@@ -1,39 +1,59 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 百事服 IoT 设备管理平台
 
-## Getting Started
+物联网设备监控与管理平台，支持用户端和管理员端双端系统。
 
-First, run the development server:
+## 技术栈
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+| 层 | 技术 |
+|---|---|
+| 框架 | Next.js 16.2 + React 19 + TypeScript |
+| 路由 | App Router（文件系统路由） |
+| UI | Ant Design v5 |
+| 状态管理 | Zustand |
+| 实时通信 | Socket.IO |
+| 地图 | @uiw/react-amap（高德地图） |
+
+## 项目结构
+
+```
+uart-site-v3/
+├── app/                    # 路由页面
+│   ├── (user)/            # 用户端
+│   │   └── main/          # /main/...
+│   ├── (admin)/           # 管理员端
+│   │   └── admin/         # /admin/...
+│   └── login/              # 登录页
+├── components/             # 共享组件
+├── lib/                    # 工具库（API、hooks、状态）
+├── providers/              # React Providers
+├── types/                  # 全局类型定义
+└── docs/                   # 架构文档
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## 快速开始
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```bash
+bun install
+bun run dev
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+访问 http://localhost:3000
 
-## Learn More
+## 双端系统
 
-To learn more about Next.js, take a look at the following resources:
+- **用户端** `/main` — 设备监控、告警管理、数据查看
+- **管理员端** `/admin` — 用户管理、设备管理、日志查询、数据统计
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## API 说明
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+后端 API 独立部署于 `https://uart.ladishb.com`，前端通过 `next.config.ts` rewrites 代理。
 
-## Deploy on Vercel
+| 环境变量 | 说明 |
+|---|---|
+| `NEXT_PUBLIC_API_URL` | API 地址（可选，默认使用同源代理） |
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## 开发注意
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
-# uart-site-v3
-# uart-site-v3
-# uart-site-v3
+- TypeScript 验证：`bun run tsc`
+- ESLint：`bun run lint`
+- 生产构建：`bun run build`
