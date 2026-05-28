@@ -1,0 +1,27 @@
+.user-main {
+    min-height: 100vh;
+}
+
+.user-header {
+    display: flex;
+    align-items: center;
+    padding: 0 1rem;
+}
+
+.logo {
+    color: aliceblue;
+}
+
+.user-header-menu {
+    display: flex;
+    align-items: center;
+    margin-left: auto;
+}
+
+
+@media screen and (max-width:476px) {
+    .menu-phone {
+        display: inline;
+
+    }
+}

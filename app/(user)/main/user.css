@@ -1,0 +1,12 @@
+.ant-card-bordered .ant-card-cover {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 12px;
+}
+
+.center {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}

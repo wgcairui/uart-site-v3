@@ -1,0 +1,17 @@
+html, body {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+}
+
+.App,
+.loading
+{
+    height: 100%;
+}
+
+.loading{
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}

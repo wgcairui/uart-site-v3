@@ -1,0 +1,18 @@
+.f {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+}
+
+.f p {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    margin: 0;
+    max-width: 800px;
+}
+
+.f span {
+    margin-left: 0.3rem;
+    color: #409eff;
+}

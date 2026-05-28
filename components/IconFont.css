@@ -1,0 +1,24 @@
+@keyframes turnZ {
+
+    0% {
+        transform: rotateZ(0deg);
+    }
+
+
+    100% {
+        transform: rotateZ(360deg);
+    }
+
+}
+
+
+
+.anmi {
+
+    animation-name: turnZ;
+
+    /* animation-duration: 5s; */
+
+    animation-iteration-count:infinite
+
+}

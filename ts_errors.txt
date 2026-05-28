@@ -1,0 +1,153 @@
+app/(admin)/admin/log/sms/page.tsx(19,21): error TS18048: 'key' is possibly 'undefined'.
+app/(admin)/admin/log/sms/page.tsx(19,52): error TS2538: Type 'undefined' cannot be used as an index type.
+app/(admin)/admin/node/devmodel/page.tsx(50,22): error TS2532: Object is possibly 'undefined'.
+app/(admin)/admin/node/devmodel/page.tsx(146,17): error TS2322: Type '{ current: number | undefined; pageSize: number | undefined; total: any; showTotal: (t: number) => string; showSizeChanger: true; }' is not assignable to type 'false | TablePaginationConfig'.
+  Type '{ current: number | undefined; pageSize: number | undefined; total: any; showTotal: (t: number) => string; showSizeChanger: true; }' is not assignable to type 'TablePaginationConfig' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the types of the target's properties.
+    Types of property 'current' are incompatible.
+      Type 'number | undefined' is not assignable to type 'number'.
+        Type 'undefined' is not assignable to type 'number'.
+app/(admin)/admin/node/protocols/info/page.tsx(154,19): error TS18048: 'start' is possibly 'undefined'.
+app/(admin)/admin/node/protocols/info/page.tsx(154,27): error TS18048: 'len' is possibly 'undefined'.
+app/(admin)/admin/node/protocols/info/page.tsx(155,10): error TS18048: 'start' is possibly 'undefined'.
+app/(admin)/admin/node/protocols/info/page.tsx(155,18): error TS18048: 'len' is possibly 'undefined'.
+app/(admin)/admin/node/protocols/info/page.tsx(216,14): error TS2532: Object is possibly 'undefined'.
+app/(admin)/admin/node/protocols/info/page.tsx(220,33): error TS2345: Argument of type 'string | undefined' is not assignable to parameter of type 'string'.
+  Type 'undefined' is not assignable to type 'string'.
+app/(admin)/admin/node/protocols/info/page.tsx(346,17): error TS2532: Object is possibly 'undefined'.
+app/(admin)/admin/node/protocols/info/page.tsx(350,36): error TS2345: Argument of type 'string | undefined' is not assignable to parameter of type 'string'.
+  Type 'undefined' is not assignable to type 'string'.
+app/(admin)/admin/node/protocols/info/page.tsx(530,7): error TS2375: Type '{ value: string | undefined; onSave: (val: string) => void; textArea: true; }' is not assignable to type 'myInput' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the types of the target's properties.
+  Types of property 'value' are incompatible.
+    Type 'string | undefined' is not assignable to type 'string'.
+      Type 'undefined' is not assignable to type 'string'.
+app/(admin)/admin/node/user/page.tsx(112,17): error TS2322: Type '{ current: number | undefined; pageSize: number | undefined; total: any; showTotal: (total: number) => string; showSizeChanger: true; }' is not assignable to type 'false | TablePaginationConfig'.
+  Type '{ current: number | undefined; pageSize: number | undefined; total: any; showTotal: (total: number) => string; showSizeChanger: true; }' is not assignable to type 'TablePaginationConfig' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the types of the target's properties.
+    Types of property 'current' are incompatible.
+      Type 'number | undefined' is not assignable to type 'number'.
+        Type 'undefined' is not assignable to type 'number'.
+app/(admin)/admin/node/user/page.tsx(121,30): error TS2345: Argument of type '(prev: PaginationReq) => { page: number | undefined; pageSize: number | undefined; sortBy: string | undefined; sortOrder: "asc" | "desc" | undefined; filters: Record<...> | undefined; needTotal?: boolean; search?: Record<...>; }' is not assignable to parameter of type 'SetStateAction<PaginationReq>'.
+  Type '(prev: PaginationReq) => { page: number | undefined; pageSize: number | undefined; sortBy: string | undefined; sortOrder: "asc" | "desc" | undefined; filters: Record<...> | undefined; needTotal?: boolean; search?: Record<...>; }' is not assignable to type '(prevState: PaginationReq) => PaginationReq'.
+    Call signature return types '{ page: number | undefined; pageSize: number | undefined; sortBy: string | undefined; sortOrder: "asc" | "desc" | undefined; filters: Record<string, string[]> | undefined; needTotal?: boolean; search?: Record<...>; }' and 'PaginationReq' are incompatible.
+      The types of 'page' are incompatible between these types.
+        Type 'number | undefined' is not assignable to type 'number'.
+          Type 'undefined' is not assignable to type 'number'.
+app/(user)/main/dev/[id]/page.tsx(71,22): error TS2375: Type '{ mac: string; pid: number; user: string | undefined; }' is not assignable to type 'DevDataProps' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the types of the target's properties.
+  Types of property 'user' are incompatible.
+    Type 'string | undefined' is not assignable to type 'string'.
+      Type 'undefined' is not assignable to type 'string'.
+components/devUseTime.tsx(35,63): error TS2532: Object is possibly 'undefined'.
+components/devUseTime.tsx(35,81): error TS2532: Object is possibly 'undefined'.
+components/log.tsx(50,46): error TS2532: Object is possibly 'undefined'.
+components/log.tsx(50,64): error TS2532: Object is possibly 'undefined'.
+components/log.tsx(127,14): error TS2375: Type '{ children: Element; lastDay: number | undefined; onChange: Dispatch<SetStateAction<Moment[]>>; }' is not assignable to type 'props' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the types of the target's properties.
+  Types of property 'lastDay' are incompatible.
+    Type 'number | undefined' is not assignable to type 'number'.
+      Type 'undefined' is not assignable to type 'number'.
+components/protocolData.tsx(304,26): error TS2375: Type '{ children: Element[]; mode: "multiple" | undefined; loading: boolean; showSearch: true; }' is not assignable to type 'SelectProps<any, DefaultOptionType>' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the types of the target's properties.
+  Types of property 'mode' are incompatible.
+    Type '"multiple" | undefined' is not assignable to type '"multiple" | "tags"'.
+      Type 'undefined' is not assignable to type '"multiple" | "tags"'.
+components/resultData.tsx(24,20): error TS2532: Object is possibly 'undefined'.
+components/Selects.tsx(43,25): error TS18048: 'target' is possibly 'undefined'.
+components/Selects.tsx(45,17): error TS18048: 'target' is possibly 'undefined'.
+components/Selects.tsx(59,10): error TS2375: Type '{ options: DataNode[]; loadData: any; multiple: boolean | undefined; value: any; onChange: any; }' is not assignable to type 'IntrinsicAttributes & (PropsWithChildren<CascaderAutoProps<DataNode, keyof DataNode>> & RefAttributes<...>)' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the types of the target's properties.
+  Type '{ options: DataNode[]; loadData: any; multiple: boolean | undefined; value: any; onChange: any; }' is not assignable to type 'CascaderProps<DataNode, keyof DataNode, true>' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the types of the target's properties.
+    Types of property 'multiple' are incompatible.
+      Type 'boolean | undefined' is not assignable to type 'true'.
+        Type 'undefined' is not assignable to type 'true'.
+components/Selects.tsx(85,17): error TS18048: 'target' is possibly 'undefined'.
+components/Selects.tsx(85,89): error TS18048: 'target' is possibly 'undefined'.
+components/Selects.tsx(95,10): error TS2375: Type '{ options: DataNode[]; loadData: any; multiple: boolean | undefined; value: any; onChange: any; }' is not assignable to type 'IntrinsicAttributes & (PropsWithChildren<CascaderAutoProps<DataNode, keyof DataNode>> & RefAttributes<...>)' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the types of the target's properties.
+  Type '{ options: DataNode[]; loadData: any; multiple: boolean | undefined; value: any; onChange: any; }' is not assignable to type 'CascaderProps<DataNode, keyof DataNode, true>' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the types of the target's properties.
+    Types of property 'multiple' are incompatible.
+      Type 'boolean | undefined' is not assignable to type 'true'.
+        Type 'undefined' is not assignable to type 'true'.
+components/Selects.tsx(157,10): error TS2375: Type '{ children: Element[]; defaultValue: string | string[] | undefined; onChange: ((data: string | string[]) => void) | undefined; mode: "multiple" | undefined; loading: boolean; style: { ...; }; }' is not assignable to type 'SelectProps<string | string[], DefaultOptionType>' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the types of the target's properties.
+  Types of property 'mode' are incompatible.
+    Type '"multiple" | undefined' is not assignable to type '"multiple" | "tags"'.
+      Type 'undefined' is not assignable to type '"multiple" | "tags"'.
+components/terminalData.tsx(55,43): error TS2532: Object is possibly 'undefined'.
+components/terminalData.tsx(55,61): error TS2532: Object is possibly 'undefined'.
+components/terminalData.tsx(306,48): error TS2532: Object is possibly 'undefined'.
+components/terminalData.tsx(306,66): error TS2532: Object is possibly 'undefined'.
+components/TerminalDev.tsx(98,14): error TS2375: Type '{ checked: boolean; size: "default"; disabled: boolean | undefined; checkedChildren: string; unCheckedChildren: string; onChange: (v: boolean) => void | undefined; }' is not assignable to type 'SwitchProps' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the types of the target's properties.
+  Types of property 'disabled' are incompatible.
+    Type 'boolean | undefined' is not assignable to type 'boolean'.
+      Type 'undefined' is not assignable to type 'boolean'.
+components/TerminalDev.tsx(363,37): error TS2345: Argument of type '() => string | undefined' is not assignable to parameter of type '() => string'.
+  Type 'string | undefined' is not assignable to type 'string'.
+    Type 'undefined' is not assignable to type 'string'.
+components/TerminalDev.tsx(534,39): error TS2375: Type '{ mac: string; pid: string | number; user: string | undefined; result: queryResultArgument[]; key: string; }' is not assignable to type 'result' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the types of the target's properties.
+  Types of property 'user' are incompatible.
+    Type 'string | undefined' is not assignable to type 'string'.
+      Type 'undefined' is not assignable to type 'string'.
+components/TerminalDev.tsx(537,38): error TS2375: Type '{ mac: string; pid: string | number; user: string | undefined; result: queryResultArgument[]; key: string; }' is not assignable to type 'result' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the types of the target's properties.
+  Types of property 'user' are incompatible.
+    Type 'string | undefined' is not assignable to type 'string'.
+      Type 'undefined' is not assignable to type 'string'.
+components/TerminalDev.tsx(540,38): error TS2375: Type '{ mac: string; pid: string | number; user: string | undefined; result: queryResultArgument[]; key: string; }' is not assignable to type 'result' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the types of the target's properties.
+  Types of property 'user' are incompatible.
+    Type 'string | undefined' is not assignable to type 'string'.
+      Type 'undefined' is not assignable to type 'string'.
+components/TerminalDev.tsx(543,39): error TS2375: Type '{ mac: string; pid: string | number; user: string | undefined; result: queryResultArgument[]; key: string; }' is not assignable to type 'result' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the types of the target's properties.
+  Types of property 'user' are incompatible.
+    Type 'string | undefined' is not assignable to type 'string'.
+      Type 'undefined' is not assignable to type 'string'.
+components/TerminalDev.tsx(554,22): error TS2375: Type '{ mac: string; pid: string | number; user: string | undefined; OnUpdate: (results: queryResultArgument[], data?: queryResultSave | undefined) => void; }' is not assignable to type 'UserRunDataProps' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the types of the target's properties.
+  Types of property 'user' are incompatible.
+    Type 'string | undefined' is not assignable to type 'string'.
+      Type 'undefined' is not assignable to type 'string'.
+components/TerminalDev.tsx(557,22): error TS2375: Type '{ mac: string; pid: string | number; time: string | undefined; }' is not assignable to type '{ time?: string | number; }' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the types of the target's properties.
+  Types of property 'time' are incompatible.
+    Type 'string | undefined' is not assignable to type 'string | number'.
+      Type 'undefined' is not assignable to type 'string | number'.
+components/TerminalDev.tsx(639,10): error TS2375: Type '{ children: Element; title: string; open: boolean; confirmLoading: boolean; onCancel: (() => void) | undefined; onOk: () => void; }' is not assignable to type 'ModalProps' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the types of the target's properties.
+  Types of property 'onCancel' are incompatible.
+    Type '(() => void) | undefined' is not assignable to type '(e: MouseEvent<HTMLButtonElement, MouseEvent> | KeyboardEvent<HTMLElement>) => void'.
+      Type 'undefined' is not assignable to type '(e: MouseEvent<HTMLButtonElement, MouseEvent> | KeyboardEvent<HTMLElement>) => void'.
+components/terminalsTable.tsx(108,10): error TS2379: Argument of type '{ title: string; placeholder: string; value: string | undefined; onOk(val: string | undefined): boolean; }' is not assignable to parameter of type 'PromptConfig' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the types of the target's properties.
+  Types of property 'value' are incompatible.
+    Type 'string | undefined' is not assignable to type 'string'.
+      Type 'undefined' is not assignable to type 'string'.
+components/terminalsTable.tsx(248,6): error TS2375: Type '{ mac: string; visible: boolean; onCancel: () => void; onChange: ((item?: Terminal | undefined) => void) | undefined; }' is not assignable to type 'addMountDev' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the types of the target's properties.
+  Types of property 'onChange' are incompatible.
+    Type '((item?: Terminal | undefined) => void) | undefined' is not assignable to type '() => void'.
+      Type 'undefined' is not assignable to type '() => void'.
+components/terminalsTable.tsx(538,7): error TS2375: Type '{ checked: boolean | undefined; }' is not assignable to type 'SwitchProps' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the types of the target's properties.
+  Types of property 'checked' are incompatible.
+    Type 'boolean | undefined' is not assignable to type 'boolean'.
+      Type 'undefined' is not assignable to type 'boolean'.
+components/terminalsTable.tsx(561,7): error TS2375: Type '{ textArea: true; value: string | undefined; onSave: (remark: string) => void; }' is not assignable to type 'myInput' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the types of the target's properties.
+  Types of property 'value' are incompatible.
+    Type 'string | undefined' is not assignable to type 'string'.
+      Type 'undefined' is not assignable to type 'string'.
+components/userData.tsx(134,26): error TS2375: Type '{ value: string | undefined; onSave: (val: string) => void; }' is not assignable to type 'myInput' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the types of the target's properties.
+  Types of property 'value' are incompatible.
+    Type 'string | undefined' is not assignable to type 'string'.
+      Type 'undefined' is not assignable to type 'string'.
+components/userData.tsx(279,54): error TS2532: Object is possibly 'undefined'.
+components/userData.tsx(279,74): error TS2532: Object is possibly 'undefined'.
+components/userData.tsx(288,51): error TS2532: Object is possibly 'undefined'.
+components/userData.tsx(288,70): error TS2532: Object is possibly 'undefined'.
+lib/utils/prompt.tsx(33,14): error TS2375: Type '{ children: Element; name: string; rules: Rule[] | undefined; }' is not assignable to type 'FormItemProps<string>' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the types of the target's properties.
+  Types of property 'rules' are incompatible.
+    Type 'Rule[] | undefined' is not assignable to type 'Rule[]'.
+      Type 'undefined' is not assignable to type 'Rule[]'.
+lib/utils/prompt.tsx(34,18): error TS2375: Type '{ placeholder: string | undefined; onPressEnter: (() => void) | undefined; }' is not assignable to type 'InputProps' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the types of the target's properties.
+  Types of property 'onPressEnter' are incompatible.
+    Type '(() => void) | undefined' is not assignable to type 'KeyboardEventHandler<HTMLInputElement>'.
+      Type 'undefined' is not assignable to type 'KeyboardEventHandler<HTMLInputElement>'.
+lib/utils/prompt.tsx(71,10): error TS2375: Type '{ children: Element; open: boolean; onOk: () => Promise<void>; onCancel: () => void; title: string; getContainer: false; afterClose: (() => void) | undefined; confirmLoading?: boolean; ... 41 more ...; panelRef?: Ref<...>; }' is not assignable to type 'ModalProps' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the types of the target's properties.
+  Types of property 'afterClose' are incompatible.
+    Type '(() => void) | undefined' is not assignable to type '() => void'.
+      Type 'undefined' is not assignable to type '() => void'.
+lib/utils/prompt.tsx(80,14): error TS2375: Type '{ ref: RefObject<any>; rules: Rule[] | undefined; value: string | undefined; placeholder: string | undefined; onPressEnter: () => Promise<void>; }' is not assignable to type 'Omit<Props, "ref">' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the types of the target's properties.
+  Types of property 'value' are incompatible.
+    Type 'string | undefined' is not assignable to type 'string'.
+      Type 'undefined' is not assignable to type 'string'.
+lib/utils/tableCommon.tsx(138,5): error TS2375: Type '{ page: any; pageSize: any; sortBy: string | undefined; sortOrder: "asc" | "desc" | undefined; filters: Record<string, string[]> | undefined; }' is not assignable to type 'ServerTableQuery' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the types of the target's properties.
+  Types of property 'sortBy' are incompatible.
+    Type 'string | undefined' is not assignable to type 'string'.
+      Type 'undefined' is not assignable to type 'string'.
+lib/utils/token.ts(5,37): error TS2345: Argument of type 'string | undefined' is not assignable to parameter of type 'string'.
+  Type 'undefined' is not assignable to type 'string'.

@@ -1,0 +1,9 @@
+/**
+ups状态
+*/
+.upsTabStat {
+    max-height: 300px;
+    padding-right: 1.8rem;
+    overflow-y: auto;
+    overflow-x: hidden;
+}

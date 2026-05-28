@@ -1,0 +1,127 @@
+.login-page {
+  height: 100vh;
+  overflow: hidden;
+}
+
+.login-page .layout {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.login-page .header {
+  background: #fff !important;
+  display: flex;
+  align-items: center;
+  padding: 0 50px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  z-index: 1;
+}
+
+.login-page .header-drop {
+  margin-left: auto;
+}
+
+.login-page .content {
+  flex: 1;
+  background-color: #f0f2f5;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12px;
+  overflow-y: auto;
+}
+
+.login-page .content-row {
+  width: 100%;
+  max-width: 1200px;
+  align-items: center;
+}
+
+.login-page .content-row-col1 {
+  text-align: center;
+  padding: 40px;
+}
+
+.login-page .content-row-col1 h3 {
+  font-size: 2.5rem;
+  color: #3a8ee6;
+  margin-bottom: 16px;
+}
+
+.login-page .content-row-col1 h4 {
+  font-size: 1.2rem;
+  color: #666;
+  margin-bottom: 32px;
+}
+
+.login-page .content-row-col1 h5 {
+  margin-top: 16px;
+  color: #999;
+}
+
+.login-page .content-row-col2 {
+  display: flex;
+  justify-content: center;
+  padding: 24px;
+}
+
+.login-page .card-login {
+  width: 100%;
+  max-width: 420px;
+  border-radius: 8px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+}
+
+.login-page .login-form-button {
+  width: 100%;
+  height: 40px;
+  font-size: 16px;
+}
+
+.login-page .hidden-sm-and-down {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+}
+
+.login-page #wxlogin {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  min-height: 150px;
+}
+
+.login-page #wxlogin iframe {
+  display: block;
+  margin: 0 auto;
+}
+
+@media screen and (max-width: 768px) {
+  .login-page .content-row-col1 {
+    display: none;
+  }
+  
+  .login-page .header {
+    padding: 0 20px;
+  }
+}
+
+.login-page .ant-layout-footer {
+  text-align: center;
+  background-color: #f0f2f5;
+  color: #666;
+  padding: 12px 50px;
+}
+
+/* Tabs styling */
+.login-page .ant-tabs-tab-btn .anticon {
+  margin-right: 8px !important;
+  vertical-align: -0.125em;
+}
+
+.login-page .ant-tabs-nav-list {
+  margin: 0 auto;
+}

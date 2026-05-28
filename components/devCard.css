@@ -1,0 +1,5 @@
+.ant-card-cover{
+    display: flex;
+    justify-content: center;
+    padding: 5px;
+}

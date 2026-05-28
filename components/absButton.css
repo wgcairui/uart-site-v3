@@ -1,0 +1,95 @@
+.css-1sdm35g {
+    display: none;
+}
+
+@media screen and (max-width: 476px) {
+    .btn1 {
+        display: inline-block !important;
+    }
+
+    .css-1sdm35g {
+        display: block;
+        top: 64px;
+        left: 0px;
+        bottom: 0px;
+        right: 0px;
+        position: fixed;
+        background-color: rgb(255, 255, 255);
+        z-index: 20;
+        height: 100vh;
+        overflow-y: auto;
+        pointer-events: none;
+    }
+}
+
+.btn1 {
+    background-color: rgb(32, 35, 42);
+    bottom: 44px;
+    color: rgb(97, 218, 251);
+    display: none;
+    cursor: pointer;
+    position: fixed;
+    right: 20px;
+    z-index: 30;
+    border-radius: 50%;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: rgb(0 0 0 / 30%) 0px 0px 20px;
+    opacity: .3;
+}
+
+.btn1:hover {
+    opacity: 1;
+}
+
+
+.btn2 {
+    padding-left: 20px;
+    padding-right: 20px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.btn3 {
+    display: flex;
+    flex-direction: row;
+    height: 60px;
+    overflow: hidden;
+    -webkit-box-align: start;
+    align-items: flex-start;
+}
+
+.btn4 {
+    width: 20px;
+    height: 20px;
+    display: flex;
+    color: rgb(97, 218, 251);
+    align-self: center;
+    -webkit-box-orient: vertical;
+    -webkit-box-direction: normal;
+    flex-direction: column;
+}
+
+.css-sg9l1i {
+    transform: translate(2px, -4px) rotate(180deg);
+    transition: -webkit-transform 0.2s ease 0s, transform 0.2s ease 0s;
+}
+
+.css-cf8c4v {
+    transform: translate(2px, 8px) rotate(180deg);
+    transition: -webkit-transform 0.2s ease 0s, transform 0.2s ease 0s;
+}
+
+.css-o1zbu3 {
+    transform: translate(2px, 4px);
+    transition: -webkit-transform 0.2s ease 0s, transform 0.2s ease 0s;
+}
+
+.css-12wnq5i {
+    transform: translate(2px, -8px);
+    transition: -webkit-transform 0.2s ease 0s, transform 0.2s ease 0s;
+}
+
+
+.css-1d35tl3 {
+    margin-top: 10px;
+}
