@@ -124,6 +124,7 @@ export const getUserMailRecords = (user: string, params?: { page?: number; pageS
 
 export const getTerminals = (filter?: Partial<Record<keyof Uart.Terminal, 1 | 0>>, query?: PaginationReq) =>
   Post<universalResult<V2ListResponse<Uart.Terminal>>>('/api/v2/admin/terminals/list', { filter, ...query })
+export const adminGetTerminal = (mac: string) => Get<universalResult<Uart.Terminal>>(`/api/v2/admin/terminals/${encodeURIComponent(mac)}`)
 export const getTerminalUser = (mac: string) => Get<universalResult<string>>(`/api/v2/admin/terminals/${encodeURIComponent(mac)}/user`)
 export const getTerminalBindUsers = (mac: string, query?: PaginationReq) =>
   Get<universalResult<V2ListResponse<Uart.UserInfo>>>(`/api/v2/admin/terminals/${encodeURIComponent(mac)}/bind-users/list`, { ...query as any })
@@ -143,6 +144,13 @@ export const cleanListenMac = () => Del<universalResult<void>>('/api/v2/admin/te
 // v1: POST /api/root/delUserTerminal
 // v2: DELETE /api/v2/admin/users/:user/devices/:mac
 export const delUserTerminal = (user: string, mac: string) => Del<universalResult<any>>(`/api/v2/admin/users/${encodeURIComponent(user)}/devices/${encodeURIComponent(mac)}`)
+
+// Admin: bindUserDevice — admin binds an existing terminal to a user
+// v2: POST /api/v2/admin/users/:user/devices
+// v1: 无对应接口（v1 由用户自行调用 /api/addUserTerminal）
+// force=true: 设备已被其他用户绑定时强行接管（解绑原用户并转给新用户）
+export const bindUserDevice = (user: string, mac: string, force = false) =>
+  Post<universalResult<any>>(`/api/v2/admin/users/${encodeURIComponent(user)}/devices`, { mac, force })
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // Admin: Registered Devices  (/api/v2/admin/register-devs)

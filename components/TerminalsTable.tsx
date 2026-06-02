@@ -384,7 +384,7 @@ export const TerminalsTable: React.FC<Omit<TableProps<Uart.Terminal>, "dataSourc
 							title: "更新时间",
 							width: 165,
 							sorter: true,
-							render: (val: any) => dayjs(val || "1970-01-01").format("YYYY-MM-DD H:m:s"),
+							render: (val: any) => dayjs(val || "1970-01-01").format("YYYY-MM-DD HH:mm:ss"),
 						},
 						{
 							key: "oprate",

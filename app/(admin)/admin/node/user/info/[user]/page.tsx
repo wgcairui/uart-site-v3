@@ -4,13 +4,14 @@ import { useParams } from "next/navigation";
 import { usePromise } from "@/lib/hooks/usePromise";
 import { BindDev, getUser, simulateLogin } from "@/lib/api/fetchRoot"
 import { Spin, Tabs, Button, message } from "antd";
-import { LoginOutlined } from "@ant-design/icons";
+import { LoginOutlined, PlusOutlined } from "@ant-design/icons";
 import { UserAlarmPage } from "@/components/UserAlarmPage";
 import { UserDes } from "@/components/UserDes";
 import { UserLog } from "@/components/UserLog";
 import { TerminalsTable } from "@/components/TerminalsTable";
 import { TerminalInfo } from "@/components/TerminalInfo";
 import { TerminalMountDevs } from "@/components/TerminalMountDevs";
+import { AddUserTerminalModal } from "@/components/AddUserTerminalModal";
 import { getTerminal } from "@/lib/api/fetch";
 import { TerminalAT } from "@/components/TerminalAT";
 import { TerminalOprate } from "@/components/TerminalOprate";
@@ -74,6 +75,7 @@ export const UserInfo: React.FC = () => {
     const user = params.user as string;
 
     const [activeKey, setActiveKey] = useState<string>('info');
+    const [addModalOpen, setAddModalOpen] = useState(false);
 
     useEffect(() => {
         const handleHashChange = () => {
@@ -102,6 +104,14 @@ export const UserInfo: React.FC = () => {
         return (data?.UTs || []) as any as Uart.Terminal[]
     }, [], [user])
 
+    /**
+     * 成功绑定设备后刷新已绑定设备列表
+     */
+    const refreshBoundTerminals = () => {
+        bindUts.fecth && bindUts.fecth();
+        fecth();
+    };
+
     return (
         loading ? <Spin />
             : !data ? <div style={{ textAlign: 'center', padding: 50 }}>找不到该用户的数据</div>
@@ -128,7 +138,31 @@ export const UserInfo: React.FC = () => {
                 <Tabs activeKey={activeKey} onChange={onTabChange} items={[
                     { key: 'info', label: '详细信息', children: <UserDes user={data}></UserDes> },
                     { key: 'alarm', label: '告警设置', children: <UserAlarmPage user={data.user}></UserAlarmPage> },
-                    { key: 'mountDev', label: '挂载设备', children: <TerminalsTable user={data.user} /> },
+                    {
+                        key: 'mountDev', label: '挂载设备', children: (
+                            <>
+                                <TerminalsTable
+                                    user={data.user}
+                                    extraActions={
+                                        <Button
+                                            type="primary"
+                                            size="small"
+                                            icon={<PlusOutlined />}
+                                            onClick={() => setAddModalOpen(true)}
+                                        >
+                                            添加设备
+                                        </Button>
+                                    }
+                                />
+                                <AddUserTerminalModal
+                                    visible={addModalOpen}
+                                    user={data.user}
+                                    onCancel={() => setAddModalOpen(false)}
+                                    onSuccess={refreshBoundTerminals}
+                                />
+                            </>
+                        )
+                    },
                     { key: 'log', label: '日志', children: <UserLog user={data.user} /> },
                     { key: 'sms-stats', label: '短信消耗', children: <SmsStatsChart user={data.user} /> },
                     { key: 'mail-stats', label: '邮件消耗', children: <MailStatsChart user={data.user} /> },
