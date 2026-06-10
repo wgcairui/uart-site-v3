@@ -5,11 +5,11 @@
  *
  * 改动要点:
  * 1. 表格新增「鉴权状态」「最近 IP」两列
- * 2. 操作列加「重置 token」按钮(hasToken === true 才显示) — 每个节点独立重建 token
+ * 2. 操作列加「重置 token / 配 token」按钮(所有节点都显示) — 每个节点独立支持重建/首次配 token
  * 3. AddNode 弹窗提交后,新建场景下展示明文 token(RotateTokenModal 复用)
  * 4. 端点全部切到 /api/v2/admin/dashboard/nodes(顺带修复旧端点无效 bug)
  *
- * 设计取舍:不做「批量迁移老节点」按钮 — 老节点后续走单节点「重置 token」/ 编辑流程单独处理。
+ * 设计取舍:不做「批量迁移老节点」按钮 — 老节点走单节点「配 token」入口,hasToken=false 时按钮文案显示「配 token」。
  */
 
 import { Button, Card, Divider, Form, Input, message, Modal, Space, Table, Tag } from 'antd'
@@ -147,7 +147,7 @@ export const Nodes: React.FC = () => {
     const [tokenModal, setTokenModal] = useState<{
         single?: { Name: string; plainToken: string } | null
         list?: NodeTokenPlain[] | null
-        source: 'rotate' | 'create'
+        source: 'rotate' | 'create' | 'init'
     } | null>(null)
     const router = useRouter()
 
@@ -191,18 +191,23 @@ export const Nodes: React.FC = () => {
         })
     }
 
-    const handleRotate = (node: string) => {
+    const handleRotate = (node: string, hasToken: boolean) => {
+        const isInit = !hasToken
         Modal.confirm({
-            title: '重置节点 Token',
+            title: isInit ? '为节点生成 Token' : '重置节点 Token',
             content: (
                 <div>
-                    <div>确定重置节点 <b>{node}</b> 的鉴权 Token？</div>
+                    <div>
+                        确定要为节点 <b>{node}</b> {isInit ? '生成' : '重置'}鉴权 Token？
+                    </div>
                     <div style={{ color: '#e84545', marginTop: 8 }}>
-                        旧 token 立即失效,对应 Node 会在下次重连时被拒。请准备好立即更新部署配置。
+                        {isInit
+                            ? '生成后该节点将启用 Token 鉴权,IP 鉴权回退路径立即失效。需准备好立即更新 Node 部署配置(环境变量 NODE_TOKEN)。'
+                            : '旧 token 立即失效,对应 Node 会在下次重连时被拒。请准备好立即更新部署配置。'}
                     </div>
                 </div>
             ),
-            okText: '确定重置',
+            okText: isInit ? '确定生成' : '确定重置',
             okButtonProps: { danger: true },
             onOk() {
                 setRotating(node)
@@ -211,10 +216,10 @@ export const Nodes: React.FC = () => {
                         if (el.code && el.data?.plainToken) {
                             setTokenModal({
                                 single: { Name: el.data.Name, plainToken: el.data.plainToken },
-                                source: 'rotate',
+                                source: isInit ? 'init' : 'rotate',
                             })
                         } else {
-                            message.error(el.message || '重置失败')
+                            message.error(el.message || (isInit ? '生成失败' : '重置失败'))
                         }
                     })
                     .finally(() => setRotating(null))
@@ -382,16 +387,14 @@ export const Nodes: React.FC = () => {
                             >
                                 重启
                             </Button>
-                            {r.hasToken && (
-                                <Button
-                                    type="link"
-                                    size="small"
-                                    loading={rotating === r.Name}
-                                    onClick={() => handleRotate(r.Name)}
-                                >
-                                    重置 token
-                                </Button>
-                            )}
+                            <Button
+                                type="link"
+                                size="small"
+                                loading={rotating === r.Name}
+                                onClick={() => handleRotate(r.Name, r.hasToken ?? false)}
+                            >
+                                {r.hasToken ? '重置 token' : '配 token'}
+                            </Button>
                             <Button
                                 type="link"
                                 size="small"

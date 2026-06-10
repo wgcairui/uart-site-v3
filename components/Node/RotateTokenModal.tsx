@@ -17,22 +17,24 @@ import type { NodeTokenPlain } from '@/lib/api/fetchRoot'
 export interface RotateTokenModalProps {
   open: boolean
   onClose: () => void
-  /** 单 token 模式(重置单个节点 / 创建新节点) */
+  /** 单 token 模式(重置单个节点 / 创建新节点 / 为老节点首次配 token) */
   single?: { Name: string; plainToken: string } | null | undefined
   /** 多 token 列表模式(预留:目前未使用,保留以便后端再返回多 token 时复用) */
   list?: NodeTokenPlain[] | null | undefined
-  /** 来源标识: 'rotate' | 'create'，影响顶部提示文案 */
-  source?: 'rotate' | 'create'
+  /** 来源标识: 'rotate' | 'create' | 'init'，影响顶部提示文案 */
+  source?: 'rotate' | 'create' | 'init' | undefined
 }
 
 const SOURCE_TITLE: Record<NonNullable<RotateTokenModalProps['source']>, string> = {
   rotate: '节点 Token 已重置',
   create: '节点已创建',
+  init: '节点 Token 已生成',
 }
 
 const SOURCE_HINT: Record<NonNullable<RotateTokenModalProps['source']>, string> = {
   rotate: '请将新的 token 更新到对应 Node 部署配置（环境变量 / k8s Secret）。旧 token 立即失效。',
   create: '请将 token 写入 Node 部署配置（环境变量 NODE_TOKEN）后启动 Node。未配置 token 的新节点无法连接。',
+  init: '该节点已启用 Token 鉴权,IP 回退路径已失效。请将 token 写入 Node 部署配置（环境变量 NODE_TOKEN）后启动 Node,否则该节点无法连接。',
 }
 
 export function RotateTokenModal({ open, onClose, single, list, source = 'rotate' }: RotateTokenModalProps) {

@@ -5,7 +5,7 @@
  *
  * 改动:
  * 1. Descriptions 加 3 行:鉴权方式 / 最近 IP / 最后心跳
- * 2. 右上角加「重置 token」按钮(hasToken === true 才显示)
+ * 2. 右上角加「重置 Token / 配 Token」按钮(所有节点都显示) — 老节点(hasToken=false)首次配 token 也走这个入口
  */
 
 import { Button, Card, Col, Descriptions, message, Modal, Row, Space, Statistic, Tag } from 'antd'
@@ -32,6 +32,7 @@ export const NodeDetail: React.FC = () => {
     const [tokenModal, setTokenModal] = useState<{
         open: boolean
         single?: { Name: string; plainToken: string } | null
+        source?: 'rotate' | 'init'
     }>({ open: false })
 
     const { data: nodes } = usePromise<any[]>(async () => {
@@ -47,17 +48,20 @@ export const NodeDetail: React.FC = () => {
     if (!node) return null
 
     const handleRotate = () => {
+        const isInit = !(node.hasToken ?? false)
         Modal.confirm({
-            title: '重置节点 Token',
+            title: isInit ? '为节点生成 Token' : '重置节点 Token',
             content: (
                 <div>
-                    <div>确定重置节点 <b>{nodeId}</b> 的鉴权 Token？</div>
+                    <div>确定要为节点 <b>{nodeId}</b> {isInit ? '生成' : '重置'}鉴权 Token？</div>
                     <div style={{ color: '#e84545', marginTop: 8 }}>
-                        旧 token 立即失效,对应 Node 会在下次重连时被拒。
+                        {isInit
+                            ? '生成后该节点将启用 Token 鉴权,IP 鉴权回退路径立即失效。需准备好立即更新 Node 部署配置(环境变量 NODE_TOKEN)。'
+                            : '旧 token 立即失效,对应 Node 会在下次重连时被拒。'}
                     </div>
                 </div>
             ),
-            okText: '确定重置',
+            okText: isInit ? '确定生成' : '确定重置',
             okButtonProps: { danger: true },
             onOk() {
                 setRotating(true)
@@ -67,9 +71,10 @@ export const NodeDetail: React.FC = () => {
                             setTokenModal({
                                 open: true,
                                 single: { Name: el.data.Name, plainToken: el.data.plainToken },
+                                source: isInit ? 'init' : 'rotate',
                             })
                         } else {
-                            message.error(el.message || '重置失败')
+                            message.error(el.message || (isInit ? '生成失败' : '重置失败'))
                         }
                     })
                     .finally(() => setRotating(false))
@@ -107,17 +112,15 @@ export const NodeDetail: React.FC = () => {
                     <ArrowLeftOutlined /> 返回列表
                 </a>
                 <Space>
-                    {node.hasToken && (
-                        <Button
-                            type="primary"
-                            danger
-                            icon={<SafetyCertificateOutlined />}
-                            loading={rotating}
-                            onClick={handleRotate}
-                        >
-                            重置 Token
-                        </Button>
-                    )}
+                    <Button
+                        type="primary"
+                        danger
+                        icon={<SafetyCertificateOutlined />}
+                        loading={rotating}
+                        onClick={handleRotate}
+                    >
+                        {node.hasToken ? '重置 Token' : '配 Token'}
+                    </Button>
                     <Button icon={<ReloadOutlined />} onClick={handleRestart}>
                         重启节点
                     </Button>
@@ -197,7 +200,7 @@ export const NodeDetail: React.FC = () => {
                     )}
                 </Descriptions.Item>
                 <Descriptions.Item label="最后心跳">
-                    <Space direction="vertical" size={0}>
+                    <Space orientation="vertical" size={0}>
                         <span>{lastSeenAbsolute}</span>
                         {node.lastSeenAt && (
                             <span style={{ fontSize: 12, color: '#7c8aa0' }}>
@@ -229,7 +232,7 @@ export const NodeDetail: React.FC = () => {
                 open={tokenModal.open}
                 onClose={() => setTokenModal({ open: false })}
                 single={tokenModal.single}
-                source="rotate"
+                source={tokenModal.source}
             />
         </div>
     )
