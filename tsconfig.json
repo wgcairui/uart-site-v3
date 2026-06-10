@@ -24,8 +24,7 @@
     ],
     "paths": {
       "@/*": ["./*"]
-    },
-    "types": ["types-uart"]
+    }
   },
   "include": [
     "next-env.d.ts",

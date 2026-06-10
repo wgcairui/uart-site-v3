@@ -6,9 +6,9 @@ import { MyCopy } from "@/components/myCopy";
 /**
  * 展示数据
  */
-export const DesList: React.FC<{ title: string, data: Record<string, any> | undefined }> = ({ title, data }) => {
+export const DesList: React.FC<{ title: string, data: Record<string, any> | undefined, style?: React.CSSProperties | undefined }> = ({ title, data, style }) => {
     return (
-        <>
+        <div style={style}>
             <Divider plain>{title}</Divider>
             {
                 data ?
@@ -23,6 +23,6 @@ export const DesList: React.FC<{ title: string, data: Record<string, any> | unde
                     </Descriptions>
                     : <Empty />
             }
-        </>
+        </div>
     )
 }

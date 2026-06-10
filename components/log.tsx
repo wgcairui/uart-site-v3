@@ -13,13 +13,13 @@ export interface pieArg {
 }
 
 export interface log<T = any> extends TableProps<T> {
-    lastDay?: number
+    lastDay?: number | undefined
     dataFun: Function
-    cPie?: (string | pieArg)[]
-    filterNode?: string  // 节点名称过滤
-    filterMac?: string   // 设备mac过滤
-    filterPhone?: string // 手机号过滤
-    onRowClick?: (record: T) => void  // 行点击回调
+    cPie?: (string | pieArg)[] | undefined
+    filterNode?: string | undefined  // 节点名称过滤
+    filterMac?: string | undefined   // 设备mac过滤
+    filterPhone?: string | undefined // 手机号过滤
+    onRowClick?: ((record: T) => void) | undefined  // 行点击回调
 }
 
 /**

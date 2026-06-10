@@ -1,17 +1,29 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { Suspense, useEffect, useState } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 import { setToken } from '@/lib/utils/token'
 import { Spin } from 'antd'
 import { useUserStore } from '@/lib/store/userStore'
 
 export default function SimulateLoginPage() {
+  return (
+    <Suspense fallback={
+      <div style={{ textAlign: 'center', padding: 50 }}>
+        <Spin size="large" />
+      </div>
+    }>
+      <SimulateLoginInner />
+    </Suspense>
+  )
+}
+
+function SimulateLoginInner() {
   const searchParams = useSearchParams()
   const router = useRouter()
   const [error, setError] = useState<string | null>(null)
 
-    useEffect(() => {
+  useEffect(() => {
     const token = searchParams.get('token')
     if (token) {
       setToken(token)
