@@ -189,7 +189,7 @@ export const deleteDevModel = (DevModel: string) => Del<universalResult<string[]
 // nodeTokenHash 永远不返回；用 hasToken 派生字段判断是否已配置 token
 // ═══════════════════════════════════════════════════════════════════════════════
 
-/** rotateNodeToken / rotateLegacyNodes 的单条返回项 */
+/** rotateNodeToken 的单条返回项 */
 export interface NodeTokenPlain {
   Name: string;
   plainToken: string;
@@ -201,19 +201,12 @@ export interface SetNodeResult {
   plainToken?: string;
 }
 
-/** POST /nodes/rotate-legacy 响应 */
-export interface RotateLegacyResult {
-  count: number;
-  items: NodeTokenPlain[];
-}
-
 export const Node = (name: string) => Get<universalResult<Uart.NodeClient>>(`/api/v2/admin/dashboard/nodes/${encodeURIComponent(name)}`)
 export const Nodes = (query?: PaginationReq) => Get<universalResult<V2ListResponse<Uart.NodeClient>>>('/api/v2/admin/dashboard/nodes', { ...query as any })
 export const setNode = (Name: string, IP: string, Port: number, MaxConnections: number) =>
   Post<universalResult<SetNodeResult>>('/api/v2/admin/dashboard/nodes', { Name, IP, Port, MaxConnections })
 export const deleteNode = (Name: string) => Del<universalResult<string[]>>(`/api/v2/admin/dashboard/nodes/${encodeURIComponent(Name)}`)
 export const rotateNodeToken = (Name: string) => Post<universalResult<NodeTokenPlain>>(`/api/v2/admin/dashboard/nodes/${encodeURIComponent(Name)}/rotate-token`, {})
-export const rotateLegacyNodes = () => Post<universalResult<RotateLegacyResult>>('/api/v2/admin/dashboard/nodes/rotate-legacy', {})
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // Admin: Logs  (/api/v2/admin/logs)

@@ -5,14 +5,15 @@
  *
  * 改动要点:
  * 1. 表格新增「鉴权状态」「最近 IP」两列
- * 2. 操作列加「重置 token」按钮(hasToken === true 才显示)
- * 3. toolbar 加「批量迁移老节点」按钮(列表中存在 hasToken === false 才显示)
- * 4. AddNode 弹窗提交后,新建场景下展示明文 token(RotateTokenModal 复用)
- * 5. 端点全部切到 /api/v2/admin/dashboard/nodes(顺带修复旧端点无效 bug)
+ * 2. 操作列加「重置 token」按钮(hasToken === true 才显示) — 每个节点独立重建 token
+ * 3. AddNode 弹窗提交后,新建场景下展示明文 token(RotateTokenModal 复用)
+ * 4. 端点全部切到 /api/v2/admin/dashboard/nodes(顺带修复旧端点无效 bug)
+ *
+ * 设计取舍:不做「批量迁移老节点」按钮 — 老节点后续走单节点「重置 token」/ 编辑流程单独处理。
  */
 
 import { Button, Card, Divider, Form, Input, message, Modal, Space, Table, Tag } from 'antd'
-import { DeleteFilled, ReloadOutlined, SafetyCertificateOutlined, SwapOutlined } from '@ant-design/icons'
+import { DeleteFilled, ReloadOutlined, SafetyCertificateOutlined } from '@ant-design/icons'
 import dayjs from 'dayjs'
 import relativeTime from 'dayjs/plugin/relativeTime'
 import 'dayjs/locale/zh-cn'
@@ -23,7 +24,6 @@ import {
     Nodes as getNodes,
     deleteNode,
     nodeRestart,
-    rotateLegacyNodes,
     rotateNodeToken,
     setNode,
     type NodeTokenPlain,
@@ -144,11 +144,10 @@ export const Nodes: React.FC = () => {
     const [visible, setVisible] = useState(false)
     const [editingItem, setEditingItem] = useState<Uart.NodeClient | null>(null)
     const [rotating, setRotating] = useState<string | null>(null)
-    const [migrating, setMigrating] = useState(false)
     const [tokenModal, setTokenModal] = useState<{
         single?: { Name: string; plainToken: string } | null
         list?: NodeTokenPlain[] | null
-        source: 'rotate' | 'create' | 'migrate'
+        source: 'rotate' | 'create'
     } | null>(null)
     const router = useRouter()
 
@@ -160,12 +159,6 @@ export const Nodes: React.FC = () => {
     // 顶部 status cards
     const status = useMemo(
         () => nodes.map((el) => ({ type: el.Name, value: el.count || 0 })),
-        [nodes],
-    )
-
-    // 是否存在存量未配置 token 的节点(用于显示「批量迁移」按钮)
-    const hasLegacy = useMemo(
-        () => nodes.some((n) => n.hasToken === false),
         [nodes],
     )
 
@@ -229,47 +222,6 @@ export const Nodes: React.FC = () => {
         })
     }
 
-    const handleMigrateLegacy = () => {
-        Modal.confirm({
-            title: '批量迁移存量节点',
-            content: (
-                <div>
-                    <div>此操作<strong>不可逆</strong>:</div>
-                    <ul style={{ paddingLeft: 20, marginTop: 8, color: '#1a2332' }}>
-                        <li>将给所有未配置 token 的节点生成新 token</li>
-                        <li>老节点的 IP 鉴权回退路径<strong>立即失效</strong></li>
-                        <li>返回的明文 token 列表<strong>只会显示一次</strong></li>
-                    </ul>
-                    <div style={{ color: '#e84545', marginTop: 8 }}>
-                        未升级到 token 鉴权的 Node 将立即断连,请先准备好批量更新部署配置。
-                    </div>
-                </div>
-            ),
-            okText: '我已了解,开始迁移',
-            okButtonProps: { danger: true },
-            onOk() {
-                setMigrating(true)
-                return rotateLegacyNodes()
-                    .then((el) => {
-                        if (el.code && el.data?.items) {
-                            if (el.data.items.length === 0) {
-                                message.info('没有需要迁移的存量节点')
-                                return
-                            }
-                            setTokenModal({
-                                list: el.data.items,
-                                source: 'migrate',
-                            })
-                            refetch()
-                        } else {
-                            message.error(el.message || '迁移失败')
-                        }
-                    })
-                    .finally(() => setMigrating(false))
-            },
-        })
-    }
-
     const renderAuthBadge = (n: Uart.NodeClient) => {
         if (n.hasToken) {
             return (
@@ -326,16 +278,6 @@ export const Nodes: React.FC = () => {
                 }}>
                     添加节点
                 </Button>
-                {hasLegacy && (
-                    <Button
-                        danger
-                        icon={<SwapOutlined />}
-                        loading={migrating}
-                        onClick={handleMigrateLegacy}
-                    >
-                        批量迁移老节点
-                    </Button>
-                )}
             </div>
 
             <AddNode
@@ -380,7 +322,7 @@ export const Nodes: React.FC = () => {
                     key="auth"
                     title="鉴权状态"
                     render={(_, r: Uart.NodeClient) => (
-                        <Space direction="vertical" size={2}>
+                        <Space orientation="vertical" size={2}>
                             {renderAuthBadge(r)}
                             {r.hasToken && r.lastSeenAt && (
                                 <span style={{ fontSize: 12, color: '#7c8aa0' }}>
