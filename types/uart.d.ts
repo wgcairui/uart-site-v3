@@ -141,6 +141,12 @@ declare namespace Uart {
         MaxConnections: number;
         count?: number;
         remark?: string;
+        /** 是否已配置 token 鉴权（派生自 nodeTokenHash 是否存在）。true=走 token, false=存量 IP 回退 */
+        hasToken?: boolean;
+        /** 最近一次成功鉴权记录的客户端 IP（审计/告警用） */
+        lastSeenIp?: string;
+        /** 最近一次成功鉴权时间 */
+        lastSeenAt?: Date | string;
     }
     interface BindDevice extends id {
         user: string;
