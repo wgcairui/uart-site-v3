@@ -48,7 +48,7 @@ export const DevUseTime: React.FC<props> = ({ terminal }) => {
 
     return (
         <>
-            <Alert type="warning" message="此功能已废弃，server 端无对应数据源" style={{ marginBottom: 12 }} />
+            <Alert type="warning" title="此功能已废弃，server 端无对应数据源" style={{ marginBottom: 12 }} />
             <Divider plain>统计设备每天查询的间隔和查询耗时</Divider>
             <MyDatePickerRange onChange={setDate}>
             </MyDatePickerRange>

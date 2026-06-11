@@ -74,7 +74,7 @@ export function RotateTokenModal({ open, onClose, single, list, source = 'rotate
         type="error"
         showIcon
         style={{ marginBottom: 16 }}
-        message="明文 token 只会显示一次"
+        title="明文 token 只会显示一次"
         description={
           <div>
             <div style={{ marginBottom: 6 }}>{SOURCE_HINT[source]}</div>
