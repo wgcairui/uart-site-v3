@@ -77,7 +77,7 @@ export const ProtocolAlarmStatUser: React.FC<UserProps> = ({ protocolName, user,
 
     return (
         <>
-            <Alert message="状态配置说明：在这里勾选异常的状态值。当设备上报的状态与您勾选的值匹配时，系统将触发状态告警。" type="info" showIcon style={{ marginBottom: 16 }} />
+            <Alert title="状态配置说明：在这里勾选异常的状态值。当设备上报的状态与您勾选的值匹配时，系统将触发状态告警。" type="info" showIcon style={{ marginBottom: 16 }} />
             <Form form={form} labelCol={{ span: 8 }} size="small" onFinish={save}>
                 {
                     options.map(el =>

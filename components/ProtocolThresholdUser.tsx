@@ -106,7 +106,7 @@ export const ProtocolThresholdUser: React.FC<UserProps> = ({ protocolName, user,
 
     return (
         <>
-            <Alert message="阈值配置说明：在这里为具体的参数设置正常运行的范围。当设备上报的值超出配置的【最小值】与【最大值】之间时，系统将触发告警。" type="info" showIcon style={{ marginBottom: 16 }} />
+            <Alert title="阈值配置说明：在这里为具体的参数设置正常运行的范围。当设备上报的值超出配置的【最小值】与【最大值】之间时，系统将触发告警。" type="info" showIcon style={{ marginBottom: 16 }} />
             <Form form={form} initialValues={initData} onFinish={save} layout="inline">
                 <Form.Item name="name" label="参数" required
                     rules={[

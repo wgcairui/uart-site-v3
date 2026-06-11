@@ -59,7 +59,7 @@ export const LogTerminal: React.FC<Props> = ({ mac }) => {
                         {selected.msg && (
                             <Alert
                                 type="warning"
-                                message="消息内容"
+                                title="消息内容"
                                 description={selected.msg}
                                 style={{ marginTop: 16, whiteSpace: 'pre-wrap' }}
                             />
