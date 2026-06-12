@@ -85,6 +85,22 @@ admin 端历史上混用 `/admin` 和 `/root` 两个前缀。已统一：
 - **补充遗漏菜单**：基础数据加 `终端运行数据`（`/admin/node/terminal/devline`）；日志记录加 `告警日志/邮件日志/短信日志`（`/admin/log/alarm|mail|sms`）
 - **清空 2 个空目录**：`app/(admin)/admin/log/logins/`、`app/(admin)/admin/log/request/`（没有 page.tsx）
 
+## 菜单清理（2026-06）
+
+下架 5 个不再使用的 admin 端功能：
+
+| 路径 | 删的内容 | 说明 |
+|---|---|---|
+| `/admin/node/terminal/devline` | 菜单项 | 页面 + 2 个组件的"查看历史记录"入口保留（被 `ResultDataParse` / `TerminalRunData` 引用） |
+| `/admin/log/dataclean` | 页面 + 菜单项 + `lib/api/fetchRoot.logdataclean` | 无业务入口，仅侧边栏可达 |
+| `/admin/log/wxevent` | 页面 + 菜单项 + `lib/api/fetchRoot.log_wxEvent` | 无业务入口，仅侧边栏可达 |
+| `/admin/log/innermessage` | 页面 + 菜单项 + `lib/api/fetchRoot.loginnerMessages` | 无业务入口，仅侧边栏可达 |
+| `/admin/log/bull` | 页面 + 菜单项 + `lib/api/fetchRoot.logbulls` | 无业务入口，仅侧边栏可达 |
+
+**为什么只删 4 个日志页的 API 而 devline 保留入口**：`devline` 页面被 2 个组件的"查看历史记录"图标实际使用（功能仍有用），只是把侧边栏的菜单项拿掉。`Log` / `DesList` / `TerminalMountDevNameLine` / `getColumnSearchProp` 等共享资源**未触碰**——其它日志页（alarm/mail/sms/wxsubscribe）还在用。
+
+**端点路径**（4 个 fetchRoot 端点）只删前端封装，后端 `/api/v2/admin/*` 路由**不删**（由 `uart-server` 仓库管，不在 v3 范围内）。后端如果想下架，要走 `server-controllers/*.ts` + uart-server 配套。
+
 ## 路由组（Route Groups）说明
 
 `(user)` 和 `(admin)` 是 Next.js **路由组**（括号包裹的目录名），URL 中**不包含**这个前缀。

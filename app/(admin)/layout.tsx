@@ -45,11 +45,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           ico: "\uEB63",
         },
         {
-          to: "/admin/node/terminal/devline",
-          text: "终端运行数据",
-          ico: "\uEB64",
-        },
-        {
           to: "/admin/node/user",
           text: "用户",
           ico: "\uEB6f",
@@ -104,28 +99,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           ico: "\uEB8c",
         },
         {
-          to: "/admin/log/dataclean",
-          text: "数据清洗日志",
-          ico: "\uEB8c",
-        },
-        {
-          to: "/admin/log/wxevent",
-          text: "微信推送事件日志",
-          ico: "\uEB8c",
-        },
-        {
           to: "/admin/log/wxsubscribe",
           text: "微信告警事件日志",
-          ico: "\uEB8c",
-        },
-        {
-          to: "/admin/log/innermessage",
-          text: "站内信",
-          ico: "\uEB8c",
-        },
-        {
-          to: "/admin/log/bull",
-          text: "bull队列",
           ico: "\uEB8c",
         },
       ]
