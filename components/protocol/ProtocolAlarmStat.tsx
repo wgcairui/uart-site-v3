@@ -27,7 +27,9 @@ export const ProtocolAlarmStat: React.FC<ProtocolProps> = ({ protocolName }) => 
 
     const options = useMemo(() => {
         const Instructs = Protocol.data?.instruct
-        if (Instructs) {
+        // data 是 usePromise 解包后的 data.sys，可能为 undefined（后端无 AlarmStat 配置）
+        // 必须先判空再 forEach
+        if (Instructs && Array.isArray(data)) {
             const args = new Map(Instructs.map((el: any) => el.formResize.filter((e2: any) => e2.isState)).flat().map((el: any) => [el.name, { ...ProtocolInstructFormrizeParse(el), value: [] as string[] }]))
             data.forEach((el: Uart.ConstantAlarmStat) => {
                 args.get(el.name)!.value = el.alarmStat
