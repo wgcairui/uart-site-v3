@@ -45,6 +45,11 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           ico: "\uEB63",
         },
         {
+          to: "/admin/node/terminal/devline",
+          text: "终端运行数据",
+          ico: "\uEB64",
+        },
+        {
           to: "/admin/node/user",
           text: "用户",
           ico: "\uEB6f",
@@ -60,27 +65,12 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           text: "公众号用户",
           ico: "\uEB64",
         },
-        {
-          to: "/admin/wx/materials",
-          text: "素材列表",
-          ico: "\uEB6f",
-        },
       ],
     },
     {
       title: '设备数据',
       ico: "el-icon-coin",
       child: [
-        {
-          to: "/admin/data/result",
-          text: "单例数据",
-          ico: "\uEB64",
-        },
-        {
-          to: "/admin/data/result-collection",
-          text: "解析数据",
-          ico: "\uEB64",
-        },
         {
           to: "/admin/data/redis",
           text: "redis",
@@ -97,7 +87,22 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       title: "日志记录",
       ico: "el-icon-coin",
       child: [
-        
+
+        {
+          to: "/admin/log/alarm",
+          text: "告警日志",
+          ico: "\uEB8c",
+        },
+        {
+          to: "/admin/log/mail",
+          text: "邮件日志",
+          ico: "\uEB8c",
+        },
+        {
+          to: "/admin/log/sms",
+          text: "短信日志",
+          ico: "\uEB8c",
+        },
         {
           to: "/admin/log/dataclean",
           text: "数据清洗日志",

@@ -72,8 +72,18 @@ admin 端历史上混用 `/admin` 和 `/root` 两个前缀。已统一：
 - **入口修复**：
   - `components/TerminalsTable.tsx` "查看" 按钮 → `/admin/node/terminal/{mac}`
   - `components/userDropDown.tsx` 下拉默认 `userPage` → `/main/userinfo`（之前是 `"/root/node/user/userInfo"` 这个路径根本不存在）
+  - `components/ResultDataParse.tsx` "查看历史记录" 链接 → `/admin/node/terminal/devline`
+  - `components/TerminalRunData.tsx` 管理员侧 "查看历史记录" 链接 → `/admin/node/terminal/devline`
 - **删除**：`app/(admin)/root/` 整个目录
 - **保留**：`app/(admin)/rootmain.css` 仍被 `(admin)/layout.tsx` 引用，**文件名带 root 是历史遗留**，改文件名需要同步 import 路径，等下次清理时一起处理
+
+## 菜单/页面一致性（2026-06）
+
+之前 menu 配置跟 page.tsx 存在不一致（admin 登录点某些菜单项 404，某些真实页面藏在菜单外）。已修复：
+
+- **删除死链菜单**（v3 初始化就没创建过对应 page.tsx）：`/admin/wx/materials`、`/admin/data/result`、`/admin/data/result-collection`
+- **补充遗漏菜单**：基础数据加 `终端运行数据`（`/admin/node/terminal/devline`）；日志记录加 `告警日志/邮件日志/短信日志`（`/admin/log/alarm|mail|sms`）
+- **清空 2 个空目录**：`app/(admin)/admin/log/logins/`、`app/(admin)/admin/log/request/`（没有 page.tsx）
 
 ## 路由组（Route Groups）说明
 
@@ -138,6 +148,6 @@ export default function SomePage() {
 | `/user` | `app/(user)/main/page.tsx` |
 | `/user/alarm` | `app/(user)/main/alarm/page.tsx` |
 | `/user/dev` | `app/(user)/main/dev/[id]/page.tsx` |
-| `/root` | `app/(admin)/admin/page.tsx` |
-| `/root/node/Protocols` | `app/(admin)/admin/node/protocols/page.tsx` |
-| `/root/log/alarm` | `app/(admin)/admin/log/alarm/page.tsx` |
+| `/admin` | `app/(admin)/admin/page.tsx` |
+| `/admin/node/Protocols` | `app/(admin)/admin/node/protocols/page.tsx` |
+| `/admin/log/alarm` | `app/(admin)/admin/log/alarm/page.tsx` |
