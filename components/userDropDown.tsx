@@ -48,7 +48,7 @@ export const UserDropDown: React.FC<props> = ({ userPage }) => {
             <Dropdown
             menu={{
                 items: [
-                    { key: "info", label: <a onClick={() => nav(userPage || "/root/node/user/userInfo", { user: data?.user })}>用户信息</a> },
+                    { key: "info", label: <a onClick={() => nav(userPage || "/main/userinfo", { user: data?.user })}>用户信息</a> },
                     { key: "exit", label: <a onClick={() => exit()}>退出</a> }
                 ]
             }}

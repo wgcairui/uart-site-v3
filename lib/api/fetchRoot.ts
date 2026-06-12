@@ -229,10 +229,6 @@ export const loguserrequsts = (start: string, end: string, query?: PaginationReq
   Post<universalResult<V2ListResponse<Uart.logUserRequst>>>('/api/v2/admin/logs/user-requests', { startTs: new Date(start).getTime(), endTs: new Date(end).getTime(), ...query })
 export const logwxsubscribes = (start: string, end: string, query?: PaginationReq) =>
   Post<universalResult<V2ListResponse<Uart.WX.wxsubscribeMessage>>>('/api/v2/admin/logs/wx-subscribes', { startTs: new Date(start).getTime(), endTs: new Date(end).getTime(), ...query })
-export const loginnerMessages = (start: string, end: string, query?: PaginationReq) =>
-  Post<universalResult<V2ListResponse<any>>>('/api/v2/admin/logs/inner-messages', { startTs: new Date(start).getTime(), endTs: new Date(end).getTime(), ...query })
-export const logbulls = (start: string, end: string, query?: PaginationReq) =>
-  Post<universalResult<V2ListResponse<any>>>('/api/v2/admin/logs/bulls', { startTs: new Date(start).getTime(), endTs: new Date(end).getTime(), ...query })
 export const logterminalAggs = (mac: string, start: string, end: string, query?: PaginationReq) =>
   Post<universalResult<V2ListResponse<logAggs>>>('/api/v2/admin/logs/terminal-aggs', { startTs: new Date(start).getTime(), endTs: new Date(end).getTime(), ...query, filters: { mac, ...(query?.filters || {}) } })
 export const logUserAggs = (user: string, start: number, end: number, query?: PaginationReq) =>
@@ -241,11 +237,6 @@ export const logUserAggs = (user: string, start: number, end: number, query?: Pa
 export const getUseBtyes = (_mac: string, _query?: PaginationReq) => Promise.resolve({ code: 0, data: { items: [], pagination: { page: 1, pageSize: 20, total: 0 } }, msg: 'DEPRECATED' } as any)
 export const getDtuBusy = (_mac: string, _start: string, _end: string, _query?: PaginationReq) => Promise.resolve({ code: 0, data: { items: [], pagination: { page: 1, pageSize: 20, total: 0 } }, msg: 'DEPRECATED' } as any)
 export const logDevUseTime = (_mac: string, _start: string, _end: string, _query?: PaginationReq) => Promise.resolve({ code: 0, data: { items: [], pagination: { page: 1, pageSize: 20, total: 0 } }, msg: 'DEPRECATED' } as any)
-export const logdataclean = (start: string, end: string, query?: PaginationReq) =>
-  Post<universalResult<{
-    items: { timeStamp: number; useTime: number; NumUserRequest: number; NumClientresults: number; CleanClientresultsTimeOut: number }[]
-    pagination: { page: number; pageSize: number; total: number }
-  }>>('/api/v2/admin/logs/dataclean', { start: start ? new Date(start).getTime() : undefined, end: end ? new Date(end).getTime() : undefined, ...query })
 export const logInstructQuery = (_mac: string) => Promise.resolve({ code: 0, data: [], msg: 'DEPRECATED' } as any)
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -257,8 +248,6 @@ export const wx_users = (query?: PaginationReq) =>
 export const update_wx_users_all = () => Post<universalResult<any>>('/api/v2/admin/wx/users/sync')
 export const wx_send_info = (type: number, openid: string, content?: string) =>
   Post<universalResult<Uart.WX.wxRequest>>('/api/v2/admin/wx/send', { type, openid, content })
-export const log_wxEvent = (query?: PaginationReq) =>
-  Post<universalResult<V2ListResponse<Uart.WX.WxEvent>>>('/api/v2/admin/wx/events/list', { ...query })
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // Admin: System (Redis / OSS)  — /api/v2/admin/system
