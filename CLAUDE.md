@@ -99,14 +99,17 @@ useUserStore.getState().setUser(newUser)
 ### API 调用
 
 ```ts
-import { Get, Post } from '@/lib/api/fetch'
-import { GetRoot, PostRoot } from '@/lib/api/fetchRoot'
+// 用户端 API（lib/api/fetch.ts 是 barrel，按业务域拆到 lib/api/endpoints/）
+import { Get, Post } from '@/lib/api/fetch'              // 底层 HTTP 封装
+import { getProtocol, userInfo } from '@/lib/api/fetch'  // 具体业务 API（barrel re-export）
+import { BindDev } from '@/lib/api/endpoints/user'       // 直接从 endpoints 导入
 
-// 用户端 API
-const result = await Get<Uart.UserInfo>('/api/v2/user/profile')
+// 管理员端 API（lib/api/fetchRoot.ts 是 barrel）
+import { runingState, nodes, setNode } from '@/lib/api/fetchRoot'
 
-// 管理员端 API
-const result = await GetRoot<Stats>('/api/v2/admin/data/stats')
+// 用法
+const result = await Get<Uart.UserInfo>('/api/v2/user/profile')  // 裸 URL
+const { data } = await getProtocol('modbus')                       // 业务封装
 ```
 
 ### Token 管理
