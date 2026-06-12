@@ -9,12 +9,12 @@ import { getProtocols, modifyProtocolRemark, setProtocol, updateProtocol } from 
 import { getProtocol } from "@/lib/api/fetch";
 import { prompt } from "@/lib/utils/prompt";
 import { generateTableKey } from "@/lib/utils/tableCommon";
-import { MyInput } from "@/components/myInput";
-import { ProtocolAlarmStat } from "@/components/ProtocolAlarmStat";
-import { ProtocolContant } from "@/components/ProtocolContant";
-import { ProtocolOprate } from "@/components/ProtocolOprate";
-import { ProtocolShowTag } from "@/components/ProtocolShowTag";
-import { ProtocolThreshold } from "@/components/ProtocolThreshold";
+import { MyInput } from "@/components/common/MyInput";
+import { ProtocolAlarmStat } from "@/components/protocol/ProtocolAlarmStat";
+import { ProtocolContant } from "@/components/protocol/ProtocolContant";
+import { ProtocolOprate } from "@/components/protocol/ProtocolOprate";
+import { ProtocolShowTag } from "@/components/protocol/ProtocolShowTag";
+import { ProtocolThreshold } from "@/components/protocol/ProtocolThreshold";
 import { usePromise } from "@/lib/hooks/usePromise";
 
 interface ProtocolInstructFormResizeInputProps {

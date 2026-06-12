@@ -5,7 +5,7 @@ import React from "react"
 import { ClientResults } from "@/lib/api/fetchRoot"
 import { generateTableKey } from "@/lib/utils/tableCommon"
 import { usePromise } from "@/lib/hooks/usePromise"
-import { MyCopy } from "./myCopy"
+import { MyCopy } from "@/components/common/MyCopy"
 
 export const ResultDataOriginal: React.FC<{ id: string }> = ({ id }) => {
 

@@ -3,7 +3,7 @@ import { Modal, Form, Select, message } from "antd";
 import React, { useMemo, useState } from "react";
 import { addTerminalMountDev, getTerminal } from "@/lib/api/fetch";
 import { usePromise } from "@/lib/hooks/usePromise";
-import { DevTypesCascader } from "./DevTypesCascader";
+import { DevTypesCascader } from "@/components/protocol/DevTypesCascader";
 interface addMountDev {
     /**
      * 是否显示

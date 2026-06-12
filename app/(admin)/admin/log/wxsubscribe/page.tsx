@@ -1,8 +1,8 @@
 'use client'
 import { Card } from "antd"
 import { logwxsubscribes } from "@/lib/api/fetchRoot"
-import { Log } from "@/components/log";
-import { DesList } from "@/components/DesList";
+import { Log } from "@/components/log/log";
+import { DesList } from "@/components/data/DesList";
 
 export const LogWxSubscribe: React.FC = () => {
     return (

@@ -9,7 +9,7 @@ import {
     makeServerFilterProp,
     extractServerTableQuery,
 } from "@/lib/utils/tableCommon";
-import { ProtocolsCascader } from "@/components/ProtocolsCascader";
+import { ProtocolsCascader } from "@/components/protocol/ProtocolsCascader";
 import { usePromise } from "@/lib/hooks/usePromise";
 import { PaginationReq } from "@/types";
 

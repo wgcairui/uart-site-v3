@@ -3,10 +3,10 @@ import { Card, Divider, Input, Table, Tabs, Space, Button } from "antd"
 import { useState } from "react"
 import { getUserAlarmSetups, logsmssends, logsmssendsCountInfo } from "@/lib/api/fetchRoot"
 import { generateTableKey, getColumnSearchProp } from "@/lib/utils/tableCommon"
-import { UserDes } from "@/components/UserDes"
+import { UserDes } from "@/components/data/UserDes"
 import { usePromise } from "@/lib/hooks/usePromise"
-import { Log } from "@/components/log";
-import { DesList } from "@/components/DesList";
+import { Log } from "@/components/log/log";
+import { DesList } from "@/components/data/DesList";
 
 /**
  * smslog

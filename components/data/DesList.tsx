@@ -1,7 +1,7 @@
 'use client'
 import { Divider, Descriptions, Empty } from "antd";
 import React from "react";
-import { MyCopy } from "@/components/myCopy";
+import { MyCopy } from "@/components/common/MyCopy";
 
 /**
  * 展示数据

@@ -2,7 +2,7 @@
 import React, { useState } from 'react'
 import { Card, Table, DatePicker, Space, Tag, Typography, Modal } from 'antd'
 import { loguserrequsts } from '@/lib/api/fetchRoot'
-import { DesList } from '@/components/DesList'
+import { DesList } from '@/components/data/DesList'
 import dayjs from 'dayjs'
 
 const { RangePicker } = DatePicker

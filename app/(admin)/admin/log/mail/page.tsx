@@ -2,8 +2,8 @@
 import { Card } from "antd"
 import { logmailsends } from "@/lib/api/fetchRoot"
 import { getColumnSearchProp } from "@/lib/utils/tableCommon"
-import { Log } from "@/components/log";
-import { DesList } from "@/components/DesList";
+import { Log } from "@/components/log/log";
+import { DesList } from "@/components/data/DesList";
 
 
 export const LogMail: React.FC = () => {

@@ -7,7 +7,7 @@ import React from "react";
 import { useParams } from "next/navigation";
 import { getTerminal } from "@/lib/api/fetch";
 
-import { TerminalMountDevs } from "@/components/TerminalMountDevs";
+import { TerminalMountDevs } from "@/components/terminal/TerminalMountDevs";
 import { usePromise } from "@/lib/hooks/usePromise";
 
 /**

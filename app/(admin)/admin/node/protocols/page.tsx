@@ -8,7 +8,7 @@ import { usePromise } from "@/lib/hooks/usePromise";
 import { ColumnsType } from "antd/lib/table";
 import { useNav } from "@/lib/hooks/useNav";
 import { MoreOutlined } from "@ant-design/icons";
-import { MyCopy } from "@/components/myCopy";
+import { MyCopy } from "@/components/common/MyCopy";
 import { downJson } from "@/lib/utils/util";
 import { getProtocol } from "@/lib/api/fetch";
 

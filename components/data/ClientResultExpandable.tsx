@@ -1,7 +1,7 @@
 'use client'
 import React from "react";
 import { Card, Divider, Table, Tag } from "antd";
-import { ResultDataOriginal } from "@/components/ResultDataOriginal";
+import { ResultDataOriginal } from "@/components/data/ResultDataOriginal";
 import { generateTableKey } from "@/lib/utils/tableCommon";
 
 /**

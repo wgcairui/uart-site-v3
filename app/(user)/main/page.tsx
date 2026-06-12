@@ -4,9 +4,9 @@ import React, { Suspense, useMemo, useState } from "react";
 import './user.css'
 import { Col, Row, Tabs, Space, Tooltip, Popconfirm, message, Button, Dropdown, Menu } from "antd"
 import { useUserStore } from "@/lib/store/userStore";
-import { devTypeIcon, IconFont } from "@/components/IconFont";
+import { devTypeIcon, IconFont } from "@/components/common/IconFont";
 import { CheckCircleFilled, WarningFilled, EyeFilled, EditFilled, DeleteFilled, DownOutlined } from "@ant-design/icons";
-import { DevCard } from "@/components/devCard";
+import { DevCard } from "@/components/data/devCard";
 import Link from "next/link";
 import { useSearchParams, useRouter } from "next/navigation";
 import dayjs from "dayjs";

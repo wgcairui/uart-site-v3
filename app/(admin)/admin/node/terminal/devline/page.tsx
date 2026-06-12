@@ -2,7 +2,7 @@
 import { Empty, Spin } from "antd";
 import React, { Suspense, useState } from "react";
 import { useSearchParams } from "next/navigation";
-import { TerminalMountDevNameLine } from "@/components/TerminalMountDevNameLine";
+import { TerminalMountDevNameLine } from "@/components/terminal/TerminalMountDevNameLine";
 
 const RootDevLineInner: React.FC = () => {
 

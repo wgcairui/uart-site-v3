@@ -5,8 +5,8 @@ import { Breadcrumb, Card, Empty, Spin } from "antd";
 import React, { Suspense, useEffect, useState } from "react";
 import { useUserStore } from "@/lib/store/userStore";
 import { useSearchParams } from "next/navigation";
-import { devTypeIcon } from "@/components/IconFont";
-import { TerminalMountDevNameLine } from "@/components/TerminalMountDevNameLine";
+import { devTypeIcon } from "@/components/common/IconFont";
+import { TerminalMountDevNameLine } from "@/components/terminal/TerminalMountDevNameLine";
 
 function DevLineInner({ params }: { params: { id: string } }) {
 

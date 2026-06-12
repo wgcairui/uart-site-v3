@@ -5,7 +5,7 @@ import { getProtocolSetup, getTerminalPidProtocol } from "@/lib/api/fetch";
 import { usePromise } from "@/lib/hooks/usePromise";
 import { sendOprateInstruct } from "@/lib/utils/util";
 import { devAir } from "@/lib/utils/devImgSource";
-import { IconFontSpin } from "./IconFont";
+import { IconFontSpin } from "@/components/common/IconFont";
 import { DevDataProps } from "./TerminalRunData";
 
 interface result extends DevDataProps {

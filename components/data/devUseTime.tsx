@@ -4,7 +4,7 @@ import dayjs from "dayjs";
 import React, { useState } from "react";
 import { logDevUseTime } from "@/lib/api/fetchRoot";
 import { usePromise } from "@/lib/hooks/usePromise";
-import { MyDatePickerRange } from "./myDatePickerRange";
+import { MyDatePickerRange } from "@/components/common/MyDatePickerRange";
 
 
 interface props {

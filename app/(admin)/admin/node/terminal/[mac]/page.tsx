@@ -5,16 +5,16 @@ import { useParams, useSearchParams } from "next/navigation";
 import { Spin, Tabs } from "antd";
 import { usePromise } from "@/lib/hooks/usePromise";
 import { getTerminal } from "@/lib/api/fetch";
-import { TerminalInfo } from "@/components/TerminalInfo";
-import { TerminalMountDevs } from "@/components/TerminalMountDevs";
-import { TerminalAT } from "@/components/TerminalAT";
-import { TerminalOprate } from "@/components/TerminalOprate";
-import { TerminalRunLog } from "@/components/TerminalRunLog";
-import { TerminalDevPage } from "@/components/TerminalDevPage";
-import { LogTerminal } from "@/components/LogTerminal";
-import { AlarmLogTab } from "@/components/AlarmLogTab";
+import { TerminalInfo } from "@/components/terminal/TerminalInfo";
+import { TerminalMountDevs } from "@/components/terminal/TerminalMountDevs";
+import { TerminalAT } from "@/components/terminal/TerminalAT";
+import { TerminalOprate } from "@/components/terminal/TerminalOprate";
+import { TerminalRunLog } from "@/components/terminal/TerminalRunLog";
+import { TerminalDevPage } from "@/components/terminal/TerminalDevPage";
+import { LogTerminal } from "@/components/log/LogTerminal";
+import { AlarmLogTab } from "@/components/log/AlarmLogTab";
 import { useTerminalUpdate } from "@/lib/hooks/useTerminalData";
-import { DevRealTimeLog } from "@/components/devRealTimeLog";
+import { DevRealTimeLog } from "@/components/data/devRealTimeLog";
 import { TerminalCurData, TerminalHistoryData } from "./TerminalDataTab";
 
 function TerminalDetailPageInner() {

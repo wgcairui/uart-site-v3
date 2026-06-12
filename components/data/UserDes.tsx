@@ -4,7 +4,7 @@ import dayjs from "dayjs";
 import React from "react";
 import { toggleUserGroup, modifyUserRemark, getUser, resetUserPassword, modifyAdminUserAlarmSetupContacts } from "@/lib/api/fetchRoot";
 import { usePromise } from "@/lib/hooks/usePromise";
-import { MyInput } from "./myInput";
+import { MyInput } from "@/components/common/MyInput";
 
 interface Props<T extends string | Uart.UserInfo = string> {
     user: T

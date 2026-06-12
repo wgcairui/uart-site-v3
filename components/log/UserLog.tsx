@@ -7,8 +7,8 @@ import { getAlarm, logUserAggs } from "@/lib/api/fetchRoot";
 import { RepeatFilter } from "@/lib/utils/util";
 import { generateTableKey, getColumnSearchProp, tableColumnsFilter, tableConfig } from "@/lib/utils/tableCommon";
 import { usePromise } from "@/lib/hooks/usePromise";
-import { MyDatePickerRange } from "./myDatePickerRange";
-import { ResultDataParse } from "./ResultDataParse";
+import { MyDatePickerRange } from "@/components/common/MyDatePickerRange";
+import { ResultDataParse } from "@/components/data/ResultDataParse";
 
 interface Props {
     user: string

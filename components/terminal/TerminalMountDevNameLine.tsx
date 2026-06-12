@@ -5,7 +5,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import { getTerminalDatasV2, getTerminalPidProtocol } from "@/lib/api/fetch";
 import { usePromise } from "@/lib/hooks/usePromise";
 import { generateTableKey } from "@/lib/utils/tableCommon";
-import { ProtocolInstructSelect } from "./ProtocolInstructSelect";
+import { ProtocolInstructSelect } from "@/components/protocol/ProtocolInstructSelect";
 
 interface Props {
 	mac: string;

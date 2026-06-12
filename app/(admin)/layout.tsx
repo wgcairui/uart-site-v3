@@ -1,11 +1,11 @@
 'use client'
 import React, { useMemo } from "react"
 import { Layout, Menu } from "antd"
-import "./rootmain.css"
+import "./admin-layout.css"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { UserDropDown } from "@/components/userDropDown"
-import { AbsButton } from "@/components/absButton"
+import { UserDropDown } from "@/components/common/UserDropdown"
+import { AbsButton } from "@/components/layout/AbsButton"
 
 interface navi {
   title: string

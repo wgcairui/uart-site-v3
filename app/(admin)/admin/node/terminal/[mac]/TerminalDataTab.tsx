@@ -3,7 +3,7 @@ import React, { useState } from "react"
 import { Table, Tag, Card, Modal } from "antd"
 import dayjs from "dayjs"
 import { ClientResultSingle, ClientResultList } from "@/lib/api/fetchRoot"
-import { clientResultExpandableExpandedRowRender } from "@/components/ClientResultExpandable"
+import { clientResultExpandableExpandedRowRender } from "@/components/data/ClientResultExpandable"
 import { usePromise } from "@/lib/hooks/usePromise"
 import { PaginationReq } from "@/types"
 

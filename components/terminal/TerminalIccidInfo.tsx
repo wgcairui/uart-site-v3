@@ -66,11 +66,11 @@ import { CopyClipboard } from "@/lib/utils/util";
 import { useNav } from "@/lib/hooks/useNav";
 import { usePromise } from "@/lib/hooks/usePromise";
 import { useTerminalUpdate } from "@/lib/hooks/useTerminalData";
-import { DevCard } from "./devCard";
+import { DevCard } from "@/components/data/devCard";
 
-import { IconFont, devTypeIcon } from "./IconFont";
-import { MyCopy } from "./myCopy";
-import { MyInput } from "./myInput";
+import { IconFont, devTypeIcon } from "@/components/common/IconFont";
+import { MyCopy } from "@/components/common/MyCopy";
+import { MyInput } from "@/components/common/MyInput";
 import { TerminalAddMountDev } from "./TerminalAddMountDev";
 import { TerminalDevPage } from "./TerminalDevPage";
 

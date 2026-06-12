@@ -5,7 +5,7 @@ import { useParams } from "next/navigation";
 import { useUserStore } from "@/lib/store/userStore";
 import { Breadcrumb, Empty, Dropdown, Button, Menu } from "antd";
 import { ApartmentOutlined, DownOutlined, HomeOutlined } from '@ant-design/icons';
-import { TerminalDevPage } from "@/components/TerminalDevPage";
+import { TerminalDevPage } from "@/components/terminal/TerminalDevPage";
 import { useNav } from "@/lib/hooks/useNav";
 
 export default function Dev() {

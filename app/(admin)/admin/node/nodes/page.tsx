@@ -28,7 +28,7 @@ import {
     setNode,
     type NodeTokenPlain,
 } from '@/lib/api/fetchRoot'
-import { RotateTokenModal } from '@/components/Node/RotateTokenModal'
+import { RotateTokenModal } from '@/components/node/RotateTokenModal'
 import { usePromise } from '@/lib/hooks/usePromise'
 import { generateTableKey, tableConfig } from '@/lib/utils/tableCommon'
 

@@ -16,8 +16,8 @@ import 'dayjs/locale/zh-cn'
 import { useParams, useRouter } from 'next/navigation'
 import React, { useMemo, useState } from 'react'
 
-import { Log } from '@/components/log'
-import { RotateTokenModal } from '@/components/Node/RotateTokenModal'
+import { Log } from '@/components/log/log'
+import { RotateTokenModal } from '@/components/node/RotateTokenModal'
 import { Nodes as getNodes, lognodes, rotateNodeToken } from '@/lib/api/fetchRoot'
 import { usePromise } from '@/lib/hooks/usePromise'
 

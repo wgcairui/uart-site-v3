@@ -4,9 +4,9 @@ import { Button, Collapse, Descriptions, Empty, message, Space, Spin, Tabs } fro
 import React from "react";
 import { getUserAlarmSetup, initUserAlarmSetup } from "@/lib/api/fetchRoot";
 import { usePromise } from "@/lib/hooks/usePromise";
-import { ProtocolAlarmStatUser } from "./ProtocolAlarmStatUser";
-import { ProtocolShowTagUser } from "./ProtocolShowTagUser";
-import { ProtocolThresholdUser } from "./ProtocolThresholdUser";
+import { ProtocolAlarmStatUser } from "@/components/protocol/ProtocolAlarmStatUser";
+import { ProtocolShowTagUser } from "@/components/protocol/ProtocolShowTagUser";
+import { ProtocolThresholdUser } from "@/components/protocol/ProtocolThresholdUser";
 import { EditableContact } from "./UserDes";
 
 /**

@@ -6,7 +6,7 @@ import dayjs from "dayjs";
 import React, { useEffect, useState } from "react";
 import { update_wx_users_all, wx_send_info, wx_users } from "@/lib/api/fetchRoot";
 import { getColumnSearchProp } from "@/lib/utils/tableCommon";
-import { MyCopy } from "@/components/myCopy";
+import { MyCopy } from "@/components/common/MyCopy";
 
 export const WxUser: React.FC = () => {
 
