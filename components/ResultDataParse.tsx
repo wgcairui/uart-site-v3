@@ -47,7 +47,7 @@ export const ResultDataParse: React.FC<{ id: string }> = ({ id }) => {
                                 <span>{value }
                                     <Tooltip color="cyan" title={`查看[${record.name}]的历史记录`}>
                                         <Link
-                                            href={`/root/node/terminal/devline?name=${record.name}&mac=${data.mac}&pid=${data.pid}`}>
+                                            href={`/admin/node/terminal/devline?name=${record.name}&mac=${data.mac}&pid=${data.pid}`}>
                                             <FundFilled style={{ marginLeft: 8 }} />
                                         </Link>
                                     </Tooltip>
