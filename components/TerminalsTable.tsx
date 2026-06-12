@@ -392,7 +392,7 @@ export const TerminalsTable: React.FC<Omit<TableProps<Uart.Terminal>, "dataSourc
 							width: 120,
 							render: (_: any, t: any) => (
 								<Space size={0} wrap>
-									<Button type="link" onClick={() => nav("/root/node/Terminal/info/" + t.DevMac)}>
+									<Button type="link" onClick={() => nav("/admin/node/terminal/" + t.DevMac)}>
 										查看
 									</Button>
 									<Dropdown

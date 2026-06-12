@@ -34,6 +34,7 @@ app/
 │
 └── (admin)/                # 路由组：管理员端
     ├── layout.tsx          # 管理员侧共享布局
+    ├── rootmain.css        # admin 布局样式（文件名带 root 是历史遗留，不要重命名除非配套 import 一起改）
     └── admin/              # ⚠️ 必须有此层
         ├── page.tsx        # /admin（管理员首页）
         ├── node/           # /admin/node/...（设备管理，10 个页面）
@@ -61,6 +62,18 @@ app/
 | `(admin)/layout.tsx` | Client Component | 含鉴权检查、用户信息加载 |
 | 数据/实时页面 | Client Component | 含 Socket 数据、交互操作 |
 | 日志列表页 | 可做 Server Component | 可通过 fetch 直接获取初始数据 |
+
+## 路由前缀统一（2026-06）
+
+admin 端历史上混用 `/admin` 和 `/root` 两个前缀。已统一：
+
+- **统一方向**：管理员端一律走 `/admin/...`（用户端 `/main/...` 不变）
+- **孤岛迁移**：`/root/node/Terminal/info/[mac]` 已合并到 `/admin/node/terminal/[mac]`（用孤岛版覆盖，保留更全功能 + `?tab=` URL 同步 + 挂载设备内嵌二级 Tabs「详情/当前数据/历史数据」）
+- **入口修复**：
+  - `components/TerminalsTable.tsx` "查看" 按钮 → `/admin/node/terminal/{mac}`
+  - `components/userDropDown.tsx` 下拉默认 `userPage` → `/main/userinfo`（之前是 `"/root/node/user/userInfo"` 这个路径根本不存在）
+- **删除**：`app/(admin)/root/` 整个目录
+- **保留**：`app/(admin)/rootmain.css` 仍被 `(admin)/layout.tsx` 引用，**文件名带 root 是历史遗留**，改文件名需要同步 import 路径，等下次清理时一起处理
 
 ## 路由组（Route Groups）说明
 
