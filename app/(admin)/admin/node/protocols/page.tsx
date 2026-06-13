@@ -9,6 +9,8 @@ import { ColumnsType } from "antd/lib/table";
 import { useNav } from "@/lib/hooks/useNav";
 import { MoreOutlined } from "@ant-design/icons";
 import { MyCopy } from "@/components/common/MyCopy";
+import { PageHeader } from "@/components/common/PageHeader";
+import { PageSummary } from "@/components/common/PageSummary";
 import { downJson } from "@/lib/utils/util";
 import { getProtocol } from "@/lib/api/fetch";
 
@@ -139,23 +141,24 @@ export const Protocols: React.FC = () => {
 
     return (
         <>
-            <Divider plain>所有协议 / {pagination.total ?? data.length}</Divider>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10, margin: '16px 0' }}>
-                {protocolStats.map((item: any) => (
-                    <Card size="small" key={item.type}
-                        onClick={() => {
-                            // click stat card → filter by ProtocolType server-side
+            <PageHeader
+                title="协议管理"
+                extra={<Button type="primary" onClick={() => setIsAddProtocolVisible(true)}>添加协议</Button>}
+            />
+            <PageSummary
+                items={[
+                    { label: '协议总数', value: pagination.total ?? data.length, color: '#1890ff' },
+                    ...(protocolStats || []).slice(0, 3).map((s: any) => ({
+                        label: s.type,
+                        value: s.value,
+                        color: '#52c41a',
+                        onClick: () => {
                             setSearchFields({})
-                            setQuery(prev => ({ ...prev, page: 1, filters: { ProtocolType: [item.type] } } as any))
-                        }}
-                        hoverable>
-                        <div>{item.type}: {item.value}</div>
-                    </Card>
-                ))}
-            </div>
-            <div style={{ marginBottom: 16 }}>
-                <Button type="primary" onClick={() => setIsAddProtocolVisible(true)}>添加协议</Button>
-            </div>
+                            setQuery(prev => ({ ...prev, page: 1, filters: { ProtocolType: [s.type] } } as any))
+                        },
+                    })),
+                ]}
+            />
             <Modal
                 title="添加协议"
                 open={isAddProtocolVisible}

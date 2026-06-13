@@ -11,6 +11,8 @@ import {
 } from "@/lib/utils/tableCommon";
 import { ProtocolsCascader } from "@/components/protocol/ProtocolsCascader";
 import { usePromise } from "@/lib/hooks/usePromise";
+import { PageHeader } from "@/components/common/PageHeader";
+import { PageSummary } from "@/components/common/PageSummary";
 import { PaginationReq } from "@/types";
 
 interface props {
@@ -124,22 +126,28 @@ export const DevModel: React.FC = () => {
 
     return (
         <>
-            <Divider plain>设备类型 / {pagination.total ?? data.length}</Divider>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10, margin: '16px 0' }}>
-                {devModelStats.map((item: any) => (
-                    <Card size="small" key={item.type}
-                        onClick={() => {
+            <PageHeader
+                title="设备类型"
+                extra={
+                    <Button type="primary" onClick={() => { setEditingItem(null); setVisible(true); }}>
+                        添加设备
+                    </Button>
+                }
+            />
+            <PageSummary
+                items={[
+                    { label: '设备类型总数', value: pagination.total ?? data.length, color: '#1890ff' },
+                    ...(devModelStats || []).slice(0, 3).map((s: any) => ({
+                        label: s.type,
+                        value: s.value,
+                        color: '#52c41a',
+                        onClick: () => {
                             setSearchFields({});
-                            setQuery(prev => ({ ...prev, page: 1, filters: { Type: [item.type] } } as any));
-                        }}
-                        hoverable>
-                        <div>{item.type}: {item.value}</div>
-                    </Card>
-                ))}
-            </div>
-            <div style={{ marginBottom: 16 }}>
-                <Button type="primary" onClick={() => { setEditingItem(null); setVisible(true); }}>添加设备</Button>
-            </div>
+                            setQuery(prev => ({ ...prev, page: 1, filters: { Type: [s.type] } } as any))
+                        },
+                    })),
+                ]}
+            />
             <AddDevModel visible={visible} onCancel={() => setVisible(false)} initialValue={editingItem} ok={fecth} />
             <Table
                 loading={loading}

@@ -7,6 +7,7 @@ import { UserDes } from "@/components/data/UserDes"
 import { usePromise } from "@/lib/hooks/usePromise"
 import { Log } from "@/components/log/log";
 import { DesList } from "@/components/data/DesList";
+import { PageSummary } from "@/components/common/PageSummary";
 import { PaginationReq, V2ListResponse } from "@/types";
 
 /**
@@ -117,20 +118,18 @@ export const LogSms: React.FC = () => {
                 children: (
                     <>
                         {/* 顶部 Stat 汇总 */}
-                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10, marginBottom: 16 }}>
-                            <Card size="small" hoverable style={{ minWidth: 160, borderTop: '3px solid #1890ff' }}>
-                                <div style={{ color: '#7c8aa0', fontSize: 12 }}>用户总数</div>
-                                <div style={{ color: '#1890ff', fontSize: 24, fontWeight: 600 }}>{userPagination.total}</div>
-                            </Card>
-                            <Card size="small" hoverable style={{ minWidth: 160, borderTop: '3px solid #fa8c16' }}>
-                                <div style={{ color: '#7c8aa0', fontSize: 12 }}>当前页合计</div>
-                                <div style={{ color: '#fa8c16', fontSize: 24, fontWeight: 600 }}>{totalCount}</div>
-                            </Card>
-                            <Card size="small" style={{ minWidth: 200, background: '#fff7e6', borderTop: '3px solid #faad14' }}>
-                                <div style={{ color: '#7c8aa0', fontSize: 12 }}>提示</div>
-                                <div style={{ fontSize: 12, color: '#874d00' }}>每用户合计基于当前页用户计算。如需全网精确统计，请走日志页筛选。</div>
-                            </Card>
-                        </div>
+                        <PageSummary
+                            items={[
+                                { label: '用户总数', value: userPagination.total, color: '#1890ff' },
+                                { label: '当前页合计', value: totalCount, color: '#fa8c16' },
+                                {
+                                    label: '提示',
+                                    value: '—',
+                                    color: '#faad14',
+                                    extra: '每用户合计基于当前页用户计算。如需全网精确统计，请走日志页筛选。',
+                                },
+                            ]}
+                        />
                         <Table
                             dataSource={generateTableKey(enriched, "user")}
                             loading={loading}

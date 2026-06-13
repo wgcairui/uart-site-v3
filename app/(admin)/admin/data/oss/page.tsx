@@ -11,6 +11,8 @@ import { getToken } from '@/lib/api/fetch'
 import { generateTableKey } from '@/lib/utils/tableCommon'
 import { CopyClipboard } from '@/lib/utils/util'
 import { usePromise } from '@/lib/hooks/usePromise'
+import { PageHeader } from '@/components/common/PageHeader'
+import { PageSummary } from '@/components/common/PageSummary'
 import { universalResult, PaginationReq, V2ListResponse } from '@/types'
 
 export const OssUpload: React.FC = () => {
@@ -94,18 +96,33 @@ export const OssUpload: React.FC = () => {
     }
   }
 
-  return (
+    return (
     <>
-      <Divider>上传文件到 ali-oss, 如果上传失败,请将文件压缩之后重试</Divider>
-      <Upload
-        onChange={s}
-        multiple
-        action="/api/v2/admin/system/oss/upload"
-        headers={{ Authorization: `Bearer ${getToken()}` || '' }}
-      >
-        <Button icon={<UploadOutlined />}>Click to Upload</Button>
-      </Upload>
-      <Divider>oss 文件列表 / 共 {pagination.total} 个</Divider>
+      <PageHeader
+        title="OSS 文件管理"
+        extra={
+          <Upload
+            onChange={s}
+            multiple
+            action="/api/v2/admin/system/oss/upload"
+            headers={{ Authorization: `Bearer ${getToken()}` || '' }}
+            showUploadList={false}
+          >
+            <Button icon={<UploadOutlined />} type="primary">上传文件</Button>
+          </Upload>
+        }
+      />
+      <PageSummary
+        items={[
+          { label: '文件总数', value: pagination.total, color: '#1890ff' },
+          {
+            label: '本次上传未保存',
+            value: (listData?.items ?? []).filter((f: any) => f.label).length,
+            color: '#fa8c16',
+            extra: '刷新页面后消失',
+          },
+        ]}
+      />
       <Form layout="inline" style={{ marginBottom: 22 }}>
         <Form.Item label="搜索">
           <Input
