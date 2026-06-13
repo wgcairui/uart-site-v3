@@ -26,8 +26,9 @@ const UserInfo: React.FC = props => {
 
     useEffect(() => {
         getUserAlarmSetup().then(el => {
-            setTels(el.data.tels || [])
-            setMails(el.data.mails || [])
+            // 防御：试用模式或鉴权失败时 data 可能 undefined
+            setTels(el.data?.tels || [])
+            setMails(el.data?.mails || [])
         })
     }, [])
 
@@ -38,7 +39,7 @@ const UserInfo: React.FC = props => {
         Modal.info({
             title: type === 'wp' ? '小程序二维码' : '公众号二维码',
             content: (
-                <Image src={data}></Image>
+                <Image src={data || ''}></Image>
             )
         })
     }

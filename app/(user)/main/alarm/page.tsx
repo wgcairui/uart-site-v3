@@ -19,11 +19,15 @@ const Alarm: React.FC = () => {
     const [dates, setDates] = useState<[dayjs.Dayjs, dayjs.Dayjs]>([dayjs().subtract(6, "month"), dayjs()])
 
     const [pageReq, setPageReq] = useState<PaginationReq>({ page: 1, pageSize: 20 });
-    const { data, fecth, loading, setData } = usePromise<V2ListResponse<alarms>>(async () => {
+    const { data: alarmsData, fecth, loading, setData: setAlarmsData } = usePromise<alarms[]>(async () => {
         const { data } = await getAlarm(dates[0].format("YYYY/MM/DD H:m:s"), dates[1].format("YYYY/MM/DD H:m:s"), pageReq)
-        return data as unknown as V2ListResponse<alarms>
-    }, { items: [], pagination: { total: 0, page: 1, pageSize: 20, totalPages: 0, hasNext: false, hasPrev: false } }, [dates, pageReq.page, pageReq.pageSize])
-    const alarms = data?.items ?? [];
+        // 防御：试用模式或鉴权失败时 data 可能不是数组
+        if (!Array.isArray(data)) {
+            return [] as alarms[]
+        }
+        return data as alarms[]
+    }, [] as alarms[], [dates, pageReq.page, pageReq.pageSize])
+    const alarms = alarmsData ?? [];
 
 
 
@@ -59,7 +63,7 @@ const Alarm: React.FC = () => {
             if (a)
                 a.isOk = true;
 
-            setData({ ...data, items: [...alarms] })
+            setAlarmsData([...alarms])
         } else fecth()
         message.success("操作成功")
     }
@@ -92,7 +96,7 @@ const Alarm: React.FC = () => {
                 <Row gutter={12}>
                     <Col span={24} md={8} sm={0} key="chart">
                         <Card>
-                            <Space direction="vertical" style={{ width: "100%" }}>
+                            <Space orientation="vertical" style={{ width: "100%" }}>
                                 <Divider plain>告警类型占比</Divider>
                                 <Descriptions bordered column={1} size="small">
                                     {pieData.map(item => <Descriptions.Item label={item.tag} key={item.tag}>{item.count}</Descriptions.Item>)}
@@ -107,9 +111,10 @@ const Alarm: React.FC = () => {
                     <Col span={24} md={16} key="table">
                         <Table dataSource={generateTableKey(alarms, '_id')} size="small" sticky
                             pagination={{
-                                current: data.pagination.page,
-                                pageSize: data.pagination.pageSize,
-                                total: data.pagination.total,
+                                current: pageReq.page ?? 1,
+                                pageSize: pageReq.pageSize ?? 20,
+                                total: alarms.length,
+                                showTotal: t => `共 ${t} 条`,
                                 onChange: (page, pageSize) => setPageReq({ ...pageReq, page, pageSize })
                             }}
                         >
