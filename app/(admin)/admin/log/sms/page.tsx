@@ -2,11 +2,12 @@
 import { Card, Divider, Input, Table, Tabs, Space, Button } from "antd"
 import { useState } from "react"
 import { getUserAlarmSetups, logsmssends, logsmssendsCountInfo } from "@/lib/api/fetchRoot"
-import { generateTableKey, getColumnSearchProp } from "@/lib/utils/tableCommon"
+import { extractServerTableQuery, generateTableKey, getColumnSearchProp, makeServerSearchProp } from "@/lib/utils/tableCommon"
 import { UserDes } from "@/components/data/UserDes"
 import { usePromise } from "@/lib/hooks/usePromise"
 import { Log } from "@/components/log/log";
 import { DesList } from "@/components/data/DesList";
+import { PaginationReq, V2ListResponse } from "@/types";
 
 /**
  * smslog
@@ -15,6 +16,8 @@ import { DesList } from "@/components/data/DesList";
 export const LogSms: React.FC = () => {
     const [phone, setPhone] = useState("")
     const [refreshKey, setRefreshKey] = useState(0)
+    const [query, setQuery] = useState<PaginationReq>({ page: 1, pageSize: 20, needTotal: true });
+    const [searchFields, setSearchFields] = useState<Record<string, string>>({});
 
     const parse = (str: string, keys: string[]) => {
         try {
@@ -29,27 +32,31 @@ export const LogSms: React.FC = () => {
         }
     }
 
-    const { data, loading, err } = usePromise<any[]>(async () => {
+    // 全网短信消费统计（一次性拉，用于"全网总消费"汇总和每用户消费数）
+    const { data: smsMap } = usePromise<Map<string, number>>(async () => {
         const smsRes = await logsmssendsCountInfo()
-        const smsMap = new Map((smsRes.data as any[] || []).map((el: any) => [el._id, el.sum]))
+        return new Map((smsRes.data as any[] || []).map((el: any) => [el._id, el.sum]))
+    }, new Map())
 
-        // 分页拉取所有用户（690条，pageSize=100需循环7次）
-        const allItems: any[] = []
-        let page = 1
-        while (true) {
-            const usersRes = await getUserAlarmSetups({ page, pageSize: 100 })
-            const items = (usersRes.data as any)?.items || []
-            allItems.push(...items)
-            if (!usersRes.data?.pagination?.hasNext) break
-            page++
-        }
+    // 用户分页 + 每页用户的消费数（client-side 计算）
+    const apiQuery: PaginationReq = { ...query, search: searchFields };
+    const { data: userData, loading, fecth: refetchUsers } = usePromise<V2ListResponse<Uart.userSetup>>(async () => {
+        const { data } = await getUserAlarmSetups(apiQuery);
+        return data as V2ListResponse<Uart.userSetup>;
+    }, { items: [], pagination: { total: 0, page: 1, pageSize: 20, totalPages: 0, hasNext: false, hasPrev: false } }, [JSON.stringify(apiQuery)]);
 
-        const count = allItems.map((el: any) => {
-            const map = (el.tels as string[] || []).map(tel => ({ tel, count: smsMap.get(tel) || 0 }))
-            return { user: el.user, map, count: map.reduce((p: number, c: any) => p + c.count, 0) }
-        })
-        return count
-    }, [])
+    const users = userData?.items ?? [];
+    const userPagination = userData?.pagination ?? { total: 0 };
+    const enriched = users.map((el: any) => {
+        const map = (el.tels as string[] || []).map((tel: string) => ({ tel, count: smsMap?.get(tel) || 0 }))
+        const count = map.reduce((p: number, c: any) => p + c.count, 0)
+        return { user: el.user, map, count }
+    });
+    const totalCount = enriched.reduce((p, c) => p + c.count, 0);
+    const handleSearch = (kv: Record<string, string>) => {
+        setSearchFields(prev => ({ ...prev, ...kv }));
+        setQuery(prev => ({ ...prev, page: 1 }));
+    };
 
     return (
         <Tabs items={[
@@ -101,51 +108,85 @@ export const LogSms: React.FC = () => {
                                 </Card>
                         }}
                     />
-                </>
+                    </>
                 ),
             },
             {
                 key: 'count',
                 label: '短信消耗排布',
                 children: (
-                    <Table dataSource={generateTableKey(data, "user")} loading={loading} columns={[
-                        {
-                            dataIndex: 'user',
-                            title: '用户',
-                            ...getColumnSearchProp('user') as any
-                        },
-                        {
-                            dataIndex: "count",
-                            title: '合计',
-                            defaultSortOrder: 'descend',
-                            sorter: (a: any, b: any) => a.count - b.count
-                        }
-                    ]}
+                    <>
+                        {/* 顶部 Stat 汇总 */}
+                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10, marginBottom: 16 }}>
+                            <Card size="small" hoverable style={{ minWidth: 160, borderTop: '3px solid #1890ff' }}>
+                                <div style={{ color: '#7c8aa0', fontSize: 12 }}>用户总数</div>
+                                <div style={{ color: '#1890ff', fontSize: 24, fontWeight: 600 }}>{userPagination.total}</div>
+                            </Card>
+                            <Card size="small" hoverable style={{ minWidth: 160, borderTop: '3px solid #fa8c16' }}>
+                                <div style={{ color: '#7c8aa0', fontSize: 12 }}>当前页合计</div>
+                                <div style={{ color: '#fa8c16', fontSize: 24, fontWeight: 600 }}>{totalCount}</div>
+                            </Card>
+                            <Card size="small" style={{ minWidth: 200, background: '#fff7e6', borderTop: '3px solid #faad14' }}>
+                                <div style={{ color: '#7c8aa0', fontSize: 12 }}>提示</div>
+                                <div style={{ fontSize: 12, color: '#874d00' }}>每用户合计基于当前页用户计算。如需全网精确统计，请走日志页筛选。</div>
+                            </Card>
+                        </div>
+                        <Table
+                            dataSource={generateTableKey(enriched, "user")}
+                            loading={loading}
+                            pagination={{
+                                current: query.page ?? 1,
+                                pageSize: query.pageSize ?? 20,
+                                total: userPagination.total,
+                                showTotal: t => `共 ${t} 个用户`,
+                                showSizeChanger: true,
+                            }}
+                            onChange={(pag) => {
+                                setQuery(prev => ({
+                                    ...prev,
+                                    page: pag.current ?? prev.page ?? 1,
+                                    pageSize: pag.pageSize ?? prev.pageSize ?? 20,
+                                }));
+                            }}
+                            columns={[
+                                {
+                                    dataIndex: 'user',
+                                    title: '用户',
+                                    ...makeServerSearchProp('user', handleSearch) as any
+                                },
+                                {
+                                    dataIndex: "count",
+                                    title: '合计',
+                                    defaultSortOrder: 'descend',
+                                    sorter: (a: any, b: any) => a.count - b.count
+                                }
+                            ]}
 
-                        expandable={{
-                            expandedRowRender: (re: any) => {
-                                return <Card>
-                                    <Divider plain>用户信息</Divider>
-                                    <UserDes user={re.user}></UserDes>
-                                    <Divider plain>使用情况</Divider>
-                                    <Table dataSource={generateTableKey(re.map, "tel")}
-                                        columns={[
-                                            {
-                                                dataIndex: 'tel',
-                                                title: '告警手机'
-                                            },
-                                            {
-                                                dataIndex: 'count',
-                                                title: "count",
-                                                defaultSortOrder: 'descend',
-                                                sorter: (a: any, b: any) => a.count - b.count
-                                            }
-                                        ]}
-                                    ></Table>
-                                </Card>
-                            }
-                        }}
-                    ></Table>
+                            expandable={{
+                                expandedRowRender: (re: any) => {
+                                    return <Card>
+                                        <Divider plain>用户信息</Divider>
+                                        <UserDes user={re.user}></UserDes>
+                                        <Divider plain>使用情况</Divider>
+                                        <Table dataSource={generateTableKey(re.map, "tel")}
+                                            columns={[
+                                                {
+                                                    dataIndex: 'tel',
+                                                    title: '告警手机'
+                                                },
+                                                {
+                                                    dataIndex: 'count',
+                                                    title: "count",
+                                                    defaultSortOrder: 'descend',
+                                                    sorter: (a: any, b: any) => a.count - b.count
+                                                }
+                                            ]}
+                                        ></Table>
+                                    </Card>
+                                }
+                            }}
+                        ></Table>
+                    </>
                 ),
             },
         ]} />
