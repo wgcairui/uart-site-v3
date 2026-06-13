@@ -149,7 +149,7 @@ export const AddUserTerminalModal: React.FC<AddUserTerminalModalProps> = ({
                     disabled: !ter,
                     danger: needForce,
                 }}
-                destroyOnClose
+                destroyOnHidden
             >
                 <Form layout="vertical">
                     <Form.Item label="设备 MAC">
@@ -255,7 +255,7 @@ export const AddUserTerminalModal: React.FC<AddUserTerminalModalProps> = ({
                 okText="确认强行绑定"
                 cancelText="取消"
                 okButtonProps={{ danger: true, loading: submitting }}
-                destroyOnClose
+                destroyOnHidden
             >
                 <p>
                     设备 <b>{ter?.DevMac}</b> 当前 owner 为{" "}
