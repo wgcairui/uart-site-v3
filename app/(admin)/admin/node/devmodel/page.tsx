@@ -12,7 +12,7 @@ import {
 import { ProtocolsCascader } from "@/components/protocol/ProtocolsCascader";
 import { usePromise } from "@/lib/hooks/usePromise";
 import { PageHeader } from "@/components/common/PageHeader";
-import { PageSummary } from "@/components/common/PageSummary";
+import { PageSummary, type SummaryVariant } from "@/components/common/PageSummary";
 import { PaginationReq } from "@/types";
 
 interface props {
@@ -84,9 +84,15 @@ export const DevModel: React.FC = () => {
 
     const [query, setQuery] = useState<PaginationReq>({ page: 1, pageSize: 20, needTotal: true });
     const [searchFields, setSearchFields] = useState<Record<string, string>>({});
+    /** 设备类型 stat 筛选：多选叠加 */
+    const [statFilter, setStatFilter] = useState<string[]>([]);
     const [visible, setVisible] = useState(false);
     const [editingItem, setEditingItem] = useState<Uart.DevsType | null>(null);
-    const apiQuery: PaginationReq = { ...query, search: searchFields };
+    const apiQuery: PaginationReq = {
+        ...query,
+        search: searchFields,
+        filters: { ...(query.filters || {}), ...(statFilter.length ? { Type: statFilter } : {}) },
+    };
 
     const { data: devModelData, loading, fecth } = usePromise<any>(async () => {
         const { data } = await DevTypes(apiQuery)
@@ -136,14 +142,19 @@ export const DevModel: React.FC = () => {
             />
             <PageSummary
                 items={[
-                    { label: '设备类型总数', value: pagination.total ?? data.length, color: '#1890ff' },
-                    ...(devModelStats || []).slice(0, 3).map((s: any) => ({
+                    { label: '设备类型总数', value: pagination.total ?? data.length, variant: 'primary' },
+                    ...(devModelStats || []).slice(0, 3).map((s: any): { label: string; value: any; variant: SummaryVariant; active: boolean; onClick: () => void } => ({
                         label: s.type,
                         value: s.value,
-                        color: '#52c41a',
+                        variant: 'info',
+                        active: statFilter.includes(s.type),
                         onClick: () => {
-                            setSearchFields({});
-                            setQuery(prev => ({ ...prev, page: 1, filters: { Type: [s.type] } } as any))
+                            setStatFilter(prev =>
+                                prev.includes(s.type)
+                                    ? prev.filter(t => t !== s.type)
+                                    : [...prev, s.type]
+                            );
+                            setQuery(prev => ({ ...prev, page: 1 }));
                         },
                     })),
                 ]}

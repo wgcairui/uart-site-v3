@@ -6,6 +6,7 @@ import { Card, Row, Col, DatePicker, Table, Space, Button, Form, Popconfirm, mes
 import dayjs from "dayjs"
 import { generateTableKey, getColumnSearchProp, tableColumnsFilter } from "@/lib/utils/tableCommon";
 import { usePromise } from "@/lib/hooks/usePromise";
+import { PageSummary } from "@/components/common/PageSummary";
 
 import { PaginationReq, V2ListResponse } from "@/types";
 
@@ -22,7 +23,7 @@ const Alarm: React.FC = () => {
         const { data } = await getAlarm(dates[0].format("YYYY/MM/DD H:m:s"), dates[1].format("YYYY/MM/DD H:m:s"), pageReq)
         return data as unknown as V2ListResponse<alarms>
     }, { items: [], pagination: { total: 0, page: 1, pageSize: 20, totalPages: 0, hasNext: false, hasPrev: false } }, [dates, pageReq.page, pageReq.pageSize])
-    const alarms = data.items;
+    const alarms = data?.items ?? [];
 
 
 
@@ -67,6 +68,14 @@ const Alarm: React.FC = () => {
 
     return (
         <>
+            <PageSummary
+                items={[
+                    { label: '告警总数', value: alarms.length, variant: 'primary' },
+                    { label: '未确认', value: alarms.filter(a => !a.isOk).length, variant: 'warning' },
+                    { label: '已确认', value: alarms.filter(a => a.isOk).length, variant: 'success' },
+                    { label: '类型数', value: pieData.length, variant: 'info' },
+                ]}
+            />
             <Form layout="inline" style={{ margin: 8 }}>
                 <Form.Item label="选择时间区间">
                     <DatePicker.RangePicker defaultValue={dates as any} onChange={(value) => setDates(value as any)} />

@@ -7,6 +7,7 @@ import { useUserStore } from "@/lib/store/userStore";
 import { devTypeIcon, IconFont } from "@/components/common/IconFont";
 import { CheckCircleFilled, WarningFilled, EyeFilled, EditFilled, DeleteFilled, DownOutlined } from "@ant-design/icons";
 import { DevCard } from "@/components/data/devCard";
+import { PageSummary } from "@/components/common/PageSummary";
 import Link from "next/link";
 import { useSearchParams, useRouter } from "next/navigation";
 import dayjs from "dayjs";
@@ -83,6 +84,22 @@ const UserIndex: React.FC = (props) => {
     return (
         <Row style={{ paddingBottom: 24 }}>
             <Col span={24} lg={18}>
+                <PageSummary
+                    items={[
+                        { label: '网关总数', value: terminals.length, variant: 'primary' },
+                        {
+                            label: '在线',
+                            value: terminals.filter(t => t.online).length,
+                            variant: 'success',
+                        },
+                        {
+                            label: '离线',
+                            value: terminals.filter(t => !t.online).length,
+                            variant: 'warning',
+                        },
+                        { label: '挂载设备', value: mountDevs.length, variant: 'info' },
+                    ]}
+                />
                 <Tabs activeKey={defalutKey} onTabClick={(key: any) => switchTab(key)} items={[
                     {
                         key: 'dev',
