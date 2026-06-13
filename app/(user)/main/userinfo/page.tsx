@@ -100,7 +100,7 @@ const UserInfo: React.FC = props => {
             />
             <Row justify="center" align="middle">
                 <Col span={24} md={12} style={{padding:12}}>
-                    <Space direction="vertical">
+                    <Space orientation="vertical">
                         <Divider plain>用户信息</Divider>
                         <p>修改用户信息请使用小程序操作</p>
                         <Descriptions title={user.user}>
