@@ -37,7 +37,7 @@ export const NodeDetail: React.FC = () => {
 
     const { data: nodes } = usePromise<any[]>(async () => {
         const el = await getNodes()
-        return el.data?.items || el.data || []
+        return Array.isArray(el.data) ? el.data : []
     }, [] as any[])
 
     const node = useMemo(

@@ -31,7 +31,7 @@ import {
 import { RotateTokenModal } from '@/components/node/RotateTokenModal'
 import { usePromise } from '@/lib/hooks/usePromise'
 import { generateTableKey, tableConfig } from '@/lib/utils/tableCommon'
-import { PaginationReq, V2ListResponse } from '@/types'
+import { PaginationReq } from '@/types'
 
 dayjs.extend(relativeTime)
 dayjs.locale('zh-cn')
@@ -153,17 +153,17 @@ export const Nodes: React.FC = () => {
     const [query, setQuery] = useState<PaginationReq>({ page: 1, pageSize: 20, needTotal: true })
     const router = useRouter()
 
-    const { data: nodesData, fecth: refetch } = usePromise<V2ListResponse<Uart.NodeClient>>(async () => {
+    const { data: nodesData, fecth: refetch } = usePromise<Uart.NodeClient[]>(async () => {
         const el = await getNodes()
-        return (el.data || ({} as any)) as V2ListResponse<Uart.NodeClient>
-    }, { items: [], pagination: { total: 0, page: 1, pageSize: 20, totalPages: 0, hasNext: false, hasPrev: false } }, [])
+        // 后端实际返回数组（不是 V2ListResponse），做防御性 ?? 兜底
+        return Array.isArray(el.data) ? el.data : []
+    }, [] as Uart.NodeClient[], [])
 
-    const nodes = nodesData?.items ?? []
-    const pagination = nodesData?.pagination ?? { total: 0 }
+    const nodes = nodesData ?? []
 
-    // 顶部 status cards
+    // 顶部 status cards — 后端 nodes 列表不带 count/online 字段，用 MaxConnections 兜底
     const status = useMemo(
-        () => nodes.map((el: any) => ({ type: el.Name, value: el.count || 0 })),
+        () => nodes.map((el: any) => ({ type: el.Name, value: el.MaxConnections || 0 })),
         [nodes],
     )
 
@@ -340,8 +340,16 @@ export const Nodes: React.FC = () => {
                     dataIndex="MaxConnections"
                     title="最大连接数"
                 />
-                <Table.Column dataIndex="count" title="注册设备" />
-                <Table.Column dataIndex="online" title="在线设备" />
+                <Table.Column
+                    dataIndex="count"
+                    title="注册设备"
+                    render={(v) => v ?? <span style={{ color: '#b0b8c8' }}>—</span>}
+                />
+                <Table.Column
+                    dataIndex="online"
+                    title="在线设备"
+                    render={(v) => v ?? <span style={{ color: '#b0b8c8' }}>—</span>}
+                />
                 <Table.Column
                     key="auth"
                     title="鉴权状态"
