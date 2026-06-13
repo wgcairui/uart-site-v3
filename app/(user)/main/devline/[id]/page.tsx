@@ -1,12 +1,11 @@
 'use client'
 
-import { ApartmentOutlined, HomeOutlined } from "@ant-design/icons";
-import { Breadcrumb, Card, Empty, Spin } from "antd";
+import { Card, Empty, Spin } from "antd";
 import React, { Suspense, useEffect, useState } from "react";
 import { useUserStore } from "@/lib/store/userStore";
 import { useSearchParams } from "next/navigation";
-import { devTypeIcon } from "@/components/common/IconFont";
 import { TerminalMountDevNameLine } from "@/components/terminal/TerminalMountDevNameLine";
+import { PageHeader } from "@/components/common/PageHeader";
 
 function DevLineInner({ params }: { params: { id: string } }) {
 
@@ -30,28 +29,21 @@ function DevLineInner({ params }: { params: { id: string } }) {
     }, [id, terminals])
 
     const search = useSearchParams()
+    const dataName = search.get("name") || ''
 
     return (
         (!terminal || !mountDev) ? <Empty />
             : <>
-                <Breadcrumb>
-                    <Breadcrumb.Item href="/">
-                        <HomeOutlined />
-                    </Breadcrumb.Item>
-                    <Breadcrumb.Item href={'/main/terminal/' + terminal?.DevMac}>
-                        <ApartmentOutlined />
-                        <span>{terminal?.name}</span>
-                    </Breadcrumb.Item>
-                    <Breadcrumb.Item href={'/main/dev/' + id}>
-                        {mountDev ? devTypeIcon[mountDev!.Type] : <Spin />}
-                        <span>{mountDev?.mountDev || ''}</span>
-                    </Breadcrumb.Item>
-                    <Breadcrumb.Item>
-                        {search.get("name") || ''}
-                    </Breadcrumb.Item>
-                </Breadcrumb>
+                <PageHeader
+                    title={dataName ? `${mountDev.mountDev} - ${dataName}` : mountDev.mountDev}
+                    breadcrumb={[
+                        { title: '首页', href: '/main' },
+                        { title: terminal.name, href: `/main/terminal/${terminal.DevMac}` },
+                        { title: mountDev.mountDev, href: `/main/dev/${id}` },
+                    ]}
+                />
                 <Card>
-                    <TerminalMountDevNameLine mac={terminal.DevMac} pid={mountDev.pid} name={search.get("name") || ''}></TerminalMountDevNameLine>
+                    <TerminalMountDevNameLine mac={terminal.DevMac} pid={mountDev.pid} name={dataName}></TerminalMountDevNameLine>
                 </Card>
             </>
     )

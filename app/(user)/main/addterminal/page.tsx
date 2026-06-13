@@ -1,10 +1,10 @@
 'use client'
 
 import React, { useState } from "react";
-import { HomeOutlined } from "@ant-design/icons";
-import { Breadcrumb, Divider, Card, Form, Button, Input, message, Spin, Descriptions, Tag, Table, Modal, Space } from "antd";
+import { Divider, Card, Form, Button, Input, message, Spin, Descriptions, Tag, Table, Modal, Space } from "antd";
 import { addUserTerminal, getTerminalOnline } from "@/lib/api/fetch";
 import { useNav } from "@/lib/hooks/useNav";
+import { PageHeader } from "@/components/common/PageHeader";
 
 const AddTerminal: React.FC = () => {
 
@@ -62,15 +62,10 @@ const AddTerminal: React.FC = () => {
 
     return (
         <>
-            <Breadcrumb>
-                <Breadcrumb.Item href="/">
-                    <HomeOutlined />
-                </Breadcrumb.Item>
-                <Breadcrumb.Item >
-                    添加设备
-                </Breadcrumb.Item>
-            </Breadcrumb>
-            <Divider />
+            <PageHeader
+                title="添加设备"
+                breadcrumb={[{ title: '首页', href: '/main' }]}
+            />
             <Card>
                 <Form>
                     <Form.Item

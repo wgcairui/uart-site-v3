@@ -8,6 +8,8 @@ import { useUserStore } from "@/lib/store/userStore";
 import { prompt } from "@/lib/utils/prompt";
 import { RegexMail, RegexTel } from "@/lib/utils/util";
 import { getUserAlarmSetup, modifyUserAlarmSetupTel, mpTicket, wpTicket } from "@/lib/api/fetch";
+import { PageHeader } from "@/components/common/PageHeader";
+import { PageSummary } from "@/components/common/PageSummary";
 import '../../userinfo.css'
 
 /**
@@ -83,6 +85,18 @@ const UserInfo: React.FC = props => {
 
     return (
         <>
+            <PageHeader
+                title={user.name || user.user}
+                breadcrumb={[{ title: '首页', href: '/main' }]}
+            />
+            <PageSummary
+                items={[
+                    { label: '账号', value: user.user, variant: 'primary' },
+                    { label: '昵称', value: user.name || '-', variant: 'info' },
+                    { label: '电话', value: user.tel || '-', variant: 'success' },
+                    { label: '邮箱', value: user.mail || '-', variant: 'warning' },
+                ]}
+            />
             <Row justify="center" align="middle">
                 <Col span={24} md={12} style={{padding:12}}>
                     <Space direction="vertical">

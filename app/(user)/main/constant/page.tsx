@@ -9,6 +9,7 @@ import { ProtocolAlarmStatUser } from "@/components/protocol/ProtocolAlarmStatUs
 import { ProtocolShowTagUser } from "@/components/protocol/ProtocolShowTagUser";
 import { ProtocolThresholdUser } from "@/components/protocol/ProtocolThresholdUser";
 import { usePromise } from "@/lib/hooks/usePromise";
+import { PageHeader } from "@/components/common/PageHeader";
 
 
 const UserConstant: FC = () => {
@@ -29,7 +30,10 @@ const UserConstant: FC = () => {
     return (
         mountDev ?
             <div style={{padding:30}}>
-                <h2>{mountDev.protocol}</h2>
+                <PageHeader
+                    title={mountDev.protocol}
+                    breadcrumb={[{ title: '首页', href: '/main' }]}
+                />
                 <Tabs items={[
                     {
                         key: 'show',
