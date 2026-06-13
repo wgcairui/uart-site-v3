@@ -6,6 +6,7 @@
 components/
 ├── common/                     # 通用基础组件
 │   ├── PageHeader.tsx          # 统一页面头部（标题 + 面包屑 + 返回 + extra 操作）
+│   ├── PageSummary.tsx         # 统一汇总卡（横排 variant 配色 + 多选叠加筛选）
 │   ├── StatCard.tsx            # 数字统计卡片（顶部彩色边框 + icon + 可点击）
 │   ├── SectionTitle.tsx        # 带 icon 的 section 标题
 │   ├── KVList.tsx              # Key-Value 列表（替代重复 Descriptions 渲染）
@@ -79,6 +80,14 @@ components/
 ```
 
 **不要省略**，否则会在 Server Component 环境中报错。
+
+### 页面设计三段式
+
+所有 admin/user 端页面统一使用 **PageHeader + PageSummary + 内容** 三段式（见顶层 CLAUDE.md）。
+
+- `PageHeader`：标题 + 面包屑 + 右上 extra 操作 + 可选 back 按钮
+- `PageSummary`：横排汇总卡，6 种 variant 语义色，可叠加筛选
+- 内容：Table / Card 网格 / Form 等
 
 ### 命名规范
 
