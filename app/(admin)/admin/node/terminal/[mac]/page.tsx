@@ -13,6 +13,7 @@ import { TerminalRunLog } from "@/components/terminal/TerminalRunLog";
 import { TerminalDevPage } from "@/components/terminal/TerminalDevPage";
 import { LogTerminal } from "@/components/log/LogTerminal";
 import { AlarmLogTab } from "@/components/log/AlarmLogTab";
+import { TerminalTimelineTab } from "@/components/log/TerminalTimelineTab";
 import { useTerminalUpdate } from "@/lib/hooks/useTerminalData";
 import { DevRealTimeLog } from "@/components/data/devRealTimeLog";
 import { TerminalCurData, TerminalHistoryData } from "./TerminalDataTab";
@@ -59,6 +60,7 @@ function TerminalDetailPageInner() {
         { key: 'log', label: '日志', children: <TerminalRunLog mac={data.DevMac} /> },
         { key: 'terminalLog', label: '设备通信日志', children: <LogTerminal mac={data.DevMac} /> },
         { key: 'alarm', label: '告警日志', children: <AlarmLogTab mac={data.DevMac} /> },
+        { key: 'timeline', label: '时间线', children: <TerminalTimelineTab mac={data.DevMac} /> },
     ];
 
     const mountDevTabs = (data.mountDevs || []).map((dev: any) => ({

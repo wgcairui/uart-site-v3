@@ -481,6 +481,89 @@ declare namespace Uart {
         createdAt?: Date;
         timeStamp?: number;  // 后端实际返回的毫秒时间戳，上游未声明
     }
+
+    // ─── terminal timeline (server feat/log-terminal-timeline @ 0cc02dd) ───
+    // 字段名权威源: midwayuartserver/src/common/types/log-event.schema.ts (commit 5ab6f10)
+    // 前端不引入 zod runtime，TS discriminated union 镜像 server zod schema
+
+    type TerminalLogKind =
+        | 'TERMINAL_CONNECT'
+        | 'TERMINAL_OFFLINE'
+        | 'DTU_OPERATION'
+        | 'DEVICE_OPERATION'
+        | 'QUERY_TIMEOUT'
+        | 'PARTIAL_INSTRUCT_TIMEOUT'
+        | 'ALARM_TRIGGER'
+        | 'ALARM_RECOVER'
+        | 'DATA_EXCEPTION'
+        | 'PARSE_NULL'
+        | 'PARSE_ALARM';
+
+    type TerminalSidecarKind =
+        | 'NODE_CONNECT'
+        | 'NODE_DISCONNECT'
+        | 'NODE_INVALID'
+        | 'NODE_TCP_FAIL'
+        | 'DTU_BUSY_TRUE'
+        | 'DTU_BUSY_FALSE';
+
+    type TerminalEventKind = TerminalLogKind | TerminalSidecarKind;
+
+    /** terminalEvents 通用基础字段（payload schema 用） */
+    interface TerminalEventBasePayload {
+        mac: string;
+        timeStamp: number;
+        nodeName?: string;
+        nodeIp?: string;
+    }
+
+    /** 各 kind 对应 payload schema — 镜像 server zod discriminatedUnion */
+    type TerminalEventPayloadUnion =
+        | (TerminalEventBasePayload & { kind: 'TERMINAL_CONNECT'; protocol?: string; pid?: number; mountDev?: string })
+        | (TerminalEventBasePayload & { kind: 'TERMINAL_OFFLINE'; lastSeen: number; reason: string })
+        | (TerminalEventBasePayload & { kind: 'DTU_OPERATION'; op: string; target?: string; args?: unknown })
+        | (TerminalEventBasePayload & { kind: 'DEVICE_OPERATION'; instruct: string; mountDev?: string; protocol?: string; pid?: number })
+        | (TerminalEventBasePayload & { kind: 'QUERY_TIMEOUT' | 'PARTIAL_INSTRUCT_TIMEOUT'; instruct?: string; timeoutMs: number; partial: boolean })
+        | (TerminalEventBasePayload & { kind: 'ALARM_TRIGGER' | 'ALARM_RECOVER'; rule: string; value: number | string; threshold?: number | string; protocol?: string; devName?: string; alarmType?: string })
+        | (TerminalEventBasePayload & { kind: 'DATA_EXCEPTION'; reason: string; rawLen?: number })
+        | (TerminalEventBasePayload & { kind: 'PARSE_NULL'; instruct?: string; rawLen?: number })
+        | (TerminalEventBasePayload & { kind: 'PARSE_ALARM'; instruct: string; protocol?: string; pid?: number; devName?: string });
+
+    /** terminalSidecar payload — node 级事件，mac 允许空字符串 */
+    type TerminalSidecarPayloadUnion =
+        | { kind: 'NODE_CONNECT'; mac: string; timeStamp: number; nodeId: string }
+        | { kind: 'NODE_DISCONNECT'; mac: string; timeStamp: number; nodeId: string; reason?: string }
+        | { kind: 'NODE_INVALID'; mac: string; timeStamp: number; sourceIp?: string; reason: string }
+        | { kind: 'NODE_TCP_FAIL'; mac: string; timeStamp: number; error: string }
+        | (TerminalEventBasePayload & { kind: 'DTU_BUSY_TRUE' | 'DTU_BUSY_FALSE'; consecutiveN: number });
+
+    type TerminalTimelinePayload = TerminalEventPayloadUnion | TerminalSidecarPayloadUnion;
+
+    interface TerminalTimelineItem {
+        _id: string;
+        mac: string;
+        timeStamp: number;
+        kind: TerminalEventKind;
+        payload: TerminalTimelinePayload;
+        nodeName?: string;
+        nodeIp?: string;
+        source: 'event' | 'sidecar';
+        /** server zod safeParse 失败时填充，前端做兜底展示 */
+        invalidPayload?: { kind: string; issues: unknown[] };
+        legacyCollection?: 'log.terminals' | 'log.uartterminaldatatransfinites' | 'log.nodes' | 'log.dtubusy';
+        legacyType?: string;
+    }
+
+    /** Timeline 查询请求 — server DTO 镜像 */
+    interface TerminalTimelineReq {
+        mac: string;
+        startTs: number;
+        endTs: number;          // 上限 31 天（server pagination.helper 强制）
+        kinds?: TerminalEventKind[];
+        includeNodeEvents?: boolean;  // 默认 true
+        page: number;
+        pageSize: number;       // 默认 50
+    }
     interface logTerminaluseBytes extends id {
         mac: string;
         date: string;

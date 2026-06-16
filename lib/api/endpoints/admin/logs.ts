@@ -23,6 +23,30 @@ export const logwxsubscribes = (start: string, end: string, query?: PaginationRe
   Post<universalResult<V2ListResponse<Uart.WX.wxsubscribeMessage>>>('/api/v2/admin/logs/wx-subscribes', { startTs: new Date(start).getTime(), endTs: new Date(end).getTime(), ...query })
 export const logterminalAggs = (mac: string, start: string, end: string, query?: PaginationReq) =>
   Post<universalResult<V2ListResponse<logAggs>>>('/api/v2/admin/logs/terminal-aggs', { startTs: new Date(start).getTime(), endTs: new Date(end).getTime(), ...query, filters: { mac, ...(query?.filters || {}) } })
+
+/** admin terminal timeline — server feat/log-terminal-timeline @ 0cc02dd */
+export interface TerminalTimelineQuery extends PaginationReq {
+  kinds?: Uart.TerminalEventKind[]
+  includeNodeEvents?: boolean
+}
+export const logTerminalTimeline = (
+  mac: string,
+  start: string | number,
+  end: string | number,
+  query?: TerminalTimelineQuery,
+) =>
+  Post<universalResult<V2ListResponse<Uart.TerminalTimelineItem>>>(
+    '/api/v2/admin/logs/terminal/timeline',
+    {
+      mac,
+      startTs: typeof start === 'string' ? new Date(start).getTime() : start,
+      endTs: typeof end === 'string' ? new Date(end).getTime() : end,
+      ...(query?.kinds?.length ? { kinds: query.kinds } : {}),
+      ...(query?.includeNodeEvents !== undefined ? { includeNodeEvents: query.includeNodeEvents } : {}),
+      page: query?.page ?? 1,
+      pageSize: query?.pageSize ?? 50,
+    },
+  )
 export const logUserAggs = (user: string, start: number, end: number, query?: PaginationReq) =>
   Post<universalResult<V2ListResponse<logAggs>>>('/api/v2/admin/logs/user-aggs', { startTs: start, endTs: end, ...query, filters: { user, ...(query?.filters || {}) } })
 
