@@ -16,6 +16,7 @@ import React, { useEffect, useMemo, useState } from 'react'
 import {
     Button,
     Card,
+    Checkbox,
     DatePicker,
     Descriptions,
     Drawer,
@@ -94,6 +95,10 @@ export const ServerErrorsPage: React.FC = () => {
         dayjs().subtract(24, 'hour'),
         dayjs(),
     ])
+    // 噪音过滤默认开启: 5xx only / 业务 URL / 非 GET
+    const [hideNonServerErrors, setHideNonServerErrors] = useState(true)
+    const [hideInfraPolling, setHideInfraPolling] = useState(true)
+    const [hideClientSide4xx, setHideClientSide4xx] = useState(true)
     const [filters, setFilters] = useState<FilterState>(EMPTY_FILTER)
     const [page, setPage] = useState(1)
     const [pageSize, setPageSize] = useState(20)
@@ -106,7 +111,7 @@ export const ServerErrorsPage: React.FC = () => {
     const [detailLoading, setDetailLoading] = useState(false)
     const [detailRecord, setDetailRecord] = useState<Uart.ServerErrorRecord | null>(null)
 
-    // 触发刷新的签名 (filters + range + page)
+    // 触发刷新的签名 (filters + range + page + 噪音 toggle)
     const querySig = useMemo(
         () =>
             JSON.stringify({
@@ -115,8 +120,11 @@ export const ServerErrorsPage: React.FC = () => {
                 f: filters,
                 page,
                 pageSize,
+                hideNonServerErrors,
+                hideInfraPolling,
+                hideClientSide4xx,
             }),
-        [range, filters, page, pageSize],
+        [range, filters, page, pageSize, hideNonServerErrors, hideInfraPolling, hideClientSide4xx],
     )
 
     const fetchList = async () => {
@@ -127,6 +135,10 @@ export const ServerErrorsPage: React.FC = () => {
             if (filters.handler) search.handler = filters.handler
             if (filters.errorMessage) search.errorMessage = filters.errorMessage
             if (filters.url) search.url = filters.url
+            // 默认隐藏 socket.io polling + 静态资源 (url 不以 /api/v2 开头)
+            if (hideInfraPolling && !filters.url) {
+                search.url = '^/api/v2'
+            }
 
             // 拼 filters (exact $in, service 端会转 number for status)
             const f: Record<string, string[]> = {}
@@ -136,6 +148,14 @@ export const ServerErrorsPage: React.FC = () => {
             if (filters.errorName.length) f.errorName = filters.errorName
             if (filters.userId) f.userId = [filters.userId]
             if (filters.requestId) f.requestId = [filters.requestId]
+            // 默认只看 5xx
+            if (hideNonServerErrors && !filters.status.length) {
+                f.status = ['500', '502', '503', '504']
+            }
+            // 默认排除 GET (polling/cron/heartbeat 多是 GET)
+            if (hideClientSide4xx && !filters.method.length) {
+                f.method = ['POST', 'PUT', 'PATCH', 'DELETE']
+            }
 
             const res = await logservererrors({
                 startTs: range[0].valueOf(),
@@ -243,6 +263,9 @@ export const ServerErrorsPage: React.FC = () => {
 
     const handleReset = () => {
         setFilters(EMPTY_FILTER)
+        setHideNonServerErrors(true)
+        setHideInfraPolling(true)
+        setHideClientSide4xx(true)
         setPage(1)
     }
 
@@ -412,6 +435,36 @@ export const ServerErrorsPage: React.FC = () => {
                         </Button>
                         <Button onClick={handleReset}>重置</Button>
                         <Button icon={<ReloadOutlined />} onClick={fetchList} />
+                    </Space>
+
+                    <Space size={8} style={{ marginLeft: 8 }}>
+                        <Checkbox
+                            checked={hideNonServerErrors}
+                            onChange={(e) => {
+                                setHideNonServerErrors(e.target.checked)
+                                setPage(1)
+                            }}
+                        >
+                            只看 5xx
+                        </Checkbox>
+                        <Checkbox
+                            checked={hideInfraPolling}
+                            onChange={(e) => {
+                                setHideInfraPolling(e.target.checked)
+                                setPage(1)
+                            }}
+                        >
+                            隐藏 socket / 静态资源
+                        </Checkbox>
+                        <Checkbox
+                            checked={hideClientSide4xx}
+                            onChange={(e) => {
+                                setHideClientSide4xx(e.target.checked)
+                                setPage(1)
+                            }}
+                        >
+                            排除 GET
+                        </Checkbox>
                     </Space>
                 </Space>
             </Card>

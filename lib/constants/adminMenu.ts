@@ -58,6 +58,7 @@ export const ADMIN_MENU: AdminMenuGroup[] = [
       { key: 'log-mail', to: '/admin/log/mail', text: '邮件日志', icon: '' },
       { key: 'log-sms', to: '/admin/log/sms', text: '短信日志', icon: '' },
       { key: 'log-wxsubscribe', to: '/admin/log/wxsubscribe', text: '微信告警事件日志', icon: '' },
+      { key: 'log-server-errors', to: '/admin/log/server-errors', text: '服务端错误日志', icon: '⚠' },
     ],
   },
 ]
