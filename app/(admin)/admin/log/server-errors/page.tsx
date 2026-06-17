@@ -135,11 +135,10 @@ export const ServerErrorsPage: React.FC = () => {
             if (filters.handler) search.handler = filters.handler
             if (filters.errorMessage) search.errorMessage = filters.errorMessage
             if (filters.url) search.url = filters.url
-            // 默认隐藏 socket.io polling + 静态资源
-            // server 端 buildMongoFilter 会把 ^ 锚点转义成字面 \^ → 无效
-            // 用子串匹配: 含 /api/v2 视为业务 endpoint, 排除 /client EIO polling + 静态资源
+            // 默认隐藏 socket.io polling + 静态资源 (url 不以 /api/v2 开头)
+            // server 端 helper fix (PR #32 commit 04ba815) 保留 ^ / $ 锚点, 子串匹配仍兼容
             if (hideInfraPolling && !filters.url) {
-                search.url = '/api/v2'
+                search.url = '^/api/v2'
             }
 
             // 拼 filters (exact $in, service 端会转 number for status)
