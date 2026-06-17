@@ -3,7 +3,7 @@
 import { Empty, Spin } from "antd";
 import React, { Suspense } from "react";
 import { useSearchParams } from "next/navigation";
-import { TerminalMountDevNameLine } from "@/components/TerminalMountDevNameLine";
+import { TerminalMountDevNameLine } from "@/components/terminal/TerminalMountDevNameLine";
 import { useToken } from "@/lib/hooks/useToken";
 
 /**

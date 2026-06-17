@@ -8,6 +8,8 @@ import { useUserStore } from "@/lib/store/userStore";
 import { prompt } from "@/lib/utils/prompt";
 import { RegexMail, RegexTel } from "@/lib/utils/util";
 import { getUserAlarmSetup, modifyUserAlarmSetupTel, mpTicket, wpTicket } from "@/lib/api/fetch";
+import { PageHeader } from "@/components/common/PageHeader";
+import { PageSummary } from "@/components/common/PageSummary";
 import '../../userinfo.css'
 
 /**
@@ -24,8 +26,9 @@ const UserInfo: React.FC = props => {
 
     useEffect(() => {
         getUserAlarmSetup().then(el => {
-            setTels(el.data.tels || [])
-            setMails(el.data.mails || [])
+            // 防御：试用模式或鉴权失败时 data 可能 undefined
+            setTels(el.data?.tels || [])
+            setMails(el.data?.mails || [])
         })
     }, [])
 
@@ -36,7 +39,7 @@ const UserInfo: React.FC = props => {
         Modal.info({
             title: type === 'wp' ? '小程序二维码' : '公众号二维码',
             content: (
-                <Image src={data}></Image>
+                <Image src={data || ''}></Image>
             )
         })
     }
@@ -83,9 +86,21 @@ const UserInfo: React.FC = props => {
 
     return (
         <>
+            <PageHeader
+                title={user.name || user.user}
+                breadcrumb={[{ title: '首页', href: '/main' }]}
+            />
+            <PageSummary
+                items={[
+                    { label: '账号', value: user.user, variant: 'primary' },
+                    { label: '昵称', value: user.name || '-', variant: 'info' },
+                    { label: '电话', value: user.tel || '-', variant: 'success' },
+                    { label: '邮箱', value: user.mail || '-', variant: 'warning' },
+                ]}
+            />
             <Row justify="center" align="middle">
                 <Col span={24} md={12} style={{padding:12}}>
-                    <Space direction="vertical">
+                    <Space orientation="vertical">
                         <Divider plain>用户信息</Divider>
                         <p>修改用户信息请使用小程序操作</p>
                         <Descriptions title={user.user}>

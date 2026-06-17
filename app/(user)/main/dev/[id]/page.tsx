@@ -3,10 +3,12 @@
 import React, { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { useUserStore } from "@/lib/store/userStore";
-import { Breadcrumb, Empty, Dropdown, Button, Menu } from "antd";
-import { ApartmentOutlined, DownOutlined, HomeOutlined } from '@ant-design/icons';
-import { TerminalDevPage } from "@/components/TerminalDevPage";
+import { Empty, Dropdown, Button } from "antd";
+import { ApartmentOutlined, DownOutlined } from '@ant-design/icons';
+import { TerminalDevPage } from "@/components/terminal/TerminalDevPage";
 import { useNav } from "@/lib/hooks/useNav";
+import { PageHeader } from "@/components/common/PageHeader";
+import { PageSummary } from "@/components/common/PageSummary";
 
 export default function Dev() {
 
@@ -33,39 +35,34 @@ export default function Dev() {
         (!terminal || !mountDev) ? <Empty />
             :
             <>
-                <Breadcrumb
+                <PageHeader
+                    title={mountDev.mountDev}
+                    extra={
+                        <Dropdown menu={{
+                            items: terminal.mountDevs.map(({ mountDev, pid }) => ({
+                                key: String(pid),
+                                label: <Button type="link" onClick={() => nav('/main/dev/' + terminal.DevMac + pid)}>{mountDev}</Button>
+                            }))
+                        }}>
+                            <Button>
+                                切换设备 <DownOutlined />
+                            </Button>
+                        </Dropdown>
+                    }
+                    breadcrumb={[
+                        { title: '首页', href: '/main' },
+                        { title: terminal.name, href: `/main/terminal/${terminal.DevMac}` },
+                    ]}
+                />
+                <PageSummary
                     items={[
-                        { title: <HomeOutlined /> },
+                        { label: '设备ID', value: terminal.DevMac, variant: 'primary' },
+                        { label: '挂载设备名', value: mountDev.mountDev, variant: 'info' },
+                        { label: '协议', value: mountDev.protocol, variant: 'purple' },
                         {
-                            title: (
-                                <Dropdown menu={{
-                                    items: terminals.map(({ DevMac, name }) => ({
-                                        key: DevMac,
-                                        label: <Button type="link" onClick={() => nav('/main/terminal/' + DevMac)}>{name}</Button>
-                                    }))
-                                }}>
-                                    <a onClick={e => e.preventDefault()}>
-                                        <ApartmentOutlined style={{ marginRight: 12 }} />
-                                        {terminal.name}
-                                        <DownOutlined />
-                                    </a>
-                                </Dropdown>
-                            )
-                        },
-                        {
-                            title: (
-                                <Dropdown menu={{
-                                    items: terminal.mountDevs.map(({ mountDev, pid }) => ({
-                                        key: pid,
-                                        label: <Button type="link" onClick={() => nav('/main/dev/' + terminal.DevMac + pid)}>{mountDev}</Button>
-                                    }))
-                                }}>
-                                    <a onClick={e => e.preventDefault()}>
-                                        {mountDev?.mountDev}
-                                        <DownOutlined />
-                                    </a>
-                                </Dropdown>
-                            )
+                            label: '网关状态',
+                            value: terminal.online ? '在线' : '离线',
+                            variant: terminal.online ? 'success' : 'warning',
                         },
                     ]}
                 />

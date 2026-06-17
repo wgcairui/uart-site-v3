@@ -5,10 +5,11 @@ import { FC, Suspense } from "react";
 import { useUserStore } from "@/lib/store/userStore";
 import { useSearchParams } from "next/navigation";
 import { getTerminalPidProtocol } from "@/lib/api/fetch";
-import { ProtocolAlarmStatUser } from "@/components/ProtocolAlarmStatUser";
-import { ProtocolShowTagUser } from "@/components/ProtocolShowTagUser";
-import { ProtocolThresholdUser } from "@/components/ProtocolThresholdUser";
+import { ProtocolAlarmStatUser } from "@/components/protocol/ProtocolAlarmStatUser";
+import { ProtocolShowTagUser } from "@/components/protocol/ProtocolShowTagUser";
+import { ProtocolThresholdUser } from "@/components/protocol/ProtocolThresholdUser";
 import { usePromise } from "@/lib/hooks/usePromise";
+import { PageHeader } from "@/components/common/PageHeader";
 
 
 const UserConstant: FC = () => {
@@ -29,7 +30,10 @@ const UserConstant: FC = () => {
     return (
         mountDev ?
             <div style={{padding:30}}>
-                <h2>{mountDev.protocol}</h2>
+                <PageHeader
+                    title={mountDev.protocol}
+                    breadcrumb={[{ title: '首页', href: '/main' }]}
+                />
                 <Tabs items={[
                     {
                         key: 'show',

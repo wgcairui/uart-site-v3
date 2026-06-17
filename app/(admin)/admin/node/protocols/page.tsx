@@ -8,9 +8,12 @@ import { usePromise } from "@/lib/hooks/usePromise";
 import { ColumnsType } from "antd/lib/table";
 import { useNav } from "@/lib/hooks/useNav";
 import { MoreOutlined } from "@ant-design/icons";
-import { MyCopy } from "@/components/myCopy";
+import { MyCopy } from "@/components/common/MyCopy";
+import { PageHeader } from "@/components/common/PageHeader";
+import { PageSummary, type SummaryVariant } from "@/components/common/PageSummary";
 import { downJson } from "@/lib/utils/util";
 import { getProtocol } from "@/lib/api/fetch";
+import { PaginationReq, V2ListResponse } from "@/types";
 
 interface props {
     ok?: (protocol: string) => void
@@ -87,10 +90,16 @@ export const Protocols: React.FC = () => {
 
     const nav = useNav()
 
-    const [query, setQuery] = useState({ page: 1, pageSize: 20, needTotal: true })
+    const [query, setQuery] = useState<PaginationReq>({ page: 1, pageSize: 20, needTotal: true })
     const [searchFields, setSearchFields] = useState<Record<string, string>>({})
+    /** 协议类型 stat 筛选：多选叠加（点击切换） */
+    const [statFilter, setStatFilter] = useState<string[]>([])
     const [isAddProtocolVisible, setIsAddProtocolVisible] = useState(false)
-    const apiQuery = { ...query, search: searchFields }
+    const apiQuery: PaginationReq = {
+        ...query,
+        search: searchFields,
+        filters: { ...(query.filters || {}), ...(statFilter.length ? { ProtocolType: statFilter } : {}) },
+    }
 
     const { data: protocolData, loading, fecth } = usePromise<any>(async () => {
         const el = await getProtocols(apiQuery);
@@ -139,23 +148,30 @@ export const Protocols: React.FC = () => {
 
     return (
         <>
-            <Divider plain>所有协议 / {pagination.total ?? data.length}</Divider>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10, margin: '16px 0' }}>
-                {protocolStats.map((item: any) => (
-                    <Card size="small" key={item.type}
-                        onClick={() => {
-                            // click stat card → filter by ProtocolType server-side
-                            setSearchFields({})
-                            setQuery(prev => ({ ...prev, page: 1, filters: { ProtocolType: [item.type] } } as any))
-                        }}
-                        hoverable>
-                        <div>{item.type}: {item.value}</div>
-                    </Card>
-                ))}
-            </div>
-            <div style={{ marginBottom: 16 }}>
-                <Button type="primary" onClick={() => setIsAddProtocolVisible(true)}>添加协议</Button>
-            </div>
+            <PageHeader
+                title="协议管理"
+                extra={<Button type="primary" onClick={() => setIsAddProtocolVisible(true)}>添加协议</Button>}
+            />
+            <PageSummary
+                items={[
+                    { label: '协议总数', value: pagination.total ?? data.length, variant: 'primary' },
+                    ...(protocolStats || []).slice(0, 3).map((s: any): { label: string; value: any; variant: SummaryVariant; active: boolean; onClick: () => void } => ({
+                        label: s.type,
+                        value: s.value,
+                        variant: 'info',
+                        active: statFilter.includes(s.type),
+                        onClick: () => {
+                            // 多选叠加：再次点击移除
+                            setStatFilter(prev =>
+                                prev.includes(s.type)
+                                    ? prev.filter(t => t !== s.type)
+                                    : [...prev, s.type]
+                            )
+                            setQuery(prev => ({ ...prev, page: 1 }))
+                        },
+                    })),
+                ]}
+            />
             <Modal
                 title="添加协议"
                 open={isAddProtocolVisible}
@@ -175,8 +191,8 @@ export const Protocols: React.FC = () => {
                 dataSource={generateTableKey(data, '_id')}
                 scroll={{ x: 1000 }}
                 pagination={{
-                    current: query.page,
-                    pageSize: query.pageSize,
+                    current: query.page ?? 1,
+                    pageSize: query.pageSize ?? 20,
                     total: pagination.total,
                     showTotal: (t) => `共 ${t} 条`,
                     showSizeChanger: true,

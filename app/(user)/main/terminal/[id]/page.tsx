@@ -7,8 +7,10 @@ import React from "react";
 import { useParams } from "next/navigation";
 import { getTerminal } from "@/lib/api/fetch";
 
-import { TerminalMountDevs } from "@/components/TerminalMountDevs";
+import { TerminalMountDevs } from "@/components/terminal/TerminalMountDevs";
 import { usePromise } from "@/lib/hooks/usePromise";
+import { PageHeader } from "@/components/common/PageHeader";
+import { PageSummary } from "@/components/common/PageSummary";
 
 /**
  * 透传网关设备详情页
@@ -30,13 +32,30 @@ export default function Terminal() {
         !terminal ? <Empty />
             :
             <>
-                <Breadcrumb
+                <PageHeader
+                    title={terminal.name || id}
+                    breadcrumb={[{ title: '首页', href: '/main' }]}
+                />
+                <PageSummary
                     items={[
-                        { title: <HomeOutlined /> },
-                        { title: <><ApartmentOutlined /><span>{terminal?.name}</span></> },
+                        { label: '设备ID', value: terminal.DevMac, variant: 'primary' },
+                        {
+                            label: '状态',
+                            value: terminal.online ? '在线' : '离线',
+                            variant: terminal.online ? 'success' : 'warning',
+                        },
+                        {
+                            label: '挂载设备',
+                            value: terminal.mountDevs?.length || 0,
+                            variant: 'info',
+                        },
+                        {
+                            label: '上线时间',
+                            value: dayjs(terminal.uptime).format('YY-M-D H:m:s'),
+                            variant: 'purple',
+                        },
                     ]}
                 />
-                <Divider />
                 <Card style={{ overflow: "auto", height: "100%",marginBottom:36 }}>
                     <Row>
                         <Col span={24} md={12}>

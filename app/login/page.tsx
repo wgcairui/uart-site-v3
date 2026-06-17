@@ -4,7 +4,7 @@ import React, { useEffect, useState } from "react";
 import { AES } from "crypto-js";
 import { Layout, Image, Dropdown, Row, Col, Card, Tabs, Form, Input, Button, message, Spin } from "antd";
 import { UserOutlined, LockOutlined, WechatFilled } from "@ant-design/icons";
-import { IconFont } from "@/components/IconFont";
+import { IconFont } from "@/components/common/IconFont";
 import { getAuthUser, getLoginHash, login as loginApi } from "@/lib/api/fetch";
 import { universalResult } from "@/types";
 import { useNav } from "@/lib/hooks/useNav";

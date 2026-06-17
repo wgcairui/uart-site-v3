@@ -1,11 +1,11 @@
 'use client'
 import { Button, Col, Row, Descriptions, Spin, Tabs, Modal, Divider, Form, Input, Tag, message } from "antd";
 import React, { useState, useMemo } from "react";
-import { TerminalsTable } from "@/components/TerminalsTable";
+import { TerminalsTable } from "@/components/terminal/TerminalsTable";
 import { getTerminalStats, addRegisterTerminal } from "@/lib/api/fetchRoot";
 import { usePromise } from "@/lib/hooks/usePromise";
 import { ModalConfirm } from "@/lib/utils/util";
-import { NodesSelects } from "@/components/NodesSelects";
+import { NodesSelects } from "@/components/node/NodesSelects";
 
 const TerminalAddDTU: React.FC = () => {
     const [mac, setMac] = useState<string>("");

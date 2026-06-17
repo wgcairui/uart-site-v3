@@ -5,13 +5,13 @@ import { Layout, Menu, Alert } from "antd";
 import './usermain.css'
 import Link from "next/link";
 import { useUserStore } from "@/lib/store/userStore";
-import { IconFont, devTypeIcon } from "@/components/IconFont";
+import { IconFont, devTypeIcon } from "@/components/common/IconFont";
 import { BindDev } from "@/lib/api/fetch";
 import { useNav } from "@/lib/hooks/useNav";
 import { subscribeEvent, unSubscribeEvent } from "@/lib/socket";
-import { UserDropDown } from "@/components/userDropDown";
+import { UserDropDown } from "@/components/common/UserDropdown";
 import { useToken } from "@/lib/hooks/useToken";
-import { AbsButton } from "@/components/absButton";
+import { AbsButton } from "@/components/layout/AbsButton";
 import dayjs from "dayjs";
 import { useRouter } from "next/navigation";
 

@@ -28,9 +28,10 @@ import {
     setNode,
     type NodeTokenPlain,
 } from '@/lib/api/fetchRoot'
-import { RotateTokenModal } from '@/components/Node/RotateTokenModal'
+import { RotateTokenModal } from '@/components/node/RotateTokenModal'
 import { usePromise } from '@/lib/hooks/usePromise'
 import { generateTableKey, tableConfig } from '@/lib/utils/tableCommon'
+import { PaginationReq } from '@/types'
 
 dayjs.extend(relativeTime)
 dayjs.locale('zh-cn')
@@ -149,16 +150,20 @@ export const Nodes: React.FC = () => {
         list?: NodeTokenPlain[] | null
         source: 'rotate' | 'create' | 'init'
     } | null>(null)
+    const [query, setQuery] = useState<PaginationReq>({ page: 1, pageSize: 20, needTotal: true })
     const router = useRouter()
 
-    const { data: nodes, fecth: refetch } = usePromise<any[]>(async () => {
+    const { data: nodesData, fecth: refetch } = usePromise<Uart.NodeClient[]>(async () => {
         const el = await getNodes()
-        return el.data?.items || el.data || []
-    }, [])
+        // 后端实际返回数组（不是 V2ListResponse），做防御性 ?? 兜底
+        return Array.isArray(el.data) ? el.data : []
+    }, [] as Uart.NodeClient[], [])
 
-    // 顶部 status cards
+    const nodes = nodesData ?? []
+
+    // 顶部 status cards — 后端 nodes 列表不带 count/online 字段，用 MaxConnections 兜底
     const status = useMemo(
-        () => nodes.map((el) => ({ type: el.Name, value: el.count || 0 })),
+        () => nodes.map((el: any) => ({ type: el.Name, value: el.MaxConnections || 0 })),
         [nodes],
     )
 
@@ -313,6 +318,20 @@ export const Nodes: React.FC = () => {
             <Table
                 dataSource={generateTableKey(nodes, '_id')}
                 {...tableConfig}
+                pagination={{
+                    current: query.page ?? 1,
+                    pageSize: query.pageSize ?? 20,
+                    total: nodes.length,
+                    showTotal: t => `共 ${t} 个节点`,
+                    showSizeChanger: true,
+                }}
+                onChange={pag => {
+                    setQuery(prev => ({
+                        ...prev,
+                        page: pag.current ?? prev.page ?? 1,
+                        pageSize: pag.pageSize ?? prev.pageSize ?? 20,
+                    }))
+                }}
             >
                 <Table.Column dataIndex="Name" title="节点名称" />
                 <Table.Column dataIndex="IP" title="节点 IP" />
@@ -321,8 +340,16 @@ export const Nodes: React.FC = () => {
                     dataIndex="MaxConnections"
                     title="最大连接数"
                 />
-                <Table.Column dataIndex="count" title="注册设备" />
-                <Table.Column dataIndex="online" title="在线设备" />
+                <Table.Column
+                    dataIndex="count"
+                    title="注册设备"
+                    render={(v) => v ?? <span style={{ color: '#b0b8c8' }}>—</span>}
+                />
+                <Table.Column
+                    dataIndex="online"
+                    title="在线设备"
+                    render={(v) => v ?? <span style={{ color: '#b0b8c8' }}>—</span>}
+                />
                 <Table.Column
                     key="auth"
                     title="鉴权状态"

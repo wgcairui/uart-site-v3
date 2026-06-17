@@ -12,8 +12,8 @@ import {
 import { ColumnsType } from "antd/lib/table";
 import { prompt } from "@/lib/utils/prompt";
 import { usePromise } from "@/lib/hooks/usePromise";
-import { MyCopy } from "@/components/myCopy";
-import { UserStat } from "@/components/UserStat";
+import { MyCopy } from "@/components/common/MyCopy";
+import { UserStat } from "@/components/data/UserStat";
 import { useNav } from "@/lib/hooks/useNav";
 import { PaginationReq } from "@/types";
 
