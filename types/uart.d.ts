@@ -564,6 +564,79 @@ declare namespace Uart {
         page: number;
         pageSize: number;       // 默认 50
     }
+
+    // ─── server error log (server feat/admin-server-errors 配套) ───
+    // 字段名权威源: midwayuartserver/src/module/log/entity/server-error-record.entity.ts
+    // 落库范围: 4xx + 5xx（除 401 TokenExpired + 400 MidwayValidation skip）
+    // TTL 30 天
+    // response header 回 X-Request-Id
+
+    /** 错误名枚举（高频） */
+    type ServerErrorName =
+        | 'TypeError'
+        | 'QueryFailedError'
+        | 'ValidationError'
+        | 'HttpException'
+        | 'MidwayValidation'
+        | string;  // 自由字符串兜底
+
+    /** 用户角色枚举（userGroup 5 值） */
+    type ServerErrorUserGroup = 'root' | 'admin' | 'user' | 'guest' | 'test';
+
+    /** HTTP method */
+    type ServerErrorMethod = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE' | string;
+
+    /** server-error record（17 字段，1:1 镜像 entity） */
+    interface ServerErrorRecord {
+        _id: string;
+        timeStamp: number;       // 落库 ms 时间戳
+        createdAt: Date;
+        requestId: string;        // UUID, X-Request-Id 回传
+        userId?: string;
+        userGroup?: ServerErrorUserGroup;
+        ip?: string;
+        method: ServerErrorMethod;
+        url: string;
+        handler?: string;         // Controller.method 路径
+        status: number;           // 4xx + 5xx
+        errorName: string;
+        errorMessage: string;     // max 2000
+        stack: string;            // max 20000, trimmed
+        params?: Record<string, any>;  // GET query, post-sanitize
+        body?: Record<string, any>;    // POST request.body, post-sanitize
+        /** extra.headers 在这里，顶层没 headers 字段 */
+        extra?: {
+            headers?: Record<string, string>;
+            [k: string]: any;
+        };
+        dropped?: 'persist_failed' | null;
+    }
+
+    /** list 请求 DTO — extends TimeRangePaginationReqDto 镜像 */
+    interface ServerErrorListReq {
+        startTs: number;
+        endTs: number;            // 上限 31 天
+        /** exact $in 过滤（白名单: status/method/userId/userGroup/errorName/requestId） */
+        filters?: {
+            status?: (number | string)[];
+            method?: ServerErrorMethod[];
+            userId?: string[];
+            userGroup?: ServerErrorUserGroup[];
+            errorName?: string[];
+            requestId?: string[];
+        };
+        /** regex 模糊（白名单: handler/errorMessage/url） */
+        search?: {
+            handler?: string;
+            errorMessage?: string;
+            url?: string;
+        };
+        /** sort 白名单: timeStamp/status/errorName/createdAt */
+        sortBy?: 'timeStamp' | 'status' | 'errorName' | 'createdAt';
+        sortOrder?: 'asc' | 'desc';
+        page?: number;            // 1-indexed
+        pageSize?: number;        // max 200
+    }
     interface logTerminaluseBytes extends id {
         mac: string;
         date: string;

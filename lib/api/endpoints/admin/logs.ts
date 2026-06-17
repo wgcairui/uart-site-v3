@@ -1,5 +1,5 @@
 // 管理员端 Logs API  (/api/v2/admin/logs)
-import { Post } from '@/lib/api/fetch'
+import { Post, Get } from '@/lib/api/fetch'
 import { universalResult, PaginationReq, V2ListResponse } from '@/types'
 
 export type logAggs<T = number> = Pick<Uart.logTerminals, "type" | "msg"> & { timeStamp: T }
@@ -46,6 +46,34 @@ export const logTerminalTimeline = (
       page: query?.page ?? 1,
       pageSize: query?.pageSize ?? 50,
     },
+  )
+
+/** admin server-error log list — server feat/admin-server-errors (PR #28)
+ *  POST 风格: filters (exact $in 白名单) + search (regex 模糊白名单)
+ *  ⚠️ path 是 /logs/ (带 s), 跟 admin-log.controller.ts prefix 一致
+ *  字段名权威源: midwayuartserver/src/module/log/entity/server-error-record.entity.ts
+ */
+export const logservererrors = (query: Uart.ServerErrorListReq) =>
+  Post<universalResult<V2ListResponse<Uart.ServerErrorRecord>>>(
+    '/api/v2/admin/logs/server-errors/list',
+    {
+      startTs: query.startTs,
+      endTs: query.endTs,
+      ...(query.filters && Object.keys(query.filters).length ? { filters: query.filters } : {}),
+      ...(query.search && Object.keys(query.search).length ? { search: query.search } : {}),
+      ...(query.sortBy ? { sortBy: query.sortBy } : {}),
+      sortOrder: query.sortOrder ?? 'desc',
+      page: query.page ?? 1,
+      pageSize: query.pageSize ?? 20,
+    },
+  )
+
+/** 详情 — GET 风格: 按 requestId 单条拉, 不分页
+ *  404 case: server 端抛 Error → middleware 返 500, 前端按 500 处理
+ */
+export const logservererrorById = (requestId: string) =>
+  Get<universalResult<Uart.ServerErrorRecord>>(
+    `/api/v2/admin/logs/server-errors/${encodeURIComponent(requestId)}`,
   )
 export const logUserAggs = (user: string, start: number, end: number, query?: PaginationReq) =>
   Post<universalResult<V2ListResponse<logAggs>>>('/api/v2/admin/logs/user-aggs', { startTs: start, endTs: end, ...query, filters: { user, ...(query?.filters || {}) } })
