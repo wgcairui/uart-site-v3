@@ -37,7 +37,7 @@ export const TerminalCurData: React.FC<{ mac: string; pid: number }> = ({ mac, p
 
 export const TerminalHistoryData: React.FC<{ mac: string; pid: number }> = ({ mac, pid }) => {
 
-    const [query] = useState<PaginationReq>({ page: 1, pageSize: 20, needTotal: true })
+    const [query, setQuery] = useState<PaginationReq>({ page: 1, pageSize: 20, needTotal: true })
     const [selected, setSelected] = useState<any>(null)
 
     const { data, loading } = usePromise(async () => {
@@ -45,7 +45,7 @@ export const TerminalHistoryData: React.FC<{ mac: string; pid: number }> = ({ ma
         const endTs = Date.now()
         const el = await ClientResultList(startTs, endTs, mac, pid, query)
         return el?.data
-    }, undefined, [mac, pid])
+    }, undefined, [mac, pid, JSON.stringify(query)])
 
     const items = (data as any)?.items ?? []
 
@@ -56,11 +56,18 @@ export const TerminalHistoryData: React.FC<{ mac: string; pid: number }> = ({ ma
                 loading={loading}
                 dataSource={items}
                 pagination={{
-                    current: (data as any)?.pagination?.page ?? 1,
-                    pageSize: (data as any)?.pagination?.pageSize ?? 20,
+                    current: query.page ?? 1,
+                    pageSize: query.pageSize ?? 20,
                     total: (data as any)?.pagination?.total,
                     showTotal: (t: number) => `共 ${t} 条`,
                     showSizeChanger: true,
+                }}
+                onChange={(pag) => {
+                    setQuery(prev => ({
+                        ...prev,
+                        page: pag.current ?? 1,
+                        pageSize: pag.pageSize ?? 20,
+                    }))
                 }}
                 columns={[
                     { dataIndex: 'mac', title: 'mac', width: 180 },
