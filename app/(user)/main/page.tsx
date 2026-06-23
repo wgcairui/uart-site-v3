@@ -8,6 +8,7 @@ import { devTypeIcon, IconFont } from "@/components/common/IconFont";
 import { CheckCircleFilled, WarningFilled, EyeFilled, EditFilled, DeleteFilled, DownOutlined } from "@ant-design/icons";
 import { DevCard } from "@/components/data/devCard";
 import { PageSummary } from "@/components/common/PageSummary";
+import { PageHeader } from "@/components/common/PageHeader";
 import Link from "next/link";
 import { useSearchParams, useRouter } from "next/navigation";
 import dayjs from "dayjs";
@@ -82,9 +83,11 @@ const UserIndex: React.FC = (props) => {
     }
 
     return (
-        <Row style={{ paddingBottom: 24 }}>
-            <Col span={24} lg={18}>
-                <PageSummary
+        <>
+            <PageHeader title="我的设备" subtitle="查看所有绑定设备、网关、聚合设备" />
+            <Row style={{ paddingBottom: 24 }}>
+                <Col span={24} lg={18}>
+                    <PageSummary
                     items={[
                         { label: '网关总数', value: terminals.length, variant: 'primary' },
                         {
@@ -198,9 +201,9 @@ const UserIndex: React.FC = (props) => {
                 ]} />
             </Col>
             <Col span={24} lg={6} xs={0}>
-
             </Col>
-        </Row>
+            </Row>
+        </>
     )
 }
 
