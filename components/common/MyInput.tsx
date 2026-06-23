@@ -8,49 +8,34 @@ interface myInput {
     onSave?: (val: string) => void
     value?: string
     okText?: string
-
 }
 
 /**
+ * 自定义输入框（带 onSave 回调）
  *
- * @param props
- * @returns
+ * 视觉风格：浅灰底 + focus 蓝环（继承 antd Input token + globals.css 覆盖）
  */
 export const MyInput: React.FC<myInput> = props => {
 
     const [Edit, setEdit] = useState(false)
-
     const [val, setVal] = useState(props.value || '')
 
     useEffect(() => {
         setVal(props.value || '')
     }, [props.value])
 
-    /**
-     * 保存内容
-     */
     const save = () => {
-        console.log('ssss',val);
-
         props.onSave && props.onSave(val)
         setEdit(false)
     }
 
-    /**
-     * 失去焦点
-     */
     const blur = () => {
         setTimeout(() => setEdit(false), 1000)
     }
 
-    /**
-     * 内容改变
-     * @param e
-     */
     const change = (e: any) => {
         setVal(e.target.value)
     }
-
 
     return (
         props.textArea ?
@@ -63,12 +48,24 @@ export const MyInput: React.FC<myInput> = props => {
                     onChange={change}
                     onFocus={() => setEdit(true)}
                     onBlur={blur}
-                    size="small"
-                >
-                </Input.TextArea>
-
-                <Button style={{ visibility: Edit ? 'visible' : "hidden", marginTop: 3 }} disabled={!Edit} size="small" type="primary" onClick={() => save()}>{props.okText || '保存'}</Button>
-
+                    size="middle"
+                />
+                {Edit && (
+                    <Button
+                        style={{
+                            marginTop: 8,
+                            background: 'linear-gradient(135deg, #6366f1 0%, #06b6d4 100%)',
+                            border: 0,
+                            color: '#fff',
+                            fontWeight: 500,
+                        }}
+                        size="small"
+                        type="primary"
+                        onClick={() => save()}
+                    >
+                        {props.okText || '保存'}
+                    </Button>
+                )}
             </section>
             :
             <Space.Compact style={{ width: 'auto', display: 'flex', alignItems: 'center' }}>
@@ -79,14 +76,23 @@ export const MyInput: React.FC<myInput> = props => {
                     onFocus={() => setEdit(true)}
                     onPressEnter={save}
                     onBlur={blur}
-                >
-                </Input>
+                />
                 {
                     Edit ?
-                        <Button size="small" shape="round" type="primary" onClick={() => save()}>{props.okText || '保存'}</Button>
-                        : <EditFilled />
+                        <Button
+                            size="small"
+                            shape="round"
+                            type="primary"
+                            style={{
+                                background: 'linear-gradient(135deg, #6366f1 0%, #06b6d4 100%)',
+                                border: 0,
+                            }}
+                            onClick={() => save()}
+                        >
+                            {props.okText || '保存'}
+                        </Button>
+                        : <EditFilled style={{ color: '#6366f1' }} />
                 }
             </Space.Compact>
-
     )
 }

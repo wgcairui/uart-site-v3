@@ -7,36 +7,27 @@ import {
     Form,
     Space,
     Spin,
-    Descriptions,
-    Tag,
     message,
     Alert,
 } from "antd";
 import { SearchOutlined, WarningOutlined } from "@ant-design/icons";
 import { adminGetTerminal, bindUserDevice } from "@/lib/api/fetchRoot";
+import KVList from './KVList';
 
 interface AddUserTerminalModalProps {
-    /** 是否显示 */
     visible: boolean;
-    /** 目标用户 */
     user: string;
-    /** 关闭 */
     onCancel?: () => void;
-    /** 绑定成功 */
     onSuccess?: () => void;
 }
 
 /**
  * Admin: 为指定用户绑定一台现有终端
  *
- * 流程：
- * 1. 输入 MAC 查找设备
- * 2. 展示设备信息
- * 3. 若设备已被其他用户绑定（!share && ownerId && ownerId !== user）：
- *    - 弹"强行绑定"确认 Modal
- *    - 用户确认后调用 bindUserDevice(user, mac, force=true)
- *    - 后端会先解绑原用户，再把设备转给当前用户
- * 4. 成功后回调刷新
+ * 视觉规则（方案 C）：
+ * - Modal 头部 / 底部用 antd token
+ * - 设备信息用 KVList 组件（不用 Descriptions）
+ * - 强行绑定主按钮 danger 红色
  */
 export const AddUserTerminalModal: React.FC<AddUserTerminalModalProps> = ({
     visible,
@@ -50,7 +41,6 @@ export const AddUserTerminalModal: React.FC<AddUserTerminalModalProps> = ({
     const [confirmForce, setConfirmForce] = useState(false);
     const [ter, setTer] = useState<(Uart.Terminal & { ownerId?: string }) | null>(null);
 
-    /** 是否需要强行绑定 */
     const needForce = !!(
         ter &&
         ter.ownerId &&
@@ -123,7 +113,6 @@ export const AddUserTerminalModal: React.FC<AddUserTerminalModalProps> = ({
     const handleBind = async () => {
         if (!ter) return;
         if (needForce) {
-            // 弹二次确认
             setConfirmForce(true);
             return;
         }
@@ -148,6 +137,10 @@ export const AddUserTerminalModal: React.FC<AddUserTerminalModalProps> = ({
                 okButtonProps={{
                     disabled: !ter,
                     danger: needForce,
+                    style: needForce ? undefined : {
+                        background: 'linear-gradient(135deg, #6366f1 0%, #06b6d4 100%)',
+                        border: 0,
+                    },
                 }}
                 destroyOnHidden
             >
@@ -173,6 +166,10 @@ export const AddUserTerminalModal: React.FC<AddUserTerminalModalProps> = ({
                                 icon={<SearchOutlined />}
                                 loading={loading}
                                 onClick={handleSearch}
+                                style={{
+                                    background: 'linear-gradient(135deg, #6366f1 0%, #06b6d4 100%)',
+                                    border: 0,
+                                }}
                             >
                                 查找
                             </Button>
@@ -191,7 +188,7 @@ export const AddUserTerminalModal: React.FC<AddUserTerminalModalProps> = ({
                                 type="warning"
                                 showIcon
                                 icon={<WarningOutlined />}
-                                style={{ marginBottom: 12 }}
+                                style={{ marginBottom: 16 }}
                                 title="该设备已被其他用户绑定"
                                 description={
                                     <>
@@ -204,45 +201,34 @@ export const AddUserTerminalModal: React.FC<AddUserTerminalModalProps> = ({
                                 }
                             />
                         )}
-                        <Descriptions
+                        <KVList
                             title={ter.DevMac}
-                            size="small"
+                            items={[
+                                { label: '名称', value: ter.name || '-' },
+                                { label: 'IP', value: ter.ip || '-' },
+                                { label: '接入节点', value: ter.mountNode || '-' },
+                                { label: '型号', value: ter.PID || '-' },
+                                {
+                                    label: '共享',
+                                    value: ter.share
+                                        ? <span className="status-tag status-tag-info">共享</span>
+                                        : <span className="status-tag status-tag-offline">独占</span>,
+                                },
+                                { label: 'Owner', value: ter.ownerId || '-' },
+                                {
+                                    label: '状态',
+                                    value: (
+                                        <>
+                                            {ter.online
+                                                ? <span className="status-tag status-tag-online" style={{ marginRight: 6 }}>在线</span>
+                                                : <span className="status-tag status-tag-offline" style={{ marginRight: 6 }}>离线</span>}
+                                            {ter.disable && <span className="status-tag status-tag-warning">禁用</span>}
+                                        </>
+                                    ),
+                                },
+                            ]}
                             column={1}
-                            bordered
-                        >
-                            <Descriptions.Item label="名称">
-                                {ter.name || "-"}
-                            </Descriptions.Item>
-                            <Descriptions.Item label="IP">
-                                {ter.ip || "-"}
-                            </Descriptions.Item>
-                            <Descriptions.Item label="接入节点">
-                                {ter.mountNode || "-"}
-                            </Descriptions.Item>
-                            <Descriptions.Item label="型号">
-                                {ter.PID || "-"}
-                            </Descriptions.Item>
-                            <Descriptions.Item label="共享">
-                                {ter.share ? (
-                                    <Tag color="blue">共享</Tag>
-                                ) : (
-                                    <Tag color="default">独占</Tag>
-                                )}
-                            </Descriptions.Item>
-                            <Descriptions.Item label="Owner">
-                                {ter.ownerId || "-"}
-                            </Descriptions.Item>
-                            <Descriptions.Item label="状态">
-                                {ter.online ? (
-                                    <Tag color="green">在线</Tag>
-                                ) : (
-                                    <Tag color="default">离线</Tag>
-                                )}
-                                {ter.disable ? (
-                                    <Tag color="yellow">禁用</Tag>
-                                ) : null}
-                            </Descriptions.Item>
-                        </Descriptions>
+                        />
                     </>
                 ) : null}
             </Modal>

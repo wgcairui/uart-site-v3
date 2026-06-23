@@ -1,5 +1,5 @@
 'use client'
-import { Breadcrumb } from 'antd'
+
 import { useRouter } from 'next/navigation'
 import type { ReactNode } from 'react'
 
@@ -9,50 +9,79 @@ export interface BreadcrumbItem {
 }
 
 interface PageHeaderProps {
+  /** 主标题 */
   title: ReactNode
-  /** 面包屑（不含当前页）；不传则只有标题 */
+  /** 副标题 */
+  subtitle?: ReactNode
+  /** 面包屑（不含当前页） */
   breadcrumb?: BreadcrumbItem[]
-  /** 右上角操作按钮区 */
+  /** 右上角操作区 */
   extra?: ReactNode
-  /** 显示返回按钮 + 默认回 history.back() */
+  /** 显示返回按钮（默认 router.back()） */
   back?: boolean
-  /** 覆盖 back 按钮行为 */
+  /** 覆盖 back 行为 */
   onBack?: () => void
 }
 
 /**
  * 统一页面头部
- * - 标题（大字号 + 粗体）
- * - 可选面包屑
- * - 可选返回按钮
- * - 右上 extra 操作区
+ *
+ * 视觉规则见 docs/style-guide.md §3.1：
+ * - 主标题 text-2xl font-bold + 渐变分隔线
+ * - 副标题 text-sm text-ink-500
+ * - extra 按钮区右对齐
  */
-export function PageHeader({ title, breadcrumb, extra, back = false, onBack }: PageHeaderProps) {
+export function PageHeader({
+  title,
+  subtitle,
+  breadcrumb,
+  extra,
+  back = false,
+  onBack,
+}: PageHeaderProps) {
   const router = useRouter()
   const handleBack = () => (onBack ? onBack() : router.back())
 
   return (
-    <div style={{ marginBottom: 16 }}>
-      {(breadcrumb?.length || back) && (
-        <div style={{ marginBottom: 8 }}>
-          {back && (
-            <a onClick={handleBack} style={{ marginRight: 12, cursor: 'pointer' }}>
-              ← 返回
-            </a>
-          )}
-          {breadcrumb?.length ? (
-            <Breadcrumb
-              items={breadcrumb.map((b) => ({
-                title: b.href ? <a onClick={() => router.push(b.href!)}>{b.title}</a> : b.title,
-              }))}
-            />
-          ) : null}
-        </div>
-      )}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-        <h2 style={{ margin: 0, fontSize: 20, fontWeight: 600 }}>{title}</h2>
-        {extra && <div>{extra}</div>}
+    <header className="app-page-header">
+      <div>
+        {(breadcrumb?.length || back) && (
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 8 }}>
+            {back && (
+              <a
+                onClick={handleBack}
+                style={{ cursor: 'pointer', color: '#64748b', fontSize: 13 }}
+              >
+                ← 返回
+              </a>
+            )}
+            {breadcrumb?.length && (
+              <nav style={{ fontSize: 12, color: '#94a3b8' }}>
+                {breadcrumb.map((b, i) => (
+                  <span key={i}>
+                    {i > 0 && <span style={{ margin: '0 8px' }}>/</span>}
+                    {b.href ? (
+                      <a
+                        onClick={() => router.push(b.href!)}
+                        style={{ color: '#64748b', cursor: 'pointer' }}
+                      >
+                        {b.title}
+                      </a>
+                    ) : (
+                      <span>{b.title}</span>
+                    )}
+                  </span>
+                ))}
+              </nav>
+            )}
+          </div>
+        )}
+        <h1 className="app-page-header-title">{title}</h1>
+        {subtitle && <p className="app-page-header-subtitle">{subtitle}</p>}
       </div>
-    </div>
+      {extra && <div className="app-page-header-extra">{extra}</div>}
+    </header>
   )
 }
+
+export default PageHeader

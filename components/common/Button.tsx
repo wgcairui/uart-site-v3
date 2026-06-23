@@ -6,7 +6,7 @@ import type { FC, ReactNode } from 'react'
 
 export type AppButtonVariant = 'primary' | 'default' | 'link' | 'danger' | 'text'
 
-interface AppButtonProps extends Omit<ButtonProps, 'type'> {
+interface AppButtonProps extends Omit<ButtonProps, 'type' | 'variant'> {
   /** 按钮变体 */
   variant?: AppButtonVariant
   /** 图标（仅 icon 按钮时） */
