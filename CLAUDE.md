@@ -52,7 +52,11 @@ uart-site-v3/
 ├── lib/                    # 工具库（见 lib/CLAUDE.md）
 ├── providers/              # React Providers（见 providers/CLAUDE.md）
 ├── types/                  # 全局类型定义
-├── docs/                   # 架构文档
+├── docs/                   # 文档（见 docs/CLAUDE.md）
+│   ├── architecture.md      # 系统架构
+│   ├── migration-guide.md   # v2 → v3 迁移
+│   ├── style-guide.md       # 视觉规范（设计 token + 组件视觉规则）⚠️ 必读
+│   └── components.md        # 组件库规范（props + 复用规则 + review 清单）⚠️ 必读
 ├── proxy.ts                 # 路由鉴权（Cookie token）— Next.js 16.2 新约定
 └── next.config.ts           # API 代理配置
 ```
