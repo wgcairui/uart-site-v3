@@ -11,6 +11,7 @@ import { useNav } from "@/lib/hooks/useNav";
 import { subscribeEvent, unSubscribeEvent } from "@/lib/socket";
 import { UserDropDown } from "@/components/common/UserDropdown";
 import { useToken } from "@/lib/hooks/useToken";
+import { clearSimulateToken } from "@/lib/utils/token";
 import { AbsButton } from "@/components/layout/AbsButton";
 import dayjs from "dayjs";
 import { useRouter } from "next/navigation";
@@ -138,6 +139,7 @@ export default function UserLayout({ children }: { children: React.ReactNode }) 
                             closable
                             style={{ marginBottom: 8 }}
                             onClose={() => {
+                                clearSimulateToken()
                                 sessionStorage.removeItem('simulated')
                                 useUserStore.getState().setSimulated(false)
                                 router.push('/admin')
