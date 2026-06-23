@@ -1,8 +1,7 @@
 'use client'
 
 import React, { Suspense, useEffect, useMemo, useState } from "react";
-import { Layout, Menu, Alert } from "antd";
-import './usermain.css'
+import { Alert } from "antd";
 import Link from "next/link";
 import { useUserStore } from "@/lib/store/userStore";
 import { IconFont, devTypeIcon } from "@/components/common/IconFont";
@@ -15,6 +14,7 @@ import { clearSimulateToken } from "@/lib/utils/token";
 import { AbsButton } from "@/components/layout/AbsButton";
 import dayjs from "dayjs";
 import { useRouter } from "next/navigation";
+import { BrandLogo } from "@/components/common/BrandLogo";
 
 function TokenSync() {
     useToken()
@@ -27,7 +27,6 @@ export default function UserLayout({ children }: { children: React.ReactNode }) 
     const router = useRouter()
     const isSimulated = useUserStore(s => s.isSimulated)
 
-    // 页面刷新后从 sessionStorage 恢复模拟状态
     useEffect(() => {
         if (sessionStorage.getItem('simulated') === 'true') {
             useUserStore.getState().setSimulated(true)
@@ -36,13 +35,8 @@ export default function UserLayout({ children }: { children: React.ReactNode }) 
 
     const [terminals, setTer] = useState<Uart.Terminal[]>([])
 
-    /**
-     * 获取绑定设备
-     * @returns
-     */
     const getBind = async (log?: string) => {
         console.log({ date: dayjs().format('H:m:s:sss'), log });
-
         const result = await BindDev()
         const uts = (result.data?.UTs || []) as Uart.Terminal[]
         setTer([...uts])
@@ -56,13 +50,8 @@ export default function UserLayout({ children }: { children: React.ReactNode }) 
         useUserStore.getState().setTerminals(terminals)
     }, [terminals])
 
-
-    /**
-     * 监听绑定设备变更
-     */
     useEffect(() => {
         const lists: { event: string, pid: number }[] = []
-
         terminals.forEach(el => {
             const event = "MacUpdate" + el.DevMac
             const pid = subscribeEvent(event, () => getBind(`获取设备更新推送:${el.DevMac}`))
@@ -80,79 +69,96 @@ export default function UserLayout({ children }: { children: React.ReactNode }) 
             .map(el => (el.mountDevs || []).map(el2 => ({ ...el2, online: el.online, mac: el.DevMac, name: el.name }))).flat()
     }, [terminals])
 
-
-    const menuItems = useMemo(() => {
-        return [
-            {
-                key: "1",
-                label: "所有设备",
-                icon: <IconFont type="icon-changjingguanli" />,
-                children: uts.map((el, key) => ({
-                    key: '1-' + key,
-                    icon: devTypeIcon[el.Type],
-                    label: <Link href={"/main/dev/" + el.mac + el.pid}>{`${el.name}-${el.mountDev}-${el.pid}`}</Link>,
-                })),
-            },
-            {
-                key: "2",
-                label: "告警管理",
-                icon: <IconFont type="icon-tixingshixin" />,
-                onClick: () => nav("/main/alarm"),
-            },
-            {
-                key: "4",
-                label: "languga",
-                icon: <IconFont type="icon-zuzhiqunzu" />,
-                children: [
-                    { key: "4-1", label: "中文" },
-                    { key: "4-2", label: "EN" },
-                ],
-            },
-            {
-                key: "info",
-                label: "用户信息",
-                onClick: () => nav('/main/user'),
-            }
-        ]
-    }, [uts, nav])
-
     return (
-        <main className="user-main">
-            <Suspense fallback={null}><TokenSync /></Suspense>
-            <Layout className="user-main">
-                <Layout.Header className="user-header">
-                    <Link href="/main">
-                        {/* <Image src="http://admin.ladishb.com/upload/LADS_witdh.png" preview={false} height={20}></Image> */}
-                        <span style={{ fontSize: 36, color: "#3a8ee6", fontFamily: "cursive" }}>百事服</span>
-                    </Link>
-                    <div className="user-header-menu">
-                        <Menu theme="dark" mode="horizontal" className="menu-phone" items={menuItems} />
-                        <UserDropDown userPage="/main/user"></UserDropDown>
-                    </div>
-                </Layout.Header>
-                <Layout.Content style={{ padding: 9, height: "100%", backgroundColor: "#ffffff", position: "relative" }}>
-                    {isSimulated && (
-                        <Alert
-                            title="模拟登录模式 - 当前以管理员身份登录用户账号"
-                            type="warning"
-                            showIcon
-                            closable
-                            style={{ marginBottom: 8 }}
-                            onClose={() => {
-                                clearSimulateToken()
-                                sessionStorage.removeItem('simulated')
-                                useUserStore.getState().setSimulated(false)
-                                router.push('/admin')
-                            }}
-                        />
-                    )}
-                    <main>{children}</main>
-                    <AbsButton>
-                        <Menu mode="inline" openKeys={["1", "4"]} items={menuItems} />
-                    </AbsButton>
-                </Layout.Content>
-            </Layout>
+        <main style={{ display: 'flex', flexDirection: 'column', width: '100vw', height: '100vh', overflow: 'hidden' }}>
+<Suspense fallback={null}><TokenSync /></Suspense>
 
+            {/* Topbar */}
+            <header className="app-topbar">
+                <div style={{ display: 'flex', alignItems: 'center', gap: 32 }}>
+                    <BrandLogo href="/main" />
+                    <nav style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                        <Link
+                            href="/main"
+                            style={{
+                                padding: '8px 14px', borderRadius: 8, fontSize: 14,
+                                color: 'var(--ink-700)', textDecoration: 'none',
+                                transition: 'all .15s',
+                            }}
+                        >
+                            <IconFont type="icon-changjingguanli" /> 所有设备
+                        </Link>
+                        <a
+                            onClick={() => nav('/main/alarm')}
+                            style={{
+                                padding: '8px 14px', borderRadius: 8, fontSize: 14,
+                                color: 'var(--ink-700)', cursor: 'pointer',
+                                transition: 'all .15s',
+                            }}
+                        >
+                            <IconFont type="icon-tixingshixin" /> 告警管理
+                        </a>
+                        <a
+                            onClick={() => nav('/main/user')}
+                            style={{
+                                padding: '8px 14px', borderRadius: 8, fontSize: 14,
+                                color: 'var(--ink-700)', cursor: 'pointer',
+                                transition: 'all .15s',
+                            }}
+                        >
+                            用户信息
+                        </a>
+                    </nav>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                    <UserDropDown userPage="/main/user" />
+                </div>
+            </header>
+
+            {/* 模拟登录提示 */}
+            {isSimulated && (
+                <Alert
+                    message="模拟登录模式 - 当前以管理员身份登录用户账号"
+                    type="warning"
+                    showIcon
+                    closable
+                    style={{ margin: '12px 32px 0', borderRadius: 12 }}
+                    onClose={() => {
+                        clearSimulateToken()
+                        sessionStorage.removeItem('simulated')
+                        useUserStore.getState().setSimulated(false)
+                        router.push('/admin')
+                    }}
+                />
+            )}
+
+            {/* 主内容 */}
+            <main className="scroll-area" style={{ flex: 1, position: 'relative' }}>
+                {children}
+                <AbsButton>
+                    <div style={{ padding: 16 }}>
+                        <div style={{ fontSize: 12, color: 'var(--ink-500)', marginBottom: 8 }}>
+                            我的设备
+                        </div>
+                        {uts.map((el, key) => (
+                            <Link
+                                key={key}
+                                href={`/main/dev/${el.mac}${el.pid}`}
+                                style={{
+                                    display: 'flex', alignItems: 'center', gap: 8,
+                                    padding: '8px 10px', borderRadius: 8, fontSize: 13,
+                                    color: 'var(--ink-700)', textDecoration: 'none',
+                                }}
+                            >
+                                {devTypeIcon[el.Type]}
+                                <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                    {el.name}-{el.mountDev}-{el.pid}
+                                </span>
+                            </Link>
+                        ))}
+                    </div>
+                </AbsButton>
+            </main>
         </main>
     )
 }
