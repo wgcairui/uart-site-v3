@@ -31,7 +31,7 @@ export function UserOverviewSection() {
             title="总用户数"
             value={data.total}
             icon={<TeamOutlined />}
-            color="#1890ff"
+            variant="primary"
             onClick={() => router.push('/admin/node/user')}
           />
         </Col>
@@ -40,7 +40,7 @@ export function UserOverviewSection() {
             title="7天活跃用户"
             value={data.activeUsers?.last7Days ?? '-'}
             icon={<UserOutlined />}
-            color="#52c41a"
+            variant="success"
           />
         </Col>
         <Col span={12} md={6}>
@@ -48,7 +48,7 @@ export function UserOverviewSection() {
             title="30天活跃用户"
             value={data.activeUsers?.last30Days ?? '-'}
             icon={<UserOutlined />}
-            color="#13c2c2"
+            variant="info"
           />
         </Col>
         <Col span={12} md={6}>
@@ -56,7 +56,7 @@ export function UserOverviewSection() {
             title="用户组数量"
             value={data.userGroup?.length ?? 0}
             icon={<AppstoreOutlined />}
-            color="#722ed1"
+            variant="purple"
           />
         </Col>
       </Row>

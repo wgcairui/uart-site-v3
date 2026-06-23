@@ -37,29 +37,29 @@ export function TerminalOverviewSection() {
             title="总终端数"
             value={data.total}
             icon={<DesktopOutlined />}
-            color="#1890ff"
+            variant="primary"
             onClick={() => router.push('/admin/node/terminal')}
           />
         </Col>
         <Col span={12} md={4}>
-          <StatCard title="在线终端" value={data.online} icon={<CheckCircleOutlined />} color="#52c41a" />
+          <StatCard title="在线终端" value={data.online} icon={<CheckCircleOutlined />} variant="success" />
         </Col>
         <Col span={12} md={4}>
-          <StatCard title="离线终端" value={data.offline} icon={<ClockCircleOutlined />} color="#ff4d4f" />
+          <StatCard title="离线终端" value={data.offline} icon={<ClockCircleOutlined />} variant="danger" />
         </Col>
         <Col span={12} md={4}>
           <StatCard
             title="在线率"
             value={data.onlineRate}
             suffix="%"
-            color={data.onlineRate >= 80 ? '#52c41a' : '#fa8c16'}
+            variant={data.onlineRate >= 80 ? 'success' : 'warning'}
           />
         </Col>
         <Col span={12} md={4}>
-          <StatCard title="超时设备数" value={data.timeoutMountDev} icon={<WarningOutlined />} color="#ff4d4f" />
+          <StatCard title="超时设备数" value={data.timeoutMountDev} icon={<WarningOutlined />} variant="danger" />
         </Col>
         <Col span={12} md={4}>
-          <StatCard title="共享终端" value={data.shared} icon={<ApiOutlined />} color="#722ed1" />
+          <StatCard title="共享终端" value={data.shared} icon={<ApiOutlined />} variant="purple" />
         </Col>
       </Row>
       <Row gutter={[16, 16]} style={{ marginTop: 16 }}>

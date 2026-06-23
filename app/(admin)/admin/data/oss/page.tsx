@@ -114,11 +114,11 @@ export const OssUpload: React.FC = () => {
       />
       <PageSummary
         items={[
-          { label: '文件总数', value: pagination.total, color: '#1890ff' },
+          { label: '文件总数', value: pagination.total, variant: 'primary' },
           {
             label: '本次上传未保存',
             value: (listData?.items ?? []).filter((f: any) => f.label).length,
-            color: '#fa8c16',
+            variant: 'warning',
             extra: '刷新页面后消失',
           },
         ]}

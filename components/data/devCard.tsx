@@ -1,7 +1,6 @@
 'use client'
 import React from "react";
 import { Card, Image } from "antd";
-import "./devCard.css"
 
 interface card extends Omit<React.HTMLAttributes<HTMLDivElement>, "title"> {
     /**
@@ -37,7 +36,7 @@ export const DevCard: React.FC<card> = (props) => {
 
 
     return (
-        <Card style={{ margin: 12, borderRadius: 8 }}
+        <Card style={{ margin: 12, borderRadius: 16, boxShadow: '0 1px 3px rgba(15,23,42,.04), 0 1px 2px rgba(15,23,42,.06)' }}
 
             cover={
                 typeof props.img === 'string' ?

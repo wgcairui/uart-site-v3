@@ -168,7 +168,7 @@ export const MailStatsChart: React.FC<MailStatsChartProps> = ({ user }) => {
                     type="monotone"
                     dataKey="count"
                     name="邮件数量"
-                    stroke="#722ed1"
+                    stroke="#7c3aed"
                     strokeWidth={2}
                     dot={{ r: 4 }}
                     activeDot={{ r: 6 }}
