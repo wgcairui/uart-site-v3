@@ -31,18 +31,18 @@ export function AlarmOverviewSection() {
           <StatCard
             title="历史告警总数"
             value={data.total}
-            color="#fa8c16"
+            variant="warning"
             onClick={() => router.push('/admin/log/alarm')}
           />
         </Col>
         <Col span={12} md={6}>
-          <StatCard title="未处理告警" value={data.unconfirmed} icon={<WarningOutlined />} color="#ff4d4f" />
+          <StatCard title="未处理告警" value={data.unconfirmed} icon={<WarningOutlined />} variant="danger" />
         </Col>
         <Col span={12} md={6}>
-          <StatCard title="已确认告警" value={data.confirmed} icon={<CheckCircleOutlined />} color="#52c41a" />
+          <StatCard title="已确认告警" value={data.confirmed} icon={<CheckCircleOutlined />} variant="success" />
         </Col>
         <Col span={12} md={6}>
-          <StatCard title="处理率" value={handleRate} suffix="%" color="#13c2c2" />
+          <StatCard title="处理率" value={handleRate} suffix="%" variant="info" />
         </Col>
       </Row>
       <Row gutter={[16, 16]} style={{ marginTop: 16 }}>
@@ -75,7 +75,7 @@ export function AlarmOverviewSection() {
                   render: (v: number) => (
                     <Badge
                       count={v}
-                      style={{ backgroundColor: v > 10 ? '#ff4d4f' : '#52c41a' }}
+                      style={{ backgroundColor: v > 10 ? '#dc2626' : '#059669' }}
                       overflowCount={9999}
                     />
                   ),

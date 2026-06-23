@@ -120,12 +120,12 @@ export const LogSms: React.FC = () => {
                         {/* 顶部 Stat 汇总 */}
                         <PageSummary
                             items={[
-                                { label: '用户总数', value: userPagination.total, color: '#1890ff' },
-                                { label: '当前页合计', value: totalCount, color: '#fa8c16' },
+                                { label: '用户总数', value: userPagination.total, variant: 'primary' },
+                                { label: '当前页合计', value: totalCount, variant: 'warning' },
                                 {
                                     label: '提示',
                                     value: '—',
-                                    color: '#faad14',
+                                    variant: 'warning',
                                     extra: '每用户合计基于当前页用户计算。如需全网精确统计，请走日志页筛选。',
                                 },
                             ]}

@@ -32,7 +32,7 @@ export function ProtocolOverviewSection() {
             title="协议总数"
             value={data.total}
             icon={<ApiOutlined />}
-            color="#1890ff"
+            variant="primary"
             onClick={() => router.push('/admin/node/protocols')}
           />
         </Col>

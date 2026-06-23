@@ -182,7 +182,7 @@ export const SmsStatsChart: React.FC<SmsStatsChartProps> = ({ user }) => {
                   type="monotone"
                   dataKey="count"
                   name="短信数量"
-                  stroke="#1677ff"
+                  stroke="#06b6d4"
                   strokeWidth={2}
                   dot={{ r: 4 }}
                   activeDot={{ r: 6 }}

@@ -29,7 +29,7 @@ export function DataOverviewSection() {
             title="单例数据记录数"
             value={data.singleDataCount}
             icon={<DatabaseOutlined />}
-            color="#1890ff"
+            variant="primary"
           />
         </Col>
         <Col span={12} md={6}>
@@ -37,7 +37,7 @@ export function DataOverviewSection() {
             title="有数据的设备覆盖率"
             value={data.coverageRate}
             suffix="%"
-            color={data.coverageRate >= 70 ? '#52c41a' : '#fa8c16'}
+            variant={data.coverageRate >= 70 ? 'success' : 'warning'}
           />
         </Col>
         <Col span={24} md={12}>
