@@ -1,40 +1,75 @@
 'use client'
-import { Breadcrumb } from 'antd'
+
 import { usePathname } from 'next/navigation'
 import { useMemo } from 'react'
 import { UserDropDown } from '@/components/common/UserDropdown'
 
+const SEGMENT_LABELS: Record<string, string> = {
+  admin: '后台',
+  main: '前台',
+  node: '节点管理',
+  protocols: '协议',
+  devmodel: '设备类型',
+  nodes: '节点列表',
+  terminal: '终端',
+  user: '用户',
+  log: '日志',
+  alarm: '告警',
+  mail: '邮件',
+  sms: '短信',
+  data: '数据',
+  wx: '微信',
+  users: '公众号用户',
+  oss: 'OSS',
+  redis: 'Redis',
+  info: '详情',
+  addterminal: '添加终端',
+  userinfo: '用户信息',
+}
+
 /**
  * 管理员端顶栏
- * 面包屑（来自 pathname）+ 用户菜单
+ *
+ * 视觉规则（方案 C）：
+ * - 半透明白底 + backdrop-filter blur（滚动时有层次）
+ * - 左侧面包屑（中文映射）
+ * - 右侧 UserDropDown
  */
 export function AdminHeader() {
   const pathname = usePathname()
 
   const crumbs = useMemo(() => {
-    return pathname.split('/').filter(Boolean).map((seg, i, arr) => ({
-      title: seg,
-      // 最后一段不渲染链接（当前页）
+    const segs = pathname.split('/').filter(Boolean)
+    return segs.map((seg, i, arr) => ({
+      label: SEGMENT_LABELS[seg] ?? seg,
       href: i === arr.length - 1 ? undefined : `/${arr.slice(0, i + 1).join('/')}`,
     }))
   }, [pathname])
 
   return (
-    <header
-      style={{
-        display: 'flex',
-        alignItems: 'center',
-        padding: '0 24px',
-        flexShrink: 0,
-        minHeight: 64,
-        background: '#fff',
-        borderBottom: '1px solid #f0f0f0',
-      }}
-    >
-      <Breadcrumb items={crumbs.map((c) => ({ title: c.href ? <a href={c.href}>{c.title}</a> : c.title }))} />
-      <span style={{ marginLeft: 'auto' }}>
+    <header className="app-topbar">
+      <nav style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13 }}>
+        {crumbs.map((c, i) => (
+          <span key={i} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            {i > 0 && <span style={{ color: 'var(--ink-300)' }}>/</span>}
+            <span
+              style={{
+                color: c.href ? 'var(--ink-500)' : 'var(--ink-900)',
+                fontWeight: c.href ? 400 : 500,
+                cursor: c.href ? 'pointer' : 'default',
+              }}
+            >
+              {c.label}
+            </span>
+          </span>
+        ))}
+      </nav>
+
+      <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
         <UserDropDown />
-      </span>
+      </div>
     </header>
   )
 }
+
+export default AdminHeader

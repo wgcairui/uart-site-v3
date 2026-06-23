@@ -1,17 +1,523 @@
+/* =============================================================
+ * UART Design System v1
+ * 风格基线：方案 C · 浅色极简 SaaS
+ * 完整规范见 docs/style-guide.md
+ * ============================================================= */
+
+:root {
+  /* 品牌色 */
+  --brand-start: #6366f1;          /* indigo-500 */
+  --brand-end:   #06b6d4;          /* cyan-500 */
+
+  /* 中性色（ink scale） */
+  --ink-900: #0f172a;
+  --ink-700: #334155;
+  --ink-500: #64748b;
+  --ink-300: #cbd5e1;
+  --ink-100: #f1f5f9;
+  --ink-50:  #f8fafc;
+
+  /* 背景层 */
+  --bg-page:  #fafbfc;
+  --bg-panel: #ffffff;
+  --bg-hover: #fafbfc;
+
+  /* 语义色 */
+  --color-primary: #6366f1;
+  --color-success: #059669;
+  --color-warning: #d97706;
+  --color-danger:  #dc2626;
+  --color-info:    #06b6d4;
+  --color-purple:  #7c3aed;
+
+  /* 字体 */
+  --font-sans: "Inter", "PingFang SC", -apple-system, system-ui, sans-serif;
+
+  /* 圆角 */
+  --radius-sm:  6px;
+  --radius-md:  8px;
+  --radius-lg:  12px;
+  --radius-xl:  16px;
+
+  /* 阴影 */
+  --shadow-card: 0 1px 3px rgba(15, 23, 42, .04), 0 1px 2px rgba(15, 23, 42, .06);
+  --shadow-hover: 0 10px 25px rgba(99, 102, 241, .1), 0 4px 10px rgba(15, 23, 42, .06);
+  --shadow-btn: 0 8px 20px rgba(99, 102, 241, .3);
+
+  /* 动效 */
+  --ease: cubic-bezier(.4, 0, .2, 1);
+  --motion-fast: .15s;
+  --motion-base: .25s;
+}
+
+/* =============================================================
+ * Base
+ * ============================================================= */
+
 html, body {
-    margin: 0;
-    padding: 0;
-    height: 100%;
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  font-family: var(--font-sans);
+  font-size: 14px;
+  color: var(--ink-900);
+  background: var(--bg-page);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
-.App,
-.loading
-{
-    height: 100%;
+* {
+  box-sizing: border-box;
 }
 
-.loading{
-    display: flex;
-    justify-content: center;
-    align-items: center;
+/* 数字等宽（stat card / 表格数字列必加） */
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
+}
+
+/* =============================================================
+ * Brand
+ * ============================================================= */
+
+.brand-gradient {
+  background: linear-gradient(135deg, var(--brand-start) 0%, var(--brand-end) 100%);
+}
+
+.brand-text {
+  background: linear-gradient(135deg, var(--brand-start) 0%, var(--brand-end) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  color: transparent;
+}
+
+.brand-shadow {
+  box-shadow: 0 6px 16px rgba(99, 102, 241, .25);
+}
+
+/* =============================================================
+ * 通用容器 / 卡片
+ * ============================================================= */
+
+.app-card {
+  background: var(--bg-panel);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-card);
+  transition: transform var(--motion-base) var(--ease),
+              box-shadow var(--motion-base) var(--ease);
+}
+
+.app-card-hoverable:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-hover);
+}
+
+.app-page {
+  padding: 32px;
+}
+
+@media (max-width: 768px) {
+  .app-page { padding: 16px; }
+}
+
+/* =============================================================
+ * Stat Card (PageSummary item)
+ * ============================================================= */
+
+.stat-card {
+  background: var(--bg-panel);
+  border-radius: var(--radius-xl);
+  padding: 24px;
+  box-shadow: var(--shadow-card);
+  transition: transform var(--motion-base) var(--ease),
+              box-shadow var(--motion-base) var(--ease);
+  cursor: default;
+}
+
+.stat-card-clickable {
+  cursor: pointer;
+}
+
+.stat-card-clickable:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-hover);
+}
+
+.stat-card-label {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--ink-500);
+  letter-spacing: 0.02em;
+}
+
+.stat-card-value {
+  font-size: 30px;
+  font-weight: 700;
+  line-height: 1.2;
+  margin-top: 8px;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+}
+
+.stat-card-extra {
+  font-size: 12px;
+  color: var(--ink-500);
+  margin-top: 8px;
+}
+
+.stat-card-extra-up   { color: var(--color-success); }
+.stat-card-extra-down { color: var(--color-danger); }
+
+.stat-card-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-lg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  flex-shrink: 0;
+}
+
+/* 变体色 */
+.stat-primary { color: var(--color-primary); }
+.stat-success { color: var(--color-success); }
+.stat-warning { color: var(--color-warning); }
+.stat-danger  { color: var(--color-danger); }
+.stat-info    { color: var(--color-info); }
+.stat-purple  { color: var(--color-purple); }
+
+.bg-primary-50 { background: #eef2ff; }
+.bg-success-50 { background: #ecfdf5; }
+.bg-warning-50 { background: #fffbeb; }
+.bg-danger-50  { background: #fef2f2; }
+.bg-info-50    { background: #ecfeff; }
+.bg-purple-50  { background: #f5f3ff; }
+
+/* =============================================================
+ * Status Tag (统一状态徽章)
+ * ============================================================= */
+
+.status-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 12px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 500;
+  line-height: 1.6;
+  white-space: nowrap;
+}
+
+.status-tag::before {
+  content: '●';
+  font-size: 8px;
+}
+
+.status-tag-online {
+  background: rgba(5, 150, 105, .1);
+  color: #047857;
+}
+
+.status-tag-warning {
+  background: rgba(217, 119, 6, .1);
+  color: #b45309;
+}
+
+.status-tag-offline {
+  background: rgba(100, 116, 139, .1);
+  color: #475569;
+}
+
+.status-tag-error {
+  background: rgba(220, 38, 38, .1);
+  color: #b91c1c;
+}
+
+.status-tag-info {
+  background: rgba(6, 182, 212, .1);
+  color: #0e7490;
+}
+
+/* =============================================================
+ * Buttons (统一按钮样式覆盖)
+ * ============================================================= */
+
+.btn-brand {
+  background: linear-gradient(135deg, var(--brand-start) 0%, var(--brand-end) 100%);
+  color: #fff;
+  border: 0;
+  font-weight: 500;
+  border-radius: var(--radius-md);
+  padding: 8px 16px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: transform var(--motion-fast) var(--ease),
+              box-shadow var(--motion-base) var(--ease);
+  box-shadow: 0 1px 2px rgba(15, 23, 42, .06);
+}
+
+.btn-brand:hover {
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-btn);
+}
+
+.btn-brand:active {
+  transform: scale(.98);
+}
+
+.btn-default {
+  background: var(--bg-panel);
+  color: var(--ink-700);
+  border: 1px solid var(--ink-100);
+  border-radius: var(--radius-md);
+  padding: 8px 16px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all var(--motion-fast) var(--ease);
+}
+
+.btn-default:hover {
+  border-color: var(--ink-300);
+}
+
+.btn-link {
+  background: transparent;
+  border: 0;
+  color: var(--color-primary);
+  font-size: 14px;
+  cursor: pointer;
+  padding: 4px 8px;
+}
+
+.btn-link:hover {
+  color: #4f46e5;
+}
+
+/* =============================================================
+ * Sidebar
+ * ============================================================= */
+
+.app-sider {
+  width: 240px;
+  background: var(--bg-panel);
+  border-right: 1px solid var(--ink-100);
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  height: 100vh;
+  overflow-y: auto;
+}
+
+.app-sider-collapsed {
+  width: 64px;
+}
+
+.sider-menu-group-label {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--ink-500);
+  padding: 12px 16px 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.sider-menu-item {
+  display: flex;
+  align-items: center;
+  padding: 10px 16px;
+  margin: 2px 8px;
+  border-radius: var(--radius-md);
+  font-size: 14px;
+  color: var(--ink-700);
+  cursor: pointer;
+  transition: all var(--motion-fast) var(--ease);
+  border-left: 2px solid transparent;
+}
+
+.sider-menu-item:hover {
+  background: var(--ink-100);
+  color: var(--color-primary);
+}
+
+.sider-menu-item-active {
+  background: linear-gradient(135deg, rgba(99, 102, 241, .08), rgba(6, 182, 212, .08));
+  color: var(--color-primary);
+  font-weight: 500;
+  border-left-color: var(--color-primary);
+}
+
+.sider-menu-icon {
+  margin-right: 12px;
+  font-size: 16px;
+  display: inline-flex;
+  width: 20px;
+  justify-content: center;
+}
+
+/* =============================================================
+ * Topbar
+ * ============================================================= */
+
+.app-topbar {
+  height: 64px;
+  background: rgba(255, 255, 255, .8);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--ink-100);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 32px;
+  flex-shrink: 0;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+/* =============================================================
+ * PageHeader
+ * ============================================================= */
+
+.app-page-header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  margin-bottom: 32px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--ink-100);
+}
+
+.app-page-header-title {
+  font-size: 24px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: var(--ink-900);
+  margin: 0;
+}
+
+.app-page-header-subtitle {
+  font-size: 14px;
+  color: var(--ink-500);
+  margin-top: 4px;
+}
+
+.app-page-header-extra {
+  display: flex;
+  gap: 12px;
+}
+
+/* =============================================================
+ * Section title
+ * ============================================================= */
+
+.app-section-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 16px;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--ink-900);
+}
+
+.app-section-title-icon {
+  font-size: 18px;
+}
+
+/* =============================================================
+ * Ant Design v5 样式覆盖（表格 / 卡片 / 表单）
+ * ============================================================= */
+
+/* 表格 — 24px 列内边距，紧凑表头 */
+.ant-table-tbody > tr > td {
+  padding: 16px 24px !important;
+  font-size: 14px;
+  border-bottom: 1px solid var(--ink-100) !important;
+}
+
+.ant-table-thead > tr > th {
+  padding: 16px 24px !important;
+  font-size: 11px !important;
+  font-weight: 500 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.05em !important;
+  color: var(--ink-500) !important;
+  border-bottom: 1px solid var(--ink-100) !important;
+  background: transparent !important;
+}
+
+.ant-table-tbody > tr:hover > td {
+  background: var(--bg-hover) !important;
+}
+
+/* 卡片 — 改圆角 */
+.ant-card {
+  border-radius: var(--radius-xl) !important;
+}
+
+.ant-card-head {
+  border-bottom: 1px solid var(--ink-100) !important;
+}
+
+/* 输入框 — 浅灰底 + focus 蓝环 */
+.ant-input,
+.ant-input-affix-wrapper,
+.ant-select-selector,
+.ant-picker {
+  border-radius: var(--radius-md) !important;
+  background: var(--ink-50) !important;
+  border-color: transparent !important;
+  transition: all var(--motion-fast) var(--ease) !important;
+}
+
+.ant-input:focus,
+.ant-input-affix-wrapper:focus,
+.ant-input-affix-wrapper-focused,
+.ant-select-focused .ant-select-selector,
+.ant-picker-focused {
+  background: var(--bg-panel) !important;
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, .15) !important;
+}
+
+/* Modal 头部 */
+.ant-modal-header {
+  border-bottom: 1px solid var(--ink-100) !important;
+  padding: 20px 24px !important;
+}
+
+.ant-modal-body {
+  padding: 24px !important;
+}
+
+/* Tabs 选中色 */
+.ant-tabs-tab.ant-tabs-tab-active .ant-tabs-tab-btn {
+  color: var(--color-primary) !important;
+}
+
+.ant-tabs-ink-bar {
+  background: linear-gradient(90deg, var(--brand-start), var(--brand-end)) !important;
+}
+
+/* Empty 占位 */
+.ant-empty {
+  padding: 48px 0 !important;
+}
+
+/* =============================================================
+ * Utility
+ * ============================================================= */
+
+.text-center { text-align: center; }
+.flex-center { display: flex; align-items: center; justify-content: center; }
+
+.scroll-area {
+  flex: 1;
+  overflow-y: auto;
+  padding: 32px;
+}
+
+@media (max-width: 768px) {
+  .scroll-area { padding: 16px; }
 }

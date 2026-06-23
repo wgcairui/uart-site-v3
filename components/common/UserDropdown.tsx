@@ -1,6 +1,5 @@
 'use client'
-import { LoadingOutlined } from "@ant-design/icons";
-import { Avatar, Dropdown } from "antd";
+import { Dropdown } from "antd";
 import React, { useEffect } from "react";
 import { userInfo } from "@/lib/api/fetch";
 import { socketClient } from "@/lib/socket";
@@ -9,17 +8,15 @@ import { usePromise } from "@/lib/hooks/usePromise";
 import { useUserStore } from "@/lib/store/userStore";
 import { clearAllTokens } from "@/lib/utils/token";
 
-
 interface props {
-    /**
-     * 用户界面路由
-     */
+    /** 用户界面路由 */
     userPage?: string
 }
 
 /**
+ * 用户下拉菜单
  *
- * @returns
+ * 视觉：头像用 brand gradient 圆形，菜单项用品牌色 hover
  */
 export const UserDropDown: React.FC<props> = ({ userPage }) => {
     const nav = useNav()
@@ -33,7 +30,6 @@ export const UserDropDown: React.FC<props> = ({ userPage }) => {
         return data
     })
 
-    // 用户数据加载完成后建立 Socket 连接，组件卸载时断开
     useEffect(() => {
         if (!data?.user) return
         useUserStore.getState().setUser(data)
@@ -41,23 +37,49 @@ export const UserDropDown: React.FC<props> = ({ userPage }) => {
         return () => socketClient.disConnect()
     }, [data?.user])
 
+    const initial = (data?.user?.[0] || 'U').toUpperCase()
+
     return (
         loading ?
-            <LoadingOutlined />
+            <span style={{ color: 'var(--ink-300)' }}>...</span>
             :
             <Dropdown
-            menu={{
-                items: [
-                    { key: "info", label: <a onClick={() => nav(userPage || "/main/userinfo", { user: data?.user })}>用户信息</a> },
-                    { key: "exit", label: <a onClick={() => exit()}>退出</a> }
-                ]
-            }}
-            arrow
-            destroyOnHidden
-            placement="bottomLeft"
-        >
-                <a className="ant-dropdown-link" onClick={e => e.preventDefault()}>
-                    <Avatar src={data?.avanter || undefined} ></Avatar>
+                menu={{
+                    items: [
+                        { key: "info", label: <a onClick={() => nav(userPage || "/main/userinfo", { user: data?.user })}>用户信息</a> },
+                        { key: "exit", label: <a onClick={() => exit()}>退出</a> }
+                    ]
+                }}
+                arrow
+                destroyOnHidden
+                placement="bottomRight"
+            >
+                <a
+                    className="ant-dropdown-link"
+                    onClick={e => e.preventDefault()}
+                    style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}
+                >
+                    {data?.avanter ? (
+                        <img
+                            src={data.avanter}
+                            alt={data.user}
+                            style={{
+                                width: 32, height: 32, borderRadius: '50%',
+                                objectFit: 'cover',
+                            }}
+                        />
+                    ) : (
+                        <span
+                            style={{
+                                width: 32, height: 32, borderRadius: '50%',
+                                display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                                background: 'linear-gradient(135deg, #6366f1 0%, #06b6d4 100%)',
+                                color: '#fff', fontWeight: 600, fontSize: 13,
+                            }}
+                        >
+                            {initial}
+                        </span>
+                    )}
                 </a>
             </Dropdown>
     )

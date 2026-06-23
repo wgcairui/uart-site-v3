@@ -1,23 +1,29 @@
 'use client'
-import { Divider } from 'antd'
+
 import type { ReactNode } from 'react'
 
 interface SectionTitleProps {
   icon?: ReactNode
-  title: string
+  title: ReactNode
+  extra?: ReactNode
 }
 
 /**
- * 带 icon 的 section 标题
- * 用 antd Divider titlePlacement="left" 实现分隔线效果
+ * 区块标题
+ *
+ * 视觉规则见 docs/style-guide.md §2.3：
+ * - icon + 文字 + 右侧 extra 操作
+ * - 字号 16px font-semibold
+ * - 不再使用 antd Divider
  */
-export function SectionTitle({ icon, title }: SectionTitleProps) {
+export function SectionTitle({ icon, title, extra }: SectionTitleProps) {
   return (
-    <Divider titlePlacement="left" style={{ fontSize: 15, fontWeight: 600 }}>
-      <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-        {icon}
-        {title}
-      </span>
-    </Divider>
+    <div className="app-section-title">
+      {icon && <span className="app-section-title-icon">{icon}</span>}
+      <span>{title}</span>
+      {extra && <span style={{ marginLeft: 'auto' }}>{extra}</span>}
+    </div>
   )
 }
+
+export default SectionTitle
