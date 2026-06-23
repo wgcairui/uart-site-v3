@@ -7,7 +7,7 @@ import { socketClient } from "@/lib/socket";
 import { useNav } from "@/lib/hooks/useNav";
 import { usePromise } from "@/lib/hooks/usePromise";
 import { useUserStore } from "@/lib/store/userStore";
-import { clearToken } from "@/lib/utils/token";
+import { clearAllTokens } from "@/lib/utils/token";
 
 
 interface props {
@@ -24,7 +24,7 @@ interface props {
 export const UserDropDown: React.FC<props> = ({ userPage }) => {
     const nav = useNav()
     const exit = () => {
-        clearToken()
+        clearAllTokens()
         nav("/")
     }
 

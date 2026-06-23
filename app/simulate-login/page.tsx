@@ -2,7 +2,7 @@
 
 import { Suspense, useEffect, useState } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
-import { setToken } from '@/lib/utils/token'
+import { setSimulateToken } from '@/lib/utils/token'
 import { Spin } from 'antd'
 import { useUserStore } from '@/lib/store/userStore'
 
@@ -26,7 +26,7 @@ function SimulateLoginInner() {
   useEffect(() => {
     const token = searchParams.get('token')
     if (token) {
-      setToken(token)
+      setSimulateToken(token)
       sessionStorage.setItem('simulated', 'true')
       useUserStore.getState().setSimulated(true)
       router.push('/main')
