@@ -9,6 +9,7 @@ import { CheckCircleFilled, WarningFilled, EyeFilled, EditFilled, DeleteFilled, 
 import { DevCard } from "@/components/data/devCard";
 import { PageSummary } from "@/components/common/PageSummary";
 import { PageHeader } from "@/components/common/PageHeader";
+import { StaggerList } from "@/components/common/StaggerList";
 import Link from "next/link";
 import { useSearchParams, useRouter } from "next/navigation";
 import dayjs from "dayjs";
@@ -109,6 +110,7 @@ const UserIndex: React.FC = (props) => {
                         label: <span><IconFont type="icon-shebeizhuangtai" /> 我的设备</span>,
                         children: (
                             <Row>
+                                <StaggerList>
                                 {
                                     mountDevs.map(el => {
                                         return (
@@ -130,6 +132,7 @@ const UserIndex: React.FC = (props) => {
                                         )
                                     })
                                 }
+                                </StaggerList>
                                 <Col span={24} md={12} lg={8} xl={6} xxl={4} key='addDev' className="center">
                                     {/* <Button shape="round" type="primary" onClick={() => setDefalutKey("module")}>添加设备</Button> */}
                                     <Dropdown menu={{
