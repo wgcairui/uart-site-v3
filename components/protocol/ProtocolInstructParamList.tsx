@@ -50,7 +50,7 @@ export function ProtocolInstructParamList({ meta, formResize, onChange, protocol
 
   return (
     <Card>
-      <Space direction="vertical">
+      <Space orientation="vertical">
         {data.map((el, i) => (
           <ProtocolInstructParamInput
             key={el.name + i}

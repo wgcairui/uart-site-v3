@@ -3,6 +3,7 @@ import { SearchOutlined } from "@ant-design/icons";
 import { Input, Space, Button, TableProps } from "antd";
 import { ColumnFilterItem, ColumnType, FilterDropdownProps } from "antd/lib/table/interface";
 import { SorterResult, TableCurrentDataSource } from "antd/lib/table/interface";
+import { BRAND } from '@/lib/utils/designTokens'
 
 
 type index = keyof Uart.uartAlarmObject
@@ -46,7 +47,7 @@ export function getColumnSearchProp<T,>(dataIndex: keyof T, val: string = ''): P
                 </Space>
             </div>
         ),
-        filterIcon: filtered => <SearchOutlined style={{ color: filtered ? '#1890ff' : undefined }} />,
+        filterIcon: filtered => <SearchOutlined style={{ color: filtered ? BRAND.start : undefined }} />,
         onFilter: (value: any, record: any) =>
             record[dataIndex]
                 ? record[dataIndex]!.toString().toLowerCase().includes((value as string).toLowerCase())
@@ -196,7 +197,7 @@ export function makeServerSearchProp<T>(
             </div>
         ),
         filterIcon: (filtered) => (
-            <SearchOutlined style={{ color: filtered ? '#1890ff' : undefined }} />
+            <SearchOutlined style={{ color: filtered ? BRAND.start : undefined }} />
         ),
     };
 }

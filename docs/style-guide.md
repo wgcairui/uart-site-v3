@@ -292,6 +292,13 @@ const useUIStore = create<{ mode: 'light' | 'dark' }>(set => ({
 - [ ] 没有用 antd 默认圆角 6px
 - [ ] 没有自定义 toast / 弹窗
 
+### 6.1 反白名单（合理用法，避免误报）
+
+- **`size="small"` 在信息密集页面允许使用**：admin 仪表盘（节点详情、Redis 数据、日志表格、终端列表）等需要在一屏展示大量数据行 / 字段的场景，antd 默认 size 偏松散，**`size="small"` / `size="middle"` 都是合理用法**。仅在 user 端用户面向页面（设备列表、用户中心）必须用默认 size（不要 `size="small"`，避免信息密度过高）。
+- **`borderRadius: 4` / `borderRadius: 8` 用于细线元素**（分割线、内嵌 Tag、小图标容器）允许，不算"硬编码圆角"。
+- **`#1890ff` 不允许**（antd 默认蓝）。`SearchOutlined` 高亮态等场景应改用 `BRAND.start` (`#6366f1`) 或对应语义色。
+- **antd v5 deprecation**：`<Space direction="vertical|horizontal">` 在 v5 已废弃为 `orientation="vertical|horizontal"`，写新代码必须用 `orientation`，改老代码时同步替换。
+
 ---
 
 ## 7. 快速参考：复制粘贴片段

@@ -315,7 +315,7 @@ const ProtocolUpload: React.FC<props> = (props) => {
   }
 
   return (
-    <Space direction="vertical">
+    <Space orientation="vertical">
       <Upload beforeUpload={upfile}>
         <Button icon={<UploadOutlined />}>Select File</Button>
       </Upload>
