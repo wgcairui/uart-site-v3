@@ -15,7 +15,7 @@ interface copy {
 export const MyCopy: React.FC<copy> = props => {
 
     const copy = () => {
-        var aux = document.createElement("input");
+        const aux = document.createElement("input");
         aux.setAttribute("value", props.value.toString());
         document.body.appendChild(aux);
         aux.select();

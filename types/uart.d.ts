@@ -415,7 +415,7 @@ declare namespace Uart {
             PhoneNumbers: string;
             SignName: string;
             TemplateCode: string;
-            TemplateParam: String;
+            TemplateParam: string;
         };
         Success?: {
             Message: string;
