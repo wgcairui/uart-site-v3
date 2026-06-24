@@ -244,19 +244,116 @@ transition: all .25s cubic-bezier(.4, 0, .2, 1);
 
 ## 4. 状态反馈规范
 
-| 场景 | 实现 |
-|---|---|
-| 加载中 | antd `<Spin>` 或 `Skeleton`，不要用自旋 logo |
-| 空数据 | 居中插画 + 一句话说明 + "添加" 按钮（参考 antd Empty 改造） |
-| 错误 | antd `message.error()`，toast 顶部出现 |
-| 成功 | antd `message.success()` |
-| 确认操作 | antd `Modal.confirm()`，按钮 Danger 色 |
+| 场景 | 实现 | 业务组件 |
+|---|---|---|
+| 加载中（首屏/表格/列表） | antd `<Skeleton>` 骨架屏 | `<AppSkeleton variant="table\|card\|list\|paragraph" />` |
+| 加载中（按钮内联/局部） | antd `<Spin size="small" />` | 直接用 antd |
+| 空数据 | 居中插画 + 一句话 + 操作按钮 | `<EmptyState description actionLabel onAction />` |
+| 错误（toast 提示） | antd `message.error()` | 直接用 antd |
+| 错误（JS 渲染崩溃） | React ErrorBoundary | `<ErrorBoundary>`（包在 layout 顶层） |
+| 成功 | antd `message.success()` | 直接用 antd |
+| 确认操作 | antd `Modal.confirm()` | 直接用 antd |
+
+**业务组件位置**：`components/common/{EmptyState,ErrorBoundary,AppSkeleton}.tsx`
 
 **禁止**自定义 toast / 自定义确认弹窗（除非有特殊交互需求）。
 
+### 4.1 EmptyState 用法
+
+```tsx
+<EmptyState
+  description="该用户还没有绑定设备"
+  actionLabel="去添加"
+  onAction={() => nav('/main/addterminal')}
+  secondaryLabel="返回首页"
+  onSecondary={() => nav('/main')}
+/>
+```
+
+- 高度默认 360px（卡片列表场景）
+- 操作按钮 1 主 1 副，主按钮用 antd `type="primary"`（自动走品牌渐变）
+- description 一句话说清楚**为什么空**+**该做什么**，不要只写"暂无数据"
+
+### 4.2 AppSkeleton 用法
+
+| variant | 适用 | 默认 |
+|---|---|---|
+| `table` | 表格首屏 | 4 列 × 6 行 |
+| `card` | 卡片网格首屏 | 4 张 |
+| `list` | 列表首屏 | 5 行 |
+| `paragraph` | 段落/详情 | 3 行 |
+
+**何时用 Spin 而非 Skeleton**：按钮内联 loading、局部快速刷新（< 300ms）、下拉刷新。
+
+### 4.3 ErrorBoundary 用法
+
+```tsx
+// app/(admin)/layout.tsx 顶层
+<ErrorBoundary>
+  <div>...</div>
+</ErrorBoundary>
+```
+
+- **必须**放在 layout 顶层（不是 page 顶层）— 否则 layout 自身的错误捕获不到
+- 自定义 fallback：`<ErrorBoundary fallback={(err, reset) => <MyUI />}>`
+- ⚠️ **不能**捕获：事件回调中的 throw、异步代码、SSR 阶段错误
+- 上报：当前 `console.error`，生产应接 Sentry/自家 logger
+
 ---
 
-## 5. 主题切换（未来扩展预留）
+---
+
+## 5. 动画规范
+
+> 业务组件见 `components/common/{PageTransition,StaggerList}.tsx`
+
+### 5.1 动效 token（globals.css）
+
+```css
+--ease: cubic-bezier(.4, 0, .2, 1);
+--motion-fast: .15s;   /* 按钮 / hover / focus */
+--motion-base: .25s;   /* 页面切换 / 列表 stagger */
+```
+
+**所有 transition 必须 ≤ 300ms**（style guide §2.6 反模式），违反会导致"卡顿"感。
+
+### 5.2 PageTransition（页面切换）
+
+- 包装在 `(user)/layout.tsx` / `(admin)/layout.tsx` 的 `<main>` 内部
+- pathname 变化时：fade out 200ms → 切新内容 → fade in 200ms
+- 关键：必须放在 `<main>` 内部而不是外层，否则 sidebar/header 也会跟着 fade
+
+```tsx
+<main>
+  <PageTransition>{children}</PageTransition>
+</main>
+```
+
+### 5.3 StaggerList（列表 stagger 进入）
+
+- 包装 `items.map()` 的结果
+- 第 1 项立即，第 N 项延迟 `(N-1) × interval ms`，默认 interval=50ms
+- 单项 250ms fade + translateY(8px → 0)
+- 超过 maxStagger（默认 12）后不再延迟 — 避免长列表卡顿
+- **必须给子元素加 `key` prop**（React 识别身份）
+
+```tsx
+<StaggerList interval={50} duration={250}>
+  {items.map(it => <Card key={it.id}>...</Card>)}
+</StaggerList>
+```
+
+### 5.4 禁止的动效
+
+- ❌ 自动播放（无 hover 就开始）
+- ❌ 旋转 / 闪烁 / 抖动
+- ❌ 单一动画 > 300ms
+- ❌ 整个 layout 一起 fade（PageTransition 必须包在 main 内部）
+- ❌ 列表全部同时进入（要用 stagger）
+
+---
+
+## 6. 主题切换（未来扩展预留）
 
 当前只实现 light theme。代码层预留 dark mode 扩展点：
 
@@ -279,7 +376,7 @@ const useUIStore = create<{ mode: 'light' | 'dark' }>(set => ({
 
 ---
 
-## 6. 反模式清单（review 时强制检查）
+## 7. 反模式清单（review 时强制检查）
 
 - [ ] 没有出现 antd 默认蓝 `#1677ff`
 - [ ] 没有出现未声明的 hex / 像素值
@@ -298,10 +395,16 @@ const useUIStore = create<{ mode: 'light' | 'dark' }>(set => ({
 - **`borderRadius: 4` / `borderRadius: 8` 用于细线元素**（分割线、内嵌 Tag、小图标容器）允许，不算"硬编码圆角"。
 - **`#1890ff` 不允许**（antd 默认蓝）。`SearchOutlined` 高亮态等场景应改用 `BRAND.start` (`#6366f1`) 或对应语义色。
 - **antd v5 deprecation**：`<Space direction="vertical|horizontal">` 在 v5 已废弃为 `orientation="vertical|horizontal"`，写新代码必须用 `orientation`，改老代码时同步替换。
+- **业务组件优先**（不要自己写）：
+  - 空状态用 `<EmptyState>`，**禁止**直接用 antd `<Empty>`（缺操作按钮）
+  - 加载用 `<AppSkeleton variant>`，**禁止**全屏 `<Spin>`（首屏体验差）
+  - 错误兜底用 `<ErrorBoundary>`（layout 顶层必加），**禁止**自写 try/catch
+  - 页面切换用 `<PageTransition>`（main 内部包），**禁止**自定义 CSS transition
+  - 列表入场用 `<StaggerList>`，**禁止**手写 `animationDelay`
 
 ---
 
-## 7. 快速参考：复制粘贴片段
+## 8. 快速参考：复制粘贴片段
 
 ### 标准页面骨架
 

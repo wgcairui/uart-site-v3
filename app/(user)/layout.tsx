@@ -15,6 +15,8 @@ import { AbsButton } from "@/components/layout/AbsButton";
 import dayjs from "dayjs";
 import { useRouter } from "next/navigation";
 import { BrandLogo } from "@/components/common/BrandLogo";
+import { ErrorBoundary } from "@/components/common/ErrorBoundary";
+import { PageTransition } from "@/components/common/PageTransition";
 
 function TokenSync() {
     useToken()
@@ -70,6 +72,7 @@ export default function UserLayout({ children }: { children: React.ReactNode }) 
     }, [terminals])
 
     return (
+        <ErrorBoundary>
         <main style={{ display: 'flex', flexDirection: 'column', width: '100vw', height: '100vh', overflow: 'hidden' }}>
 <Suspense fallback={null}><TokenSync /></Suspense>
 
@@ -134,7 +137,7 @@ export default function UserLayout({ children }: { children: React.ReactNode }) 
 
             {/* 主内容 */}
             <main className="scroll-area" style={{ flex: 1, position: 'relative' }}>
-                {children}
+                <PageTransition>{children}</PageTransition>
                 <AbsButton>
                     <div style={{ padding: 16 }}>
                         <div style={{ fontSize: 12, color: 'var(--ink-500)', marginBottom: 8 }}>
@@ -160,5 +163,6 @@ export default function UserLayout({ children }: { children: React.ReactNode }) 
                 </AbsButton>
             </main>
         </main>
+        </ErrorBoundary>
     )
 }
