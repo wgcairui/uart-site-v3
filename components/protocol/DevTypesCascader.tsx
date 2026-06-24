@@ -2,7 +2,7 @@
 import React, { useMemo, useState } from "react";
 import { Cascader } from "antd";
 import { getDevTypes } from "@/lib/api/fetch";
-import { usePromise } from "@/lib/hooks/usePromise";
+
 
 interface DataNode {
     label: React.ReactNode;

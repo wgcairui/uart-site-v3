@@ -2,7 +2,7 @@
 import { Modal, Alert } from "antd"
 import { useState } from "react"
 import { logterminals } from "@/lib/api/fetchRoot"
-import { getColumnSearchProp } from "@/lib/utils/tableCommon"
+
 import { DesList } from "@/components/data/DesList";
 import { Log } from "@/components/log/log";
 

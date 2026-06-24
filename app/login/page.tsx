@@ -6,7 +6,7 @@ import { Layout, Image, Dropdown, Row, Col, Card, Tabs, Form, Input, Button, mes
 import { UserOutlined, LockOutlined, WechatFilled } from "@ant-design/icons";
 import { IconFont } from "@/components/common/IconFont";
 import { getAuthUser, getLoginHash, login as loginApi } from "@/lib/api/fetch";
-import { universalResult } from "@/types";
+
 import { useNav } from "@/lib/hooks/useNav";
 import { setToken, getToken } from "@/lib/utils/token";
 import { useUserStore } from "@/lib/store/userStore";

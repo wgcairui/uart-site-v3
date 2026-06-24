@@ -1,5 +1,5 @@
 'use client'
-import { Button, Card, Collapse, Divider, Dropdown, Form, Input, Menu, message, Modal, Radio, Space, Table } from "antd";
+import { Button, Divider, Dropdown, Form, Input, message, Modal, Radio, Space, Table } from 'antd'
 import React, { useMemo, useState } from "react";
 import { deleteProtocol, getProtocols, setProtocol, getProtocolStats } from "@/lib/api/fetchRoot";
 import { generateTableKey, makeServerSearchProp, makeServerFilterProp, extractServerTableQuery } from "@/lib/utils/tableCommon";
@@ -13,7 +13,7 @@ import { PageHeader } from "@/components/common/PageHeader";
 import { PageSummary, type SummaryVariant } from "@/components/common/PageSummary";
 import { downJson } from "@/lib/utils/util";
 import { getProtocol } from "@/lib/api/fetch";
-import { PaginationReq, V2ListResponse } from "@/types";
+import { PaginationReq } from '@/types'
 
 interface props {
     ok?: (protocol: string) => void

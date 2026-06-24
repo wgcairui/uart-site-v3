@@ -4,7 +4,7 @@ import React, { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { useUserStore } from "@/lib/store/userStore";
 import { Empty, Dropdown, Button } from "antd";
-import { ApartmentOutlined, DownOutlined } from '@ant-design/icons';
+import { DownOutlined } from '@ant-design/icons'
 import { TerminalDevPage } from "@/components/terminal/TerminalDevPage";
 import { useNav } from "@/lib/hooks/useNav";
 import { PageHeader } from "@/components/common/PageHeader";

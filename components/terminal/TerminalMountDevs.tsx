@@ -5,72 +5,41 @@ import {
 	EyeFilled,
 	DeleteFilled,
 	LoadingOutlined,
-	ReloadOutlined,
-	MoreOutlined,
-	SyncOutlined,
 	DownOutlined,
 	CloudUploadOutlined,
 	CloudDownloadOutlined,
-} from "@ant-design/icons";
+} from '@ant-design/icons'
 import {
-	Table,
 	Tooltip,
 	Button,
-	Card,
 	Descriptions,
-	Tag,
-	Divider,
 	Row,
 	Col,
 	Space,
 	Popconfirm,
 	message,
-	TableProps,
 	Modal,
-	Spin,
 	Dropdown,
-	notification,
 	ColProps,
-	Switch,
-	Empty,
-	Avatar,
-} from "antd";
-import { ColumnsType } from "antd/lib/table";
+} from 'antd'
+
 import dayjs from "dayjs";
 import React, { useEffect, useState } from "react";
-import { PaginationReq, V2ListResponse } from "@/types";
+
 import { devType } from "@/lib/utils/devImgSource";
-import {
-	BindDev,
-	changeShareApi,
-	deleteRegisterTerminal,
-	delUserTerminal,
-	getNodeInstructQueryMac,
-	getTerminalBindUsers,
-	getTerminals,
-	getTerminalUser,
-	initTerminal,
-	IotQueryCardFlowInfo,
-	IotQueryCardInfo,
-	IotQueryIotCardOfferDtl,
-	iotRemoteUrl,
-	IotUpdateIccidInfo,
-	modifyTerminalRemark,
-	setTerminalOnline,
-	setTerminalOwner,
-} from "@/lib/api/fetchRoot";
-import { delTerminalMountDev, getTerminal, modifyTerminal, refreshDevTimeOut } from "@/lib/api/fetch";
+import { getNodeInstructQueryMac } from '@/lib/api/fetchRoot'
+import { delTerminalMountDev, refreshDevTimeOut } from '@/lib/api/fetch'
 import { prompt } from "@/lib/utils/prompt";
-import { generateTableKey, getColumnSearchProp, tableColumnsFilter, makeServerSearchProp, makeServerFilterProp, extractServerTableQuery } from "@/lib/utils/tableCommon";
-import { CopyClipboard } from "@/lib/utils/util";
+
+
 import { useNav } from "@/lib/hooks/useNav";
 import { usePromise } from "@/lib/hooks/usePromise";
-import { useTerminalUpdate } from "@/lib/hooks/useTerminalData";
+
 import { DevCard } from "@/components/data/devCard";
 
-import { IconFont, devTypeIcon } from "@/components/common/IconFont";
-import { MyCopy } from "@/components/common/MyCopy";
-import { MyInput } from "@/components/common/MyInput";
+import { devTypeIcon } from '@/components/common/IconFont'
+
+
 import { TerminalAddMountDev } from "./TerminalAddMountDev";
 import { TerminalDevPage } from "./TerminalDevPage";
 

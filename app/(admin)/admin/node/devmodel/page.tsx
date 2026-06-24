@@ -1,6 +1,6 @@
 'use client'
 import { DeleteFilled, WarningFilled } from "@ant-design/icons";
-import { Button, Card, Divider, Form, Input, message, Modal, Table } from "antd";
+import { Button, Form, Input, message, Modal, Table } from 'antd'
 import React, { useEffect, useState } from "react";
 import { addDevType, deleteDevModel, DevTypes, getDevModelStats } from "@/lib/api/fetchRoot";
 import {

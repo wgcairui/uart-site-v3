@@ -3,7 +3,7 @@ import React, { useState } from 'react'
 import { Tag, Card, Table, DatePicker, Space, Modal, Typography } from 'antd'
 import { loguartterminaldatatransfinites } from '@/lib/api/fetchRoot'
 import { getColumnSearchProp } from '@/lib/utils/tableCommon'
-import { ResultDataParse } from '@/components/data/ResultDataParse'
+
 import dayjs from 'dayjs'
 
 const { RangePicker } = DatePicker

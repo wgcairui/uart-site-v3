@@ -2,7 +2,7 @@
 import { Card, Divider, Input, Table, Tabs, Space, Button } from "antd"
 import { useState } from "react"
 import { getUserAlarmSetups, logsmssends, logsmssendsCountInfo } from "@/lib/api/fetchRoot"
-import { extractServerTableQuery, generateTableKey, getColumnSearchProp, makeServerSearchProp } from "@/lib/utils/tableCommon"
+import { generateTableKey, getColumnSearchProp, makeServerSearchProp } from '@/lib/utils/tableCommon'
 import { UserDes } from "@/components/data/UserDes"
 import { usePromise } from "@/lib/hooks/usePromise"
 import { Log } from "@/components/log/log";
