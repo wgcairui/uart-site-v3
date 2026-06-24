@@ -5,12 +5,7 @@ import { ColumnsType } from 'antd/lib/table'
 import dayjs from 'dayjs'
 import React, { useMemo, useState } from 'react'
 import { update_wx_users_all, wx_send_info, wx_users } from '@/lib/api/fetchRoot'
-import {
-  extractServerTableQuery,
-  generateTableKey,
-  getColumnSearchProp,
-  makeServerSearchProp,
-} from '@/lib/utils/tableCommon'
+import { extractServerTableQuery, generateTableKey, makeServerSearchProp } from '@/lib/utils/tableCommon'
 import { MyCopy } from '@/components/common/MyCopy'
 import { usePromise } from '@/lib/hooks/usePromise'
 import { PaginationReq, V2ListResponse } from '@/types'

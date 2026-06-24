@@ -1,7 +1,7 @@
 'use client'
 
-import { ApartmentOutlined, HomeOutlined } from "@ant-design/icons";
-import { Breadcrumb, Card, Col, Descriptions, Divider, Row, Tag, Empty } from "antd";
+
+import { Card, Col, Descriptions, Divider, Row, Tag, Empty } from 'antd'
 import dayjs from "dayjs";
 import React from "react";
 import { useParams } from "next/navigation";

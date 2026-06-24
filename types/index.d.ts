@@ -1,4 +1,4 @@
-import { FunctionComponent } from "react";
+
 
 interface universalProps {
     [x: string]: any

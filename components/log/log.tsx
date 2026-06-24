@@ -1,6 +1,6 @@
 'use client'
 import { Button, Col, Descriptions, Row, Space, Table } from "antd";
-import { ColumnsType, TableProps } from "antd/lib/table";
+import { TableProps } from 'antd/lib/table'
 import dayjs from "dayjs";
 import React, { useMemo, useState } from "react";
 import { generateTableKey } from "@/lib/utils/tableCommon";

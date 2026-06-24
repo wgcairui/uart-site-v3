@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest'
-import { render, screen, fireEvent } from '@testing-library/react'
+import { render, fireEvent } from '@testing-library/react'
 import { Button } from './Button'
 
 // 注意：antd v5 Button 在中文字符间自动插空格（防止字符粘连的 CSS 优化）

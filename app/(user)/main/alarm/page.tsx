@@ -8,7 +8,7 @@ import { generateTableKey, getColumnSearchProp, tableColumnsFilter } from "@/lib
 import { usePromise } from "@/lib/hooks/usePromise";
 import { PageSummary } from "@/components/common/PageSummary";
 
-import { PaginationReq, V2ListResponse } from "@/types";
+import { PaginationReq } from '@/types'
 
 interface alarms extends Uart.uartAlarmObject {
     _id?: string

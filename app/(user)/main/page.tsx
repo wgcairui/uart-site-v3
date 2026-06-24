@@ -2,7 +2,7 @@
 
 import React, { Suspense, useMemo, useState } from "react";
 import './user.css'
-import { Col, Row, Tabs, Space, Tooltip, Popconfirm, message, Button, Dropdown, Menu } from "antd"
+import { Col, Row, Tabs, Space, Tooltip, Popconfirm, message, Button, Dropdown } from 'antd'
 import { useUserStore } from "@/lib/store/userStore";
 import { devTypeIcon, IconFont } from "@/components/common/IconFont";
 import { CheckCircleFilled, WarningFilled, EyeFilled, EditFilled, DeleteFilled, DownOutlined } from "@ant-design/icons";

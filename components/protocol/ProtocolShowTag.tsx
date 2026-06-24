@@ -1,12 +1,12 @@
 'use client'
-import { Alert, Button, Checkbox, CheckboxOptionType, Col, Divider, Input, InputNumber, message, Modal, Row, Select, Space, Table, Tag } from "antd";
-import { ColumnsType } from "antd/lib/table";
+import { Button, Checkbox, CheckboxOptionType, Col, message, Row } from 'antd'
+
 import React, { useMemo, useState } from "react";
 import { addDevConstant } from "@/lib/api/fetchRoot";
 import { getProtocol, getProtocolSetup } from "@/lib/api/fetch";
-import { generateTableKey } from "@/lib/utils/tableCommon";
+
 import { usePromise } from "@/lib/hooks/usePromise";
-import { ProtocolInstructSelect } from "./ProtocolInstructSelect";
+
 
 interface ProtocolProps {
     protocolName: string

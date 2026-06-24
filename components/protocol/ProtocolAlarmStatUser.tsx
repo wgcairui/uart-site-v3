@@ -1,9 +1,9 @@
 'use client'
-import { Alert, Button, Checkbox, Divider, Form, InputNumber, message, Space, Table, Tag } from "antd";
+import { Alert, Button, Checkbox, Form, message, Tag } from 'antd'
 import React, { useEffect, useMemo, useState } from "react";
 import { modifyAdminUserAlarmSetupProtocol } from "@/lib/api/fetchRoot";
 import { getProtocol, getProtocolSetup, setUserSetupProtocol } from "@/lib/api/fetch";
-import { generateTableKey } from "@/lib/utils/tableCommon";
+
 import { usePromise } from "@/lib/hooks/usePromise";
 import { ProtocolInstructFormrizeParse } from "@/lib/utils/util";
 

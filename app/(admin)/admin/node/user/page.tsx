@@ -3,12 +3,11 @@ import React, { useState } from "react";
 import { deleteUser, getUser, sendUserSocketInfo, users as getUsers, getUserStats } from "@/lib/api/fetchRoot"
 import { Avatar, Button, Col, Divider, message, Modal, Row, Table, Tag, Descriptions } from "antd";
 import {
-    generateTableKey,
-    makeServerSearchProp,
-    makeServerFilterProp,
-    extractServerTableQuery,
-    ServerTableQuery,
-} from "@/lib/utils/tableCommon";
+	generateTableKey,
+	makeServerSearchProp,
+	makeServerFilterProp,
+	extractServerTableQuery,
+} from '@/lib/utils/tableCommon'
 import { ColumnsType } from "antd/lib/table";
 import { prompt } from "@/lib/utils/prompt";
 import { usePromise } from "@/lib/hooks/usePromise";
