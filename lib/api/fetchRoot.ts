@@ -8,5 +8,6 @@ export * from '@/lib/api/endpoints/admin/protocols'
 export * from '@/lib/api/endpoints/admin/nodes'
 export * from '@/lib/api/endpoints/admin/logs'
 export * from '@/lib/api/endpoints/admin/system'
+export * from '@/lib/api/endpoints/admin/ai'
 
 export type { PaginationReq, V2ListResponse } from '@/types'
