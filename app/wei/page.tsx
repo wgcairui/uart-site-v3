@@ -56,7 +56,7 @@ const Wei: React.FC = () => {
 		}
 		const exclude = value.filterText.split("|");
 		const excludeReg = new RegExp(`(${exclude.join("|")})`, "g");
-		let text = value.origData.replace(excludeReg, "");
+		const text = value.origData.replace(excludeReg, "");
 
 		form.setFieldValue("origData", text);
 		const idCard = rp(text, idCardRegex);
