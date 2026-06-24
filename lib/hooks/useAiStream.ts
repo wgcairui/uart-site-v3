@@ -125,7 +125,7 @@ export function useAiStream(): UseAiStreamResult {
             // 非 JSON 行（心跳等）忽略
             continue
           }
-          dispatchEvent(event, handlers, setError)
+          dispatchEvent(event, handlers)
           if (event.type === 'done') {
             handlers.onDone?.()
             return
@@ -166,11 +166,7 @@ export function useAiStream(): UseAiStreamResult {
   return { stream, abort, isStreaming, error }
 }
 
-function dispatchEvent(
-  event: AiStreamEvent,
-  handlers: AiStreamHandlers,
-  setError: (msg: string) => void
-) {
+function dispatchEvent(event: AiStreamEvent, handlers: AiStreamHandlers) {
   switch (event.type) {
     case 'text':
       handlers.onText?.(event.delta)
@@ -184,10 +180,7 @@ function dispatchEvent(
     case 'saved':
       handlers.onSaved?.(event)
       return
-    case 'done':
-      return
-    case 'error':
-      setError(event.error)
-      return
+    // 'done' / 'error' 由调用方统一处理：setError + handlers.onError
+    // 加上 early return 结束 stream 循环
   }
 }
