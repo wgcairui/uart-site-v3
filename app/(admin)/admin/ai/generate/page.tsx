@@ -19,6 +19,7 @@ import {
 import { ProtocolPreviewForm } from '@/components/ai/ProtocolPreviewForm'
 import { StatsPane } from '@/components/ai/StatsPane'
 import { useAiStream } from '@/lib/hooks/useAiStream'
+import { aiCommit } from '@/lib/api/endpoints/admin/ai'
 import type { AiRunStats, GenerateStreamDto } from '@/types/ai'
 import { EMPTY_AI_STATS } from '@/types/ai'
 
@@ -177,7 +178,7 @@ export default function AiGeneratePage() {
         onToolDelta: (delta) => {
           toolJsonAccumRef.current += delta
         },
-        onSaved: (info) => {
+        onSaved: async (info) => {
           // 2026-06-25 改：优先用 info.protocol（后端 saved 事件带的完整 JSON，
           // MiniMax 不支持 tool_use 后改成 prompt-instruct，server 直接 yield 完整 input）
           // 兼容 v1：toolJsonAccumRef 累积的 tool_delta 仍可作为 fallback
@@ -227,6 +228,82 @@ export default function AiGeneratePage() {
             },
           ])
           message.success(`协议 ${info.protocolName} v${info.version} 已保存`)
+
+          // === v2 file 模式：自动调 /commit 完成源文档归档 ===
+          // protocolId + ossKey + originalFileName 三个字段全有才调（text 模式 ossKey 缺）
+          if (info.ossKey && info.protocolId && info.originalFileName) {
+            const commitInfo = {
+              protocolId: info.protocolId,
+              protocolName: info.protocolName,
+              ossKey: info.ossKey,
+              originalFileName: info.originalFileName,
+            }
+            setMessages((prev) => [
+              ...prev,
+              {
+                id: `committing-${Date.now()}`,
+                role: 'system',
+                content: '归档源文档到永久区…',
+              },
+            ])
+            try {
+              const res = await aiCommit(commitInfo)
+              if (res.code === 200 && res.data) {
+                if (res.data.promoteError) {
+                  // 容错：后端返 200 + promoteError，admin 看到"协议成 + 源文档不可用"
+                  message.warning(`源文档归档失败：${res.data.promoteError}`)
+                  setMessages((prev) => [
+                    ...prev,
+                    {
+                      id: `commit-error-${Date.now()}`,
+                      role: 'error',
+                      content: `源文档归档失败：${res.data?.promoteError ?? 'unknown'}`,
+                    },
+                  ])
+                } else {
+                  message.success('源文档已归档')
+                  setMessages((prev) => [
+                    ...prev,
+                    {
+                      id: `commit-done-${Date.now()}`,
+                      role: 'saved',
+                      content: res.data?.sourceOssUrl
+                        ? `源文档已归档：${info.originalFileName}`
+                        : '源文档已归档',
+                      meta: {
+                        protocolName: info.protocolName,
+                        version: info.version,
+                        provider: info.provider,
+                      },
+                    },
+                  ])
+                }
+              } else {
+                // HTTP 200 但 code 非 200 → 后端显式失败
+                const msg = res.msg || `HTTP ${res.code}`
+                message.warning(`源文档归档失败：${msg}`)
+                setMessages((prev) => [
+                  ...prev,
+                  {
+                    id: `commit-error-${Date.now()}`,
+                    role: 'error',
+                    content: `源文档归档失败：${msg}`,
+                  },
+                ])
+              }
+            } catch (err: any) {
+              const msg = err?.message ? String(err.message) : '网络错误'
+              message.warning(`源文档归档失败：${msg}`)
+              setMessages((prev) => [
+                ...prev,
+                {
+                  id: `commit-error-${Date.now()}`,
+                  role: 'error',
+                  content: `源文档归档失败：${msg}`,
+                },
+              ])
+            }
+          }
         },
         onError: (err) => {
           setStats((s) => ({ ...s, finishedAt: Date.now(), error: err }))
