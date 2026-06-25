@@ -1,11 +1,13 @@
 'use client'
 
-import { Button, Checkbox, Form, Input, message, Radio, Select, Space, Tag, Typography } from 'antd'
+import { Button, Checkbox, Form, Input, message, Radio, Select, Space, Tabs, Tag, Typography } from 'antd'
 import { ThunderboltOutlined } from '@ant-design/icons'
 import { useRouter } from 'next/navigation'
 import { useCallback, useRef, useState } from 'react'
 import { PageHeader } from '@/components/common/PageHeader'
 import { AiWorkspace } from '@/components/ai/AiWorkspace'
+import { SourceUploadTab } from '@/components/ai/SourceUploadTab'
+import { SourceUrlTab } from '@/components/ai/SourceUrlTab'
 import {
   buildAssistantMessage,
   buildSystemMessage,
@@ -22,17 +24,29 @@ import { EMPTY_AI_STATS } from '@/types/ai'
 
 const { Text } = Typography
 
+/** Source 模式：text（粘手册）/ upload（PDF/Excel/Word）/ url（抓网页） */
+type SourceMode = 'text' | 'upload' | 'url'
+
+/** file 模式（upload + url）上传/抓取后的元信息，给 generate-stream 的 ossKey/originalFileName/contentType 用 */
+interface FileSourceInfo {
+  ossKey: string
+  originalFileName: string
+  contentType: string
+}
+
 /**
- * /admin/ai/generate — AI 生成新协议（决策 16 + 19 / 2026-06-24）
+ * /admin/ai/generate — AI 生成新协议（决策 16 + 19 / 2026-06-24，决策 13 阶段 1 / 2026-06-25）
  *
  * 流程：
- * 1. admin 填写 protocolType + 设备手册（manualText）/ 建议协议名
+ * 1. admin 填写 protocolType + 选择 Source（text/upload/url）+ 建议协议名
  * 2. 点击「生成协议」→ POST /generate-stream (SSE)
  * 3. 流式渲染 text delta + tool_start badge
  * 4. tool_done 后中间 form 实时绑定 tool_done.input
  * 5. saved 事件 → 显示「已保存 v1」+ 跳详情页入口
+ *    (file 模式额外自动调 /commit 完成源文档归档，见 onSaved)
  *
- * 后端契约：`wgcairui/uart-server` `src/module/ai/controller/admin-ai.controller.ts`
+ * 后端契约：`wgcairui/uart-server` `feat/ai-protocol-2026-06-24` 分支
+ * `src/module/ai/controller/admin-ai.controller.ts`
  */
 export default function AiGeneratePage() {
   const router = useRouter()
@@ -41,6 +55,12 @@ export default function AiGeneratePage() {
   // ============ 表单（生成参数）============
   const [form] = Form.useForm<GenerateStreamDto & { overrideExisting: boolean }>()
   const [submitting, setSubmitting] = useState(false)
+
+  // ============ Source 模式（v2 决策 13 阶段 1）============
+  // 三个 tab 互斥：text（粘手册）/ upload（PDF/Excel/Word 直传 OSS）/ url（抓网页）
+  const [sourceMode, setSourceMode] = useState<SourceMode>('text')
+  const [manualText, setManualText] = useState('') // text 模式专用
+  const [fileSource, setFileSource] = useState<FileSourceInfo | null>(null) // upload/url 模式专用
 
   // ============ 协议预览 ============
   const [protocol, setProtocol] = useState<Partial<Uart.protocol> | null>(null)
@@ -66,10 +86,38 @@ export default function AiGeneratePage() {
         message.warning('请选择设备类型')
         return
       }
-      const manualText = values.manualText?.trim() ?? ''
-      if (manualText.length > 8000) {
-        message.warning('设备手册 ≤ 8000 字')
-        return
+
+      // === Source 校验 ===
+      let dtoSourceType: 'text' | 'file' = 'text'
+      let dtoManualText: string | undefined = undefined
+      let dtoOssKey: string | undefined = undefined
+      let dtoOriginalFileName: string | undefined = undefined
+      let dtoContentType: string | undefined = undefined
+
+      if (sourceMode === 'text') {
+        const text = manualText.trim()
+        if (text.length === 0) {
+          message.warning('请粘贴设备手册或描述')
+          return
+        }
+        if (text.length > 8000) {
+          message.warning('设备手册 ≤ 8000 字')
+          return
+        }
+        dtoSourceType = 'text'
+        dtoManualText = text
+      } else {
+        // upload / url 都是 file 模式
+        if (!fileSource) {
+          message.warning(
+            sourceMode === 'upload' ? '请先上传文件' : '请先抓取 URL'
+          )
+          return
+        }
+        dtoSourceType = 'file'
+        dtoOssKey = fileSource.ossKey
+        dtoOriginalFileName = fileSource.originalFileName
+        dtoContentType = fileSource.contentType
       }
 
       // 重置状态
@@ -79,7 +127,7 @@ export default function AiGeneratePage() {
       assistantMsgIdRef.current = null
       toolJsonAccumRef.current = ''
       const userMsg = buildUserMessage(
-        `[生成] ${values.protocolType}${values.deviceModel ? ' / ' + values.deviceModel : ''}`
+        `[生成] ${values.protocolType}${values.deviceModel ? ' / ' + values.deviceModel : ''} · source=${sourceMode}`
       )
       setMessages([userMsg, buildSystemMessage('LLM 推理中…')])
       setSubmitting(true)
@@ -88,8 +136,13 @@ export default function AiGeneratePage() {
         protocolType: values.protocolType,
         hintProtocolName: values.hintProtocolName?.trim() || undefined,
         deviceModel: values.deviceModel?.trim() || undefined,
-        manualText: manualText || undefined,
         overrideExisting: values.overrideExisting ?? false,
+        // v2 source 字段
+        sourceType: dtoSourceType,
+        manualText: dtoManualText,
+        ossKey: dtoOssKey,
+        originalFileName: dtoOriginalFileName,
+        contentType: dtoContentType,
       }
 
       await stream('/api/v2/admin/ai/generate-stream', dto, {
@@ -199,7 +252,7 @@ export default function AiGeneratePage() {
       })
       setSubmitting(false)
     },
-    [stream]
+    [stream, sourceMode, manualText, fileSource]
   )
 
   const handleRetry = () => {
@@ -251,16 +304,79 @@ export default function AiGeneratePage() {
       <Form.Item
         label={
           <Space size={4}>
-            <Text style={{ fontSize: 12 }}>设备手册 / Modbus 寄存器表</Text>
-            <Tag style={{ fontSize: 10 }}>≤ 8000 字</Tag>
+            <Text style={{ fontSize: 12 }}>Source（设备手册 / 文件 / URL）</Text>
+            {sourceMode === 'text' && (
+              <Tag style={{ fontSize: 10 }}>≤ 8000 字</Tag>
+            )}
+            {sourceMode === 'upload' && (
+              <Tag style={{ fontSize: 10 }}>PDF/Excel/Word ≤ 20MB</Tag>
+            )}
+            {sourceMode === 'url' && (
+              <Tag style={{ fontSize: 10 }}>http/https 网页</Tag>
+            )}
           </Space>
         }
-        name="manualText"
         style={{ marginBottom: 8 }}
       >
-        <Input.TextArea
-          autoSize={{ minRows: 2, maxRows: 6 }}
-          placeholder="粘贴设备手册片段、modbus 寄存器表、协议示例…留空 LLM 会按通用模板生成"
+        <Tabs
+          size="small"
+          activeKey={sourceMode}
+          onChange={(k) => {
+            const next = k as SourceMode
+            setSourceMode(next)
+            // 切 tab 时清掉另一种模式的 state，避免 stale
+            if (next === 'text') {
+              setFileSource(null)
+            } else {
+              setManualText('')
+            }
+          }}
+          items={[
+            {
+              key: 'text',
+              label: '📝 粘文字',
+              children: (
+                <Input.TextArea
+                  value={manualText}
+                  onChange={(e) => setManualText(e.target.value)}
+                  autoSize={{ minRows: 2, maxRows: 6 }}
+                  placeholder="粘贴设备手册片段、modbus 寄存器表、协议示例…留空 LLM 会按通用模板生成"
+                />
+              ),
+            },
+            {
+              key: 'upload',
+              label: '📤 上传文件',
+              children: (
+                <SourceUploadTab
+                  disabled={isStreaming || submitting}
+                  onUploaded={(info) =>
+                    setFileSource({
+                      ossKey: info.ossKey,
+                      originalFileName: info.originalFileName,
+                      contentType: info.contentType,
+                    })
+                  }
+                />
+              ),
+            },
+            {
+              key: 'url',
+              label: '🌐 抓 URL',
+              children: (
+                <SourceUrlTab
+                  disabled={isStreaming || submitting}
+                  onFetched={(info) =>
+                    setFileSource({
+                      ossKey: info.ossKey,
+                      originalFileName: info.originalFileName,
+                      contentType: info.contentType,
+                    })
+                  }
+                />
+              ),
+            },
+          ]}
         />
       </Form.Item>
       <Space>

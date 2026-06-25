@@ -60,15 +60,17 @@ export interface GenerateStreamDto {
   /** sourceType='text' 时必填（≤8000 字） */
   manualText: string | undefined
   overrideExisting: boolean | undefined
-  // === v2 source 字段（optional，向后兼容）===
+  // === v2 source 字段（可选 + 向后兼容 v1 路径）===
+  // 注意：用 `T | undefined` 不是 `T?`，配合 tsconfig.exactOptionalPropertyTypes，
+  // 避免「optional 字段 + undefined 值」报错。
   /** 'text'（默认）| 'file'；不传走 v1 路径 */
-  sourceType?: 'text' | 'file'
+  sourceType: 'text' | 'file' | undefined
   /** sourceType='file' 时必填，来自 /upload-token 或 /fetch-url 返回 */
-  ossKey?: string
+  ossKey: string | undefined
   /** sourceType='file' 时必填 */
-  originalFileName?: string
+  originalFileName: string | undefined
   /** sourceType='file' 时建议填（MIME） */
-  contentType?: string
+  contentType: string | undefined
   // === end v2 ===
 }
 
