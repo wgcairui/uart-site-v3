@@ -88,13 +88,13 @@ export function StatsPane({ stats, instructionCount = 0, toolStepCount = 0 }: St
               title="输入"
               value={stats.inputTokens}
               suffix="tokens"
-              valueStyle={{ fontSize: 16 }}
+              styles={{ content: { fontSize: 16 } }}
             />
             <Statistic
               title="输出"
               value={stats.outputTokens}
               suffix="tokens"
-              valueStyle={{ fontSize: 16 }}
+              styles={{ content: { fontSize: 16 } }}
             />
           </Space>
         </Card>
@@ -105,18 +105,31 @@ export function StatsPane({ stats, instructionCount = 0, toolStepCount = 0 }: St
               title={isRunning ? '已用时' : '总耗时'}
               value={isRunning ? elapsed : stats.latencyMs || elapsed}
               suffix="ms"
-              valueStyle={{ fontSize: 16 }}
+              styles={{ content: { fontSize: 16 } }}
             />
             {stats.latencyMs > 0 && stats.latencyMs !== elapsed && (
-              <Statistic title="LLM 端" value={stats.latencyMs} suffix="ms" valueStyle={{ fontSize: 16 }} />
+              <Statistic
+                title="LLM 端"
+                value={stats.latencyMs}
+                suffix="ms"
+                styles={{ content: { fontSize: 16 } }}
+              />
             )}
           </Space>
         </Card>
 
         <Card size="small" title={<><FieldNumberOutlined /> 协议结构</>}>
           <Space size={16} wrap>
-            <Statistic title="指令条数" value={instructionCount} valueStyle={{ fontSize: 16 }} />
-            <Statistic title="工具调用" value={toolStepCount} valueStyle={{ fontSize: 16 }} />
+            <Statistic
+              title="指令条数"
+              value={instructionCount}
+              styles={{ content: { fontSize: 16 } }}
+            />
+            <Statistic
+              title="工具调用"
+              value={toolStepCount}
+              styles={{ content: { fontSize: 16 } }}
+            />
           </Space>
         </Card>
 
