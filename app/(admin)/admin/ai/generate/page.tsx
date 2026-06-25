@@ -75,6 +75,8 @@ export default function AiGeneratePage() {
   const [preAnalyzeReasoning, setPreAnalyzeReasoning] = useState<string | null>(null)
   const deviceModelTouchedRef = useRef(false)
   const hintProtocolNameTouchedRef = useRef(false)
+  // 决策 22：pre-analyze 也能 prefill 设备类型下拉，admin 改过就不再覆盖
+  const protocolTypeTouchedRef = useRef(false)
   const preAnalyzeAbortRef = useRef<AbortController | null>(null)
   const textDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
@@ -120,6 +122,10 @@ export default function AiGeneratePage() {
         }
         if (suggestedProtocolName && !hintProtocolNameTouchedRef.current) {
           form.setFieldValue('hintProtocolName', suggestedProtocolName)
+        }
+        // 决策 22：设备类型下拉也 prefill（admin 改过就不覆盖）
+        if (res.data.protocolType && !protocolTypeTouchedRef.current) {
+          form.setFieldValue('protocolType', res.data.protocolType)
         }
         setPreAnalyzeReasoning(reasoning)
         if (typeof confidence === 'number' && confidence < 0.6) {
@@ -168,6 +174,7 @@ export default function AiGeneratePage() {
   useEffect(() => {
     deviceModelTouchedRef.current = false
     hintProtocolNameTouchedRef.current = false
+    protocolTypeTouchedRef.current = false
     setPreAnalyzeReasoning(null)
     preAnalyzeAbortRef.current?.abort()
     if (textDebounceRef.current) {
@@ -194,6 +201,7 @@ export default function AiGeneratePage() {
     (changed: Partial<GenerateStreamDto & { overrideExisting: boolean }>) => {
       if (changed.deviceModel !== undefined) deviceModelTouchedRef.current = true
       if (changed.hintProtocolName !== undefined) hintProtocolNameTouchedRef.current = true
+      if (changed.protocolType !== undefined) protocolTypeTouchedRef.current = true
     },
     []
   )

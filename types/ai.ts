@@ -208,6 +208,8 @@ export interface PreAnalyzeDto {
  * 字段语义：
  * - deviceModel: 从手册封面/标题/第一段提取；看不出 → 字段省略（不返回空串）
  * - suggestedProtocolName: PascalCase ≤ 64，命名规则 `<厂商><型号><设备类型>` 或 `<型号><设备类型>`，没把握 → 字段省略
+ * - **protocolType (2026-06-25 决策 22)**: 设备类型，前端用来 prefill Generate 页面
+ *   「设备类型」下拉；命名规则文档在 spec §2.5，跟着 PascalCase 命名走
  * - confidence: 0~1，前端用来显示"AI 推断可信度"
  * - reasoning: 中文 1-2 句解释为什么这么命名，鼠标 hover 显示
  */
@@ -216,6 +218,8 @@ export interface PreAnalyzeResult {
   deviceModel: string | undefined
   /** 英文 PascalCase，如 "UpsApcSmart3000" */
   suggestedProtocolName: string | undefined
+  /** 设备类型，前端 prefill Generate 页「设备类型」下拉（决策 22 / 2026-06-25） */
+  protocolType: Uart.protocolType | undefined
   /** 0~1，0=完全猜 / 1=手册明确写明 */
   confidence: number
   /** 中文 1-2 句解释 */
