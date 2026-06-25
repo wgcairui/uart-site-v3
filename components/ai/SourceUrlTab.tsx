@@ -117,7 +117,7 @@ export function SourceUrlTab({ onFetched, disabled }: SourceUrlTabProps) {
             type="error"
             showIcon
             style={{ padding: '4px 12px', fontSize: 12 }}
-            message={
+            title={
               <Space size={4}>
                 <Text type="danger" style={{ fontSize: 12 }}>
                   {error}

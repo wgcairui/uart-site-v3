@@ -72,7 +72,7 @@ export function AiSourceInfoCard({ remark }: AiSourceInfoCardProps) {
       showIcon
       icon={<RobotOutlined />}
       style={{ marginBottom: 8, fontSize: 12 }}
-      message={
+      title={
         <Space size={6} wrap>
           <Text strong style={{ fontSize: 12 }}>
             AI 生成

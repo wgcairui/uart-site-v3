@@ -1,7 +1,6 @@
 'use client'
 
 import { useCallback, useState } from 'react'
-import { message } from 'antd'
 import { aiUploadToken } from '@/lib/api/endpoints/admin/ai'
 import type { UploadTokenResult } from '@/types/ai'
 
@@ -84,10 +83,9 @@ export function useSourceUpload(): UseSourceUploadResult {
       const errState: SourceUploadState = {
         status: 'error',
         fileName: file.name,
-        error: msg,
+        error: `上传准备失败：${msg}`,
       }
       setState(errState)
-      message.error(`上传准备失败：${msg}`)
       return errState
     }
 
@@ -111,7 +109,6 @@ export function useSourceUpload(): UseSourceUploadResult {
           error: msg,
         }
         setState(errState)
-        message.error(msg)
         return errState
       }
     } catch (err: any) {
@@ -119,10 +116,9 @@ export function useSourceUpload(): UseSourceUploadResult {
       const errState: SourceUploadState = {
         status: 'error',
         fileName: file.name,
-        error: msg,
+        error: `上传失败：${msg}`,
       }
       setState(errState)
-      message.error(`上传失败：${msg}`)
       return errState
     }
 
