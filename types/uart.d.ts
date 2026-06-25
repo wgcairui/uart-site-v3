@@ -70,6 +70,9 @@ declare namespace Uart {
         ProtocolType: protocolType;
         instruct: protocolInstruct[];
         remark?: string;
+        // 决策 19（2026-06-24）新增字段：version 自增 + source 区分写入来源
+        version?: number;
+        source?: 'admin' | 'ai-generate' | 'ai-chat';
     }
     interface DevsType extends id {
         Type: string;

@@ -36,6 +36,7 @@ import { ProtocolShowTag } from '@/components/protocol/ProtocolShowTag'
 import { ProtocolThreshold } from '@/components/protocol/ProtocolThreshold'
 import { ProtocolInstructForm } from '@/components/protocol/ProtocolInstructForm'
 import { usePromise } from '@/lib/hooks/usePromise'
+import { AiSourceInfoCard } from '@/components/ai/AiSourceInfoCard'
 
 interface props {
   Protocol: string
@@ -165,6 +166,7 @@ const ProtocolDes: React.FC<props> = ({ Protocol }) => {
         <Descriptions.Item label="类型">{data.Type}</Descriptions.Item>
         <Descriptions.Item label="设备类型">{data.ProtocolType}</Descriptions.Item>
         <Descriptions.Item label="备注" span={3}>
+          <AiSourceInfoCard remark={data.remark} />
           <MyInput
             {...(data.remark !== undefined ? { value: data.remark } : {})}
             onSave={remark}
@@ -235,7 +237,10 @@ const ProtocolDesLocal: React.FC<{ Protocol: Uart.protocol }> = ({ Protocol }) =
         <Descriptions.Item label="名称">{data.Protocol}</Descriptions.Item>
         <Descriptions.Item label="类型">{data.Type}</Descriptions.Item>
         <Descriptions.Item label="设备类型">{data.ProtocolType}</Descriptions.Item>
-        <Descriptions.Item label="备注">{data.remark}</Descriptions.Item>
+        <Descriptions.Item label="备注" span={3}>
+          <AiSourceInfoCard remark={data.remark} />
+          {data.remark}
+        </Descriptions.Item>
       </Descriptions>
       {data.instruct && (
         <Table

@@ -50,15 +50,25 @@ export const ADMIN_MENU: AdminMenuGroup[] = [
       { key: 'oss', to: '/admin/data/oss', text: 'OSS', icon: '' },
     ],
   },
-  {
+{
     title: '日志记录',
     ico: 'el-icon-coin',
     child: [
-      { key: 'log-alarm', to: '/admin/log/alarm', text: '告警日志', icon: '' },
-      { key: 'log-mail', to: '/admin/log/mail', text: '邮件日志', icon: '' },
-      { key: 'log-sms', to: '/admin/log/sms', text: '短信日志', icon: '' },
-      { key: 'log-wxsubscribe', to: '/admin/log/wxsubscribe', text: '微信告警事件日志', icon: '' },
+      { key: 'log-alarm', to: '/admin/log/alarm', text: '告警日志', icon: '⚠' },
+      { key: 'log-mail', to: '/admin/log/mail', text: '邮件日志', icon: '✉' },
+      { key: 'log-sms', to: '/admin/log/sms', text: '短信日志', icon: '✉' },
+      { key: 'log-wxsubscribe', to: '/admin/log/wxsubscribe', text: '微信告警事件日志', icon: '✉' },
       { key: 'log-server-errors', to: '/admin/log/server-errors', text: '服务端错误日志', icon: '⚠' },
+    ],
+  },
+  {
+    // 决策 16 + 19 + 20 / 2026-06-24：AI 协议生成器 admin 端入口
+    title: 'AI 工具',
+    ico: '⚡',
+    child: [
+      { key: 'ai-generate', to: '/admin/ai/generate', text: '生成新协议', icon: '⚡' },
+      { key: 'ai-chat', to: '/admin/ai/chat', text: 'AI 修改协议', icon: '✎' },
+      { key: 'ai-dry-run', to: '/admin/ai/dry-run', text: '协议 Dry-run', icon: '✓' },
     ],
   },
 ]
