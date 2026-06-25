@@ -123,7 +123,7 @@ export function ChatPane({
         key: m.id,
         ...ROLE_PROPS.error,
         content: (
-          <Space direction="vertical" size={4}>
+          <Space orientation="vertical" size={4}>
             <Text type="danger" style={{ fontSize: 13 }}>
               {m.content}
             </Text>
@@ -157,7 +157,7 @@ export function ChatPane({
           <Empty
             image={Empty.PRESENTED_IMAGE_SIMPLE}
             description={
-              <Space direction="vertical" size={8}>
+              <Space orientation="vertical" size={8}>
                 <Text type="secondary">还没有对话</Text>
                 {prompts && prompts.length > 0 && (
                   <Prompts

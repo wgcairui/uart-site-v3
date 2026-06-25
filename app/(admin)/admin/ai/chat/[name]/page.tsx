@@ -60,7 +60,7 @@ export default function AiChatPage() {
 
 function Empty({ name }: { name: string }) {
   return (
-    <Space direction="vertical" size={8} style={{ padding: 32 }}>
+    <Space orientation="vertical" size={8} style={{ padding: 32 }}>
       <Text type="secondary">未指定协议名</Text>
       <Text type="secondary" style={{ fontSize: 12 }}>
         从{' '}

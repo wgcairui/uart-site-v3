@@ -121,7 +121,7 @@ export default function AiDryRunPage() {
       {!result && !loading && (
         <Empty
           description={
-            <Space direction="vertical" size={4}>
+            <Space orientation="vertical" size={4}>
               <Text type="secondary">点击「跑 Dry-run」开始验证</Text>
               <Text type="secondary" style={{ fontSize: 12 }}>
                 后端用 LLM 当 validator，检查协议对历史回包的适用性

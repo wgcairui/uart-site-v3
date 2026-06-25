@@ -145,7 +145,7 @@ export function ProtocolPreviewForm({ value, onChange, mode, editable = false }:
                     </Space>
                   }
                 >
-                  <Space direction="vertical" size={4} style={{ width: '100%' }}>
+                  <Space orientation="vertical" size={4} style={{ width: '100%' }}>
                     {(inst.formResize ?? []).map((f, fi) => (
                       <Space key={fi} size={4} wrap>
                         <CheckOutlined style={{ color: '#52c41a', fontSize: 11 }} />

@@ -68,7 +68,7 @@ export function StatsPane({ stats, instructionCount = 0, toolStepCount = 0 }: St
       >
         {stats.error && (
           <Card size="small" style={{ borderColor: '#ff4d4f', background: '#fff1f0' }}>
-            <Space direction="vertical" size={4}>
+            <Space orientation="vertical" size={4}>
               <Text type="danger" strong style={{ fontSize: 13 }}>
                 请求失败
               </Text>

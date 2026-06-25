@@ -88,7 +88,7 @@ export default function AiChatIndexPage() {
         {items.length === 0 && !loading ? (
           <Empty
             description={
-              <Space direction="vertical" size={8}>
+              <Space orientation="vertical" size={8}>
                 <Text type="secondary">暂无协议</Text>
                 <Text type="secondary" style={{ fontSize: 12 }}>
                   先在 <a href="/admin/ai/generate">AI 生成新协议</a> 或
