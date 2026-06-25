@@ -292,22 +292,37 @@ function AiChatContent({ name }: AiChatContentProps) {
           </Tag>
         )}
       </div>
-      {loadingProtocol ? (
-        <Skeleton active style={{ padding: 32 }} />
-      ) : (
+      {(
         <AiWorkspace
           left={
-            <ChatPane
-              messages={messages}
-              isStreaming={isStreaming}
-              inputForm={inputFormNode}
-              onSubmit={() => undefined}
-              retryButton={
-                <Button size="small" danger onClick={() => chatForm.submit()}>
-                  重试
-                </Button>
-              }
-            />
+            <div style={{ position: 'relative', height: '100%' }}>
+              {loadingProtocol && (
+                <div
+                  style={{
+                    position: 'absolute',
+                    inset: 0,
+                    background: 'rgba(255,255,255,0.7)',
+                    zIndex: 10,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}
+                >
+                  <Skeleton active paragraph={{ rows: 4 }} />
+                </div>
+              )}
+              <ChatPane
+                messages={messages}
+                isStreaming={isStreaming}
+                inputForm={inputFormNode}
+                onSubmit={() => undefined}
+                retryButton={
+                  <Button size="small" danger onClick={() => chatForm.submit()}>
+                    重试
+                  </Button>
+                }
+              />
+            </div>
           }
           middle={<ProtocolPreviewForm value={protocol} onChange={setProtocol} mode="chat" />}
           right={
