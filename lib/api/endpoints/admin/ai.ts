@@ -21,6 +21,8 @@ import type {
   DryRunResult,
   FetchUrlDto,
   FetchUrlResult,
+  PreAnalyzeDto,
+  PreAnalyzeResult,
   UploadTokenDto,
   UploadTokenResult,
 } from '@/types/ai'
@@ -78,3 +80,34 @@ export const aiFetchUrl = (dto: FetchUrlDto) =>
  */
 export const aiCommit = (dto: CommitDto) =>
   Post<{ code: number; data: CommitResult; msg?: string }>('/api/v2/admin/ai/commit', dto)
+
+/**
+ * POST /api/v2/admin/ai/pre-analyze
+ * 设备元数据自动推断（决策 21 / 2026-06-25）。admin 选完 source 后**自动**调一次，
+ * LLM 扫一眼源文档 → 推断 deviceModel + suggestedProtocolName → 前端 prefilled 到 form。
+ *
+ * 调时机（前端集成在 generate/page.tsx onSourceReady）：
+ * - text 模式：textarea debounce 1s 后调
+ * - file 模式：OSS PUT 200 之后调
+ * - URL 模式：/fetch-url 返回 200 之后调
+ *
+ * 容错（前端处理，不是 wrapper 处理）：
+ * - 失败不阻断：pre-analyze 报错 → console.warn，admin 继续手填
+ * - 不抢用户输入：用户手动改过 deviceModel/hintProtocolName → 不再 prefilled
+ *
+ * 支持 AbortSignal：text debounce 触发新一轮时 abort 上一次 in-flight 请求，避免
+ * 20s LLM 累积多个并发。20s server-side timeout 是兜底。
+ *
+ * 后端错误码：
+ * - 400：sourceType='text' 时 manualText 必填 / sourceType='file' 时 ossKey+originalFileName 必填 / source 内容为空
+ * - 502：LLM 失败 / 未输出有效 JSON / 输出缺少 deviceModel 和 suggestedProtocolName 之一
+ */
+export const aiPreAnalyze = (
+  dto: PreAnalyzeDto,
+  options?: { signal?: AbortSignal }
+) =>
+  Post<{ code: number; data: PreAnalyzeResult; msg?: string }>(
+    '/api/v2/admin/ai/pre-analyze',
+    dto,
+    options
+  )
