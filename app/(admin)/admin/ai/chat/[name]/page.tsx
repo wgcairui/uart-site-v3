@@ -1,6 +1,6 @@
 'use client'
 
-import { Button, Form, Input, Skeleton, Space, Tag, Typography, message } from 'antd'
+import { App, Button, Form, Input, Skeleton, Space, Tag, Typography } from 'antd'
 import { useParams } from 'next/navigation'
 import Link from 'next/link'
 import { useCallback, useEffect, useRef, useState } from 'react'
@@ -79,6 +79,7 @@ interface AiChatContentProps {
 }
 
 function AiChatContent({ name }: AiChatContentProps) {
+  const { message } = App.useApp()
   const { stream, abort, isStreaming, error: streamError } = useAiStream()
 
   const [protocol, setProtocol] = useState<Partial<Uart.protocol> | null>(null)

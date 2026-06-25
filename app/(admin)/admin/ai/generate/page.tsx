@@ -1,6 +1,6 @@
 'use client'
 
-import { Button, Checkbox, Form, Input, message, Radio, Select, Space, Spin, Tabs, Tag, Tooltip, Typography } from 'antd'
+import { App, Button, Checkbox, Form, Input, Radio, Select, Space, Spin, Tabs, Tag, Tooltip, Typography } from 'antd'
 import { RobotOutlined, ThunderboltOutlined } from '@ant-design/icons'
 import { useRouter } from 'next/navigation'
 import { useCallback, useEffect, useRef, useState } from 'react'
@@ -51,6 +51,7 @@ interface FileSourceInfo {
  */
 export default function AiGeneratePage() {
   const router = useRouter()
+  const { message } = App.useApp()
   const { stream, abort, isStreaming, error: streamError } = useAiStream()
 
   // ============ 表单（生成参数）============
@@ -507,7 +508,13 @@ export default function AiGeneratePage() {
             <Input
               placeholder="如：APC Smart-UPS 3000"
               style={{ width: 180 }}
-              {...(preAnalyzeLoading ? { prefix: <Spin size="small" /> } : {})}
+              prefix={
+                // 固定 wrapper（占位 span），避免 loading 切换时 prefix 槽 add/remove
+                // 触发 antd v6 Input focus 丢失 warning
+                <span style={{ display: 'inline-block', width: 14, height: 14 }}>
+                  {preAnalyzeLoading ? <Spin size="small" /> : null}
+                </span>
+              }
             />
           </Tooltip>
         </Form.Item>
@@ -533,7 +540,11 @@ export default function AiGeneratePage() {
             <Input
               placeholder="PascalCase，留空让 LLM 起"
               style={{ width: 180 }}
-              {...(preAnalyzeLoading ? { prefix: <Spin size="small" /> } : {})}
+              prefix={
+                <span style={{ display: 'inline-block', width: 14, height: 14 }}>
+                  {preAnalyzeLoading ? <Spin size="small" /> : null}
+                </span>
+              }
             />
           </Tooltip>
         </Form.Item>

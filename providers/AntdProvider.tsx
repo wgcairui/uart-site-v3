@@ -1,7 +1,7 @@
 'use client'
 
 import { AntdRegistry } from '@ant-design/nextjs-registry'
-import { ConfigProvider, theme } from 'antd'
+import { App, ConfigProvider, theme } from 'antd'
 import zhCN from 'antd/locale/zh_CN'
 import type { FC, PropsWithChildren } from 'react'
 import { BRAND, INK, RADIUS, FONT, BG } from '@/lib/utils/designTokens'
@@ -98,7 +98,9 @@ const AntdProvider: FC<PropsWithChildren> = ({ children }) => {
           algorithm: theme.defaultAlgorithm,
         }}
       >
-        {children}
+        <App message={{ maxCount: 3 }}>
+          {children}
+        </App>
       </ConfigProvider>
     </AntdRegistry>
   )
