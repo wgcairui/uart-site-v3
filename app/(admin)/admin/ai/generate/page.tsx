@@ -125,9 +125,13 @@ export default function AiGeneratePage() {
           toolJsonAccumRef.current += delta
         },
         onSaved: (info) => {
-          // tool_done 后 form 实时绑定：尝试解析累积的 JSON
+          // 2026-06-25 改：优先用 info.protocol（后端 saved 事件带的完整 JSON，
+          // MiniMax 不支持 tool_use 后改成 prompt-instruct，server 直接 yield 完整 input）
+          // 兼容 v1：toolJsonAccumRef 累积的 tool_delta 仍可作为 fallback
           let parsed: Partial<Uart.protocol> | null = null
-          if (toolJsonAccumRef.current) {
+          if (info.protocol) {
+            parsed = info.protocol as Partial<Uart.protocol>
+          } else if (toolJsonAccumRef.current) {
             try {
               parsed = JSON.parse(toolJsonAccumRef.current)
             } catch {

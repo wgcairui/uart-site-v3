@@ -5,7 +5,13 @@
  * `AiGenerateEvent` / `AiChatEvent` 严格对齐。
  */
 
-/** 后端 generate / chat 端点共同的 SSE 事件类型（结构相同，version 来源不同） */
+/** 后端 generate / chat 端点共同的 SSE 事件类型（结构相同，version 来源不同）
+ *
+ * 2026-06-25 改：
+ * - tool_start / tool_delta 已弃用（MiniMax 不支持 Anthropic tool_use）
+ * - 新增 saved.protocol 字段（LLM 生成的完整 JSON，让前端 form 直接绑字段，
+ *   替代 v1 的 tool_delta 流式累积）
+ */
 export type AiStreamEvent =
   | { type: 'text'; delta: string }
   | { type: 'tool_start'; toolName: string }
@@ -19,6 +25,8 @@ export type AiStreamEvent =
       inputTokens: number;
       outputTokens: number;
       latencyMs: number;
+      /** LLM 生成的完整协议 JSON（与后端 Protocols 表对应） */
+      protocol?: any;
     }
   | { type: 'done' }
   | { type: 'error'; error: string }

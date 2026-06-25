@@ -43,32 +43,35 @@ export interface ChatPaneProps {
   retryButton?: ReactNode
 }
 
+// 2026-06-25 改：avatar 改成 ReactNode 而不是 {icon, style} 对象
+// @ant-design/x Bubble.List 渲染 items 时若 avatar 是 object，会当成 React child
+// 渲染 → "Objects are not valid as a React child" 报错。直接传 ReactNode 没问题。
 const ROLE_PROPS = {
   user: {
     placement: 'end' as const,
-    avatar: { icon: <UserOutlined />, style: { background: '#87d068' } },
+    avatar: <UserOutlined style={{ background: '#87d068', color: '#fff', borderRadius: '50%', padding: 4 }} />,
   },
   assistant: {
     placement: 'start' as const,
-    avatar: { icon: <RobotOutlined />, style: { background: '#1677ff' } },
+    avatar: <RobotOutlined style={{ background: '#1677ff', color: '#fff', borderRadius: '50%', padding: 4 }} />,
     typing: false,
   },
   tool: {
     placement: 'start' as const,
-    avatar: { icon: <CodeOutlined />, style: { background: '#722ed1', visibility: 'hidden' as const } },
+    avatar: <CodeOutlined style={{ visibility: 'hidden' }} />,
     variant: 'borderless' as const,
   },
   saved: {
     placement: 'start' as const,
-    avatar: { icon: <CheckCircleOutlined style={{ color: '#52c41a' }} />, style: { background: '#f6ffed' } },
+    avatar: <CheckCircleOutlined style={{ background: '#f6ffed', color: '#52c41a', borderRadius: '50%', padding: 4 }} />,
   },
   error: {
     placement: 'start' as const,
-    avatar: { icon: <RobotOutlined style={{ color: '#ff4d4f' }} />, style: { background: '#fff1f0' } },
+    avatar: <RobotOutlined style={{ background: '#fff1f0', color: '#ff4d4f', borderRadius: '50%', padding: 4 }} />,
   },
   system: {
     placement: 'start' as const,
-    avatar: { icon: <RobotOutlined style={{ color: '#faad14' }} />, style: { background: '#fffbe6' } },
+    avatar: <RobotOutlined style={{ background: '#fffbe6', color: '#faad14', borderRadius: '50%', padding: 4 }} />,
   },
 }
 
