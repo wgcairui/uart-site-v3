@@ -66,7 +66,7 @@ export const TerminalRunData: React.FC<UserRunDataProps> = ({ mac, pid, user, cl
 									{value + (!record.issimulate ? record.unit : "")}
 									{
 										<Tooltip color="cyan" title={`查看[${record.name}]的历史记录`}>
-											<Link href={user ? `/main/devline/${mac + pid}?name=${record.name}` : `/admin/node/terminal/devline?name=${record.name}&mac=${mac}&pid=${pid}`}>
+											<Link href={user ? `/main/devline/${mac}/${pid}?name=${record.name}` : `/admin/node/terminal/devline?name=${record.name}&mac=${mac}&pid=${pid}`}>
 												<FundFilled style={{ marginLeft: 8 }} />
 											</Link>
 										</Tooltip>
