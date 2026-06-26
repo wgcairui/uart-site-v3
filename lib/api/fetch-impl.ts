@@ -34,10 +34,12 @@ async function parseJson(res: Response) {
 
 export const Post = async <T>(
   path: string,
-  data?: { [x: string]: any }
+  data?: { [x: string]: any },
+  options?: { signal?: AbortSignal }
 ): Promise<T> => {
   const init: RequestInit = { method: 'POST', headers: header() }
   if (data !== undefined) init.body = JSON.stringify(data)
+  if (options?.signal) init.signal = options.signal
   const res = await fetch(path, init)
   const json = await parseJson(res)
   validationStatus(json)

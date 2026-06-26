@@ -160,7 +160,7 @@ function UploadStateView({ state, onRetry }: UploadStateViewProps) {
       type="error"
       showIcon
       style={{ padding: '4px 12px', fontSize: 12 }}
-      message={
+      title={
         <Space size={4}>
           <Text style={{ fontSize: 12 }}>{state.fileName}</Text>
           <Text type="danger" style={{ fontSize: 12 }}>

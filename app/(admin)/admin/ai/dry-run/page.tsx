@@ -1,6 +1,6 @@
 'use client'
 
-import { Alert, Button, Card, Empty, Form, InputNumber, List, Space, Tag, Typography, message } from 'antd'
+import { Alert, App, Button, Card, Empty, Form, InputNumber, List, Space, Tag, Typography } from 'antd'
 import { CheckCircleOutlined, CloseCircleOutlined, ExperimentOutlined } from '@ant-design/icons'
 import { PageHeader } from '@/components/common/PageHeader'
 import { usePromise } from '@/lib/hooks/usePromise'
@@ -24,6 +24,7 @@ const { Text, Paragraph } = Typography
  * 重新跑会覆盖当前结果。
  */
 export default function AiDryRunPage() {
+  const { message } = App.useApp()
   const [form] = Form.useForm<{ protocolName: string; sampleSize: number; lookbackHours: number }>()
   const [loading, setLoading] = useState(false)
   const [result, setResult] = useState<DryRunResult | null>(null)

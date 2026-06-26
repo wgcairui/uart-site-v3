@@ -3,11 +3,11 @@
 import { Card, Empty, Spin } from "antd";
 import React, { Suspense, useEffect, useState } from "react";
 import { useUserStore } from "@/lib/store/userStore";
-import { useSearchParams } from "next/navigation";
+import { useParams, useSearchParams } from "next/navigation";
 import { TerminalMountDevNameLine } from "@/components/terminal/TerminalMountDevNameLine";
 import { PageHeader } from "@/components/common/PageHeader";
 
-function DevLineInner({ params }: { params: { id: string } }) {
+function DevLineInner() {
 
     const terminals = useUserStore(s => s.terminals)
 
@@ -15,18 +15,17 @@ function DevLineInner({ params }: { params: { id: string } }) {
 
     const [mountDev, setMountDev] = useState<Uart.TerminalMountDevs>()
 
-    /**
-     * 设备id
-     */
-    const { id } = params
+    // Next.js 16: params 改成 Promise，用 useParams() 同步取
+    const params = useParams<{ mac: string; pid: string }>()
+    const { mac, pid } = params
 
     useEffect(() => {
-        const ter = terminals.find(el => RegExp("^" + el.DevMac).test(id || ''))
+        const ter = terminals.find(el => el.DevMac === mac)
         if (ter) {
             setTerminal(ter)
-            setMountDev(ter.mountDevs.find(el => ter.DevMac + el.pid === id))
+            setMountDev(ter.mountDevs.find(el => el.pid === Number(pid)))
         }
-    }, [id, terminals])
+    }, [mac, pid, terminals])
 
     const search = useSearchParams()
     const dataName = search.get("name") || ''
@@ -39,20 +38,24 @@ function DevLineInner({ params }: { params: { id: string } }) {
                     breadcrumb={[
                         { title: '首页', href: '/main' },
                         { title: terminal.name, href: `/main/terminal/${terminal.DevMac}` },
-                        { title: mountDev.mountDev, href: `/main/dev/${id}` },
+                        // dev 页面仍是旧 [id] 格式（独立处理，不在此处 refactor）
+                        { title: mountDev.mountDev, href: `/main/dev/${mac}${pid}` },
                     ]}
                 />
-                <Card>
+                <Card
+                    style={{ marginTop: 16 }}
+                    styles={{ body: { padding: 16 } }}
+                >
                     <TerminalMountDevNameLine mac={terminal.DevMac} pid={mountDev.pid} name={dataName}></TerminalMountDevNameLine>
                 </Card>
             </>
     )
 }
 
-export default function DevLine(props: { params: { id: string } }) {
+export default function DevLine() {
     return (
         <Suspense fallback={<Spin />}>
-            <DevLineInner {...props} />
+            <DevLineInner />
         </Suspense>
     )
 }

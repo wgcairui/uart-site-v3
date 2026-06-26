@@ -1,9 +1,9 @@
 'use client'
 
-import { Button, Checkbox, Form, Input, message, Radio, Select, Space, Tabs, Tag, Typography } from 'antd'
-import { ThunderboltOutlined } from '@ant-design/icons'
+import { App, Button, Checkbox, Form, Input, Radio, Select, Space, Spin, Tabs, Tag, Tooltip, Typography } from 'antd'
+import { RobotOutlined, ThunderboltOutlined } from '@ant-design/icons'
 import { useRouter } from 'next/navigation'
-import { useCallback, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { PageHeader } from '@/components/common/PageHeader'
 import { AiWorkspace } from '@/components/ai/AiWorkspace'
 import { SourceUploadTab } from '@/components/ai/SourceUploadTab'
@@ -19,8 +19,8 @@ import {
 import { ProtocolPreviewForm } from '@/components/ai/ProtocolPreviewForm'
 import { StatsPane } from '@/components/ai/StatsPane'
 import { useAiStream } from '@/lib/hooks/useAiStream'
-import { aiCommit } from '@/lib/api/endpoints/admin/ai'
-import type { AiRunStats, GenerateStreamDto } from '@/types/ai'
+import { aiCommit, aiPreAnalyze } from '@/lib/api/endpoints/admin/ai'
+import type { AiRunStats, GenerateStreamDto, PreAnalyzeDto } from '@/types/ai'
 import { EMPTY_AI_STATS } from '@/types/ai'
 
 const { Text } = Typography
@@ -51,6 +51,7 @@ interface FileSourceInfo {
  */
 export default function AiGeneratePage() {
   const router = useRouter()
+  const { message } = App.useApp()
   const { stream, abort, isStreaming, error: streamError } = useAiStream()
 
   // ============ 表单（生成参数）============
@@ -62,6 +63,22 @@ export default function AiGeneratePage() {
   const [sourceMode, setSourceMode] = useState<SourceMode>('text')
   const [manualText, setManualText] = useState('') // text 模式专用
   const [fileSource, setFileSource] = useState<FileSourceInfo | null>(null) // upload/url 模式专用
+
+  // ============ Pre-analyze（决策 21 / 2026-06-25）============
+  // 选完 source 后自动调一次 /pre-analyze，LLM 扫一眼源文档 → 推断 deviceModel + suggestedProtocolName
+  // 设计原则：
+  // - 失败不阻断：pre-analyze 报错 console.warn，admin 继续手填
+  // - 不抢用户输入：用户手动改过 deviceModel/hintProtocolName 后 → touched flag 阻止 prefill
+  // - debounce 1s（text 模式）：避免每输入一个字就调一次
+  // - abort：text debounce 触发新一轮时 abort 上一次 in-flight（避免 20s 累积）
+  const [preAnalyzeLoading, setPreAnalyzeLoading] = useState(false)
+  const [preAnalyzeReasoning, setPreAnalyzeReasoning] = useState<string | null>(null)
+  const deviceModelTouchedRef = useRef(false)
+  const hintProtocolNameTouchedRef = useRef(false)
+  // 决策 22：pre-analyze 也能 prefill 设备类型下拉，admin 改过就不再覆盖
+  const protocolTypeTouchedRef = useRef(false)
+  const preAnalyzeAbortRef = useRef<AbortController | null>(null)
+  const textDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   // ============ 协议预览 ============
   const [protocol, setProtocol] = useState<Partial<Uart.protocol> | null>(null)
@@ -80,6 +97,114 @@ export default function AiGeneratePage() {
   const toolJsonAccumRef = useRef<string>('')
 
   const instructionCount = protocol?.instruct?.length ?? 0
+
+  // ============ Pre-analyze trigger（决策 21）============
+  // 统一触发入口。text 模式 debounce 触发；file/url 模式在 tab onUploaded/onFetched 同步触发
+  // - abort 上一次 in-flight（20s 兜底）
+  // - 失败 console.warn 不阻断，admin 继续手填
+  // - prefilled 前检查 touched flag，不抢用户输入
+  const triggerPreAnalyze = useCallback(
+    async (dto: PreAnalyzeDto) => {
+      preAnalyzeAbortRef.current?.abort()
+      const controller = new AbortController()
+      preAnalyzeAbortRef.current = controller
+      setPreAnalyzeLoading(true)
+      try {
+        const res = await aiPreAnalyze(dto, { signal: controller.signal })
+        if (res.code !== 200 || !res.data) {
+          console.warn('pre-analyze 失败:', res.msg || `HTTP ${res.code}`)
+          return
+        }
+        const { deviceModel, suggestedProtocolName, confidence, reasoning } = res.data
+        // prefilled：只在用户没手动改过的字段上
+        if (deviceModel && !deviceModelTouchedRef.current) {
+          form.setFieldValue('deviceModel', deviceModel)
+        }
+        if (suggestedProtocolName && !hintProtocolNameTouchedRef.current) {
+          form.setFieldValue('hintProtocolName', suggestedProtocolName)
+        }
+        // 决策 22：设备类型下拉也 prefill（admin 改过就不覆盖）
+        if (res.data.protocolType && !protocolTypeTouchedRef.current) {
+          form.setFieldValue('protocolType', res.data.protocolType)
+        }
+        setPreAnalyzeReasoning(reasoning)
+        if (typeof confidence === 'number' && confidence < 0.6) {
+          message.info(
+            `AI 推断可信度 ${(confidence * 100).toFixed(0)}%，建议 review`
+          )
+        }
+      } catch (err: any) {
+        if (err?.name === 'AbortError') return
+        console.warn('pre-analyze 失败:', err)
+      } finally {
+        if (preAnalyzeAbortRef.current === controller) {
+          preAnalyzeAbortRef.current = null
+        }
+        setPreAnalyzeLoading(false)
+      }
+    },
+    [form]
+  )
+
+  // ============ text 模式：debounce 1s 后触发 pre-analyze ============
+  useEffect(() => {
+    if (sourceMode !== 'text') return
+    const text = manualText.trim()
+    // 至少 10 字才推断（避免空/超短输入浪费 LLM call）
+    if (text.length < 10) return
+    if (textDebounceRef.current) clearTimeout(textDebounceRef.current)
+    textDebounceRef.current = setTimeout(() => {
+      triggerPreAnalyze({
+        sourceType: 'text',
+        manualText: text,
+        ossKey: undefined,
+        originalFileName: undefined,
+        contentType: undefined,
+      })
+    }, 1000)
+    return () => {
+      if (textDebounceRef.current) {
+        clearTimeout(textDebounceRef.current)
+        textDebounceRef.current = null
+      }
+    }
+  }, [manualText, sourceMode, triggerPreAnalyze])
+
+  // ============ 切 source tab 时重置 touched flags + 清 pre-analyze 状态 ============
+  useEffect(() => {
+    deviceModelTouchedRef.current = false
+    hintProtocolNameTouchedRef.current = false
+    protocolTypeTouchedRef.current = false
+    setPreAnalyzeReasoning(null)
+    preAnalyzeAbortRef.current?.abort()
+    if (textDebounceRef.current) {
+      clearTimeout(textDebounceRef.current)
+      textDebounceRef.current = null
+    }
+    setPreAnalyzeLoading(false)
+  }, [sourceMode])
+
+  // ============ 组件卸载时清理 ============
+  useEffect(() => {
+    return () => {
+      preAnalyzeAbortRef.current?.abort()
+      if (textDebounceRef.current) {
+        clearTimeout(textDebounceRef.current)
+      }
+    }
+  }, [])
+
+  // ============ Form onValuesChange：检测用户改过 deviceModel/hintProtocolName ============
+  // 不抢用户输入：一旦用户动了 deviceModel / hintProtocolName 字段，
+  // prefill 阶段会跳过该字段（用 ref，event-driven，不进 state 避免不必要 re-render）
+  const handleValuesChange = useCallback(
+    (changed: Partial<GenerateStreamDto & { overrideExisting: boolean }>) => {
+      if (changed.deviceModel !== undefined) deviceModelTouchedRef.current = true
+      if (changed.hintProtocolName !== undefined) hintProtocolNameTouchedRef.current = true
+      if (changed.protocolType !== undefined) protocolTypeTouchedRef.current = true
+    },
+    []
+  )
 
   const submitGenerate = useCallback(
     async (values: GenerateStreamDto & { overrideExisting?: boolean }) => {
@@ -353,6 +478,7 @@ export default function AiGeneratePage() {
         overrideExisting: false,
       }}
       onFinish={submitGenerate}
+      onValuesChange={handleValuesChange}
       disabled={isStreaming || submitting}
     >
       <Space size={12} wrap align="end">
@@ -368,11 +494,67 @@ export default function AiGeneratePage() {
             ]}
           />
         </Form.Item>
-        <Form.Item label="设备型号" name="deviceModel" style={{ marginBottom: 8 }}>
-          <Input placeholder="如：APC Smart-UPS 3000" style={{ width: 180 }} />
+        <Form.Item
+          label={
+            <Space size={4}>
+              <Text style={{ fontSize: 12 }}>设备型号</Text>
+              {preAnalyzeLoading && (
+                <Tag color="processing" icon={<RobotOutlined />} style={{ fontSize: 10, margin: 0 }}>
+                  AI 推断中
+                </Tag>
+              )}
+            </Space>
+          }
+          name="deviceModel"
+          style={{ marginBottom: 8 }}
+        >
+          <Tooltip
+            title={preAnalyzeReasoning ?? null}
+            placement="top"
+            mouseEnterDelay={0.3}
+          >
+            <Input
+              placeholder="如：APC Smart-UPS 3000"
+              style={{ width: 180 }}
+              prefix={
+                // 固定 wrapper（占位 span），避免 loading 切换时 prefix 槽 add/remove
+                // 触发 antd v6 Input focus 丢失 warning
+                <span style={{ display: 'inline-block', width: 14, height: 14 }}>
+                  {preAnalyzeLoading ? <Spin size="small" /> : null}
+                </span>
+              }
+            />
+          </Tooltip>
         </Form.Item>
-        <Form.Item label="建议协议名" name="hintProtocolName" style={{ marginBottom: 8 }}>
-          <Input placeholder="PascalCase，留空让 LLM 起" style={{ width: 180 }} />
+        <Form.Item
+          label={
+            <Space size={4}>
+              <Text style={{ fontSize: 12 }}>建议协议名</Text>
+              {preAnalyzeLoading && (
+                <Tag color="processing" icon={<RobotOutlined />} style={{ fontSize: 10, margin: 0 }}>
+                  AI 推断中
+                </Tag>
+              )}
+            </Space>
+          }
+          name="hintProtocolName"
+          style={{ marginBottom: 8 }}
+        >
+          <Tooltip
+            title={preAnalyzeReasoning ?? null}
+            placement="top"
+            mouseEnterDelay={0.3}
+          >
+            <Input
+              placeholder="PascalCase，留空让 LLM 起"
+              style={{ width: 180 }}
+              prefix={
+                <span style={{ display: 'inline-block', width: 14, height: 14 }}>
+                  {preAnalyzeLoading ? <Spin size="small" /> : null}
+                </span>
+              }
+            />
+          </Tooltip>
         </Form.Item>
         <Form.Item label="覆盖同名" name="overrideExisting" valuePropName="checked" style={{ marginBottom: 8 }}>
           <Checkbox>覆盖已存在的协议</Checkbox>
@@ -427,13 +609,21 @@ export default function AiGeneratePage() {
               children: (
                 <SourceUploadTab
                   disabled={isStreaming || submitting}
-                  onUploaded={(info) =>
+                  onUploaded={(info) => {
                     setFileSource({
                       ossKey: info.ossKey,
                       originalFileName: info.originalFileName,
                       contentType: info.contentType,
                     })
-                  }
+                    // OSS PUT 200 之后触发 pre-analyze（决策 21）
+                    triggerPreAnalyze({
+                      sourceType: 'file',
+                      manualText: undefined,
+                      ossKey: info.ossKey,
+                      originalFileName: info.originalFileName,
+                      contentType: info.contentType,
+                    })
+                  }}
                 />
               ),
             },
@@ -443,13 +633,21 @@ export default function AiGeneratePage() {
               children: (
                 <SourceUrlTab
                   disabled={isStreaming || submitting}
-                  onFetched={(info) =>
+                  onFetched={(info) => {
                     setFileSource({
                       ossKey: info.ossKey,
                       originalFileName: info.originalFileName,
                       contentType: info.contentType,
                     })
-                  }
+                    // /fetch-url 返回 200 之后触发 pre-analyze（决策 21）
+                    triggerPreAnalyze({
+                      sourceType: 'file',
+                      manualText: undefined,
+                      ossKey: info.ossKey,
+                      originalFileName: info.originalFileName,
+                      contentType: info.contentType,
+                    })
+                  }}
                 />
               ),
             },

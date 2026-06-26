@@ -125,14 +125,54 @@ export const getTerminalDatasV2 = (
   name: string | string[],
   start: number,
   end: number,
-  _query?: PaginationReq
+  query?: PaginationReq
 ) => {
   const names = typeof name === 'string' ? name : name.length > 1 ? name : name[0] || []
-  return Post<universalResult<V2ListResponse<datas>>>(`/api/v2/user/devices/${encodeURIComponent(mac)}/mount/${pid}/data/history`, {
+  const safePid = Number(pid) || 0
+  return Post<universalResult<V2ListResponse<datas>>>(`/api/v2/user/devices/${encodeURIComponent(mac)}/mount/${safePid}/data/history`, {
     name: names,
     start,
     end,
+    ...query,
   })
+}
+
+/** 折线图专用：单次最多 2000 点，服务端可选去重。POST /api/v2/user/devices/:mac/mount/:pid/data/chart */
+export interface ChartDataItem {
+  name: string;
+  value: string;
+  time: number;
+  unit?: string;
+  parseValue?: string;
+  issimulate?: boolean;
+}
+export interface ChartDataResponse {
+  items: ChartDataItem[];
+  total: number;        // 原始点数
+  deduped: number;      // 被去重掉的点数
+  returned: number;     // 实际返回点数（可能 < total 因为 maxPoints 采样）
+  dedup: boolean;
+}
+export const getDeviceChartData = (
+  mac: string,
+  pid: number | string,
+  name: string | string[],
+  start: number,
+  end: number,
+  options?: { dedup?: boolean; maxPoints?: number }
+) => {
+  const names = typeof name === 'string' ? name : name.length > 1 ? name : name[0] || []
+  const safePid = Number(pid) || 0
+  return Post<universalResult<ChartDataResponse>>(
+    `/api/v2/user/devices/${encodeURIComponent(mac)}/mount/${safePid}/data/chart`,
+    {
+      name: names,
+      start,
+      end,
+      dedup: options?.dedup ?? true,
+      maxPoints: options?.maxPoints ?? 500,
+    }
+  )
 }
 
 /** 重置设备超时状态 v2: POST /api/v2/user/devices/:mac/mount/:pid/refresh */

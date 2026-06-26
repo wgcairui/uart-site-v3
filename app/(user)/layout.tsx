@@ -121,7 +121,7 @@ export default function UserLayout({ children }: { children: React.ReactNode }) 
             {/* 模拟登录提示 */}
             {isSimulated && (
                 <Alert
-                    message="模拟登录模式 - 当前以管理员身份登录用户账号"
+                    title="模拟登录模式 - 当前以管理员身份登录用户账号"
                     type="warning"
                     showIcon
                     closable
