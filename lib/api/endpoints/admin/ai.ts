@@ -18,6 +18,7 @@
  * upload-token 端点保留向后兼容（前端不再用，但 schema 不删）。
  */
 import { Post } from '@/lib/api/fetch'
+import { getAuthToken } from '@/lib/utils/token'
 import type {
   CommitDto,
   CommitResult,
@@ -75,9 +76,19 @@ export const aiUpload = async (dto: UploadDto): Promise<UploadResult> => {
     fileSize: String(dto.fileSize),
   }).toString()
 
+  // ⚠️ 手动塞 Authorization header（不能用 lib/api/fetch.ts 的 Post，强制 JSON.stringify 不能传 FormData）
+  // cookie 'token' 是 next.js 写入（lib/utils/token.ts:10），但 server `getHeaderToken` 不读 'token' cookie，
+  // 只认 ctx.header['token'] / ctx.cookies.get('auth._token.local') / ctx.header.authorization
+  // 三个 fallback。所以浏览器 fetch 必须带 Authorization header 才能过 AuthGuard.
+  // getAuthToken() 返回 'bearer%20<token>' 格式，server 端 getHeaderToken 用 split(/(%20| )/).reverse()[0] 反向取 token.
+  const headers: Record<string, string> = {}
+  const auth = getAuthToken()
+  if (auth) headers['Authorization'] = auth
+
   const res = await fetch(`/api/v2/admin/ai/upload?${qs}`, {
     method: 'POST',
     body: fd,
+    headers,
     credentials: 'include',
   })
   const text = await res.text()
