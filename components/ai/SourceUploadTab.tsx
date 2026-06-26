@@ -13,7 +13,8 @@ const { Text } = Typography
  * 流程：
  * 1. admin 选文件（PDF/Excel/Word/TXT/MD，≤ 20MB）
  * 2. beforeUpload 拦截：MIME/大小白名单
- * 3. customRequest 调 useSourceUpload.upload(file) → /upload-token → OSS PUT
+ * 3. customRequest 调 useSourceUpload.upload(file) → POST /api/v2/admin/ai/upload → 后端中转 → OSS
+ *    （2026-06-26 改造：原 /upload-token 浏览器直传踩了 mixed-content，改回后端中转）
  * 4. 4 态 UI：idle（提示）→ uploading（Spin + 文件名）→ done（✓ 标签）→ error（Alert + 重试）
  * 5. onUploaded 回调把 {ossKey, originalFileName, contentType} 抛给父表单
  *

@@ -6,12 +6,16 @@
  * 注意：
  * - generate-stream / chat-stream 是 SSE（text/event-stream），不走 fetch-impl 的 JSON 解析；
  *   使用 `@/lib/hooks/useAiStream` 直接消费，**不要**用本文件的 wrapper 调用 SSE 端点。
- * - 本文件只暴露一次性 JSON 端点：dry-run / upload-token / fetch-url / commit。
+ * - 本文件只暴露一次性 JSON 端点：dry-run / upload / fetch-url / commit。
  *
  * 后端实现：`wgcairui/uart-server` `src/module/ai/controller/admin-ai.controller.ts`
  *
  * 2026-06-25 决策 13 阶段 1 改：新增 upload-token（OSS 预签名）/ fetch-url（后端抓网页）
  * / commit（两段式：OSS tmp → 永久区）三个端点 wrapper。
+ *
+ * 2026-06-26 改：upload-token → upload（后端中转）。原「浏览器 → OSS 直传」踩了
+ * mixed-content（CORS 也漏配），改回后端中转跟 `/admin/data/oss` 的 oss/upload 一致。
+ * upload-token 端点保留向后兼容（前端不再用，但 schema 不删）。
  */
 import { Post } from '@/lib/api/fetch'
 import type {
@@ -23,6 +27,8 @@ import type {
   FetchUrlResult,
   PreAnalyzeDto,
   PreAnalyzeResult,
+  UploadDto,
+  UploadResult,
   UploadTokenDto,
   UploadTokenResult,
 } from '@/types/ai'
@@ -35,18 +41,60 @@ export const aiDryRun = (dto: DryRunDto) =>
   Post<{ code: number; data: DryRunResult; msg?: string }>('/api/v2/admin/ai/dry-run', dto)
 
 /**
- * POST /api/v2/admin/ai/upload-token
- * 拿 OSS 预签名 PUT URL。前端拿到 uploadUrl 后用 `fetch(uploadUrl, { method: 'PUT', body: file })`
- * 直传 OSS，**不经过**后端中转。
+ * POST /api/v2/admin/ai/upload（multipart/form-data）
+ * 后端中转上传文件到 OSS tmp 区。**不走**预签名直传 —— 浏览器 → 同源后端 → OSS，
+ * 完全规避 mixed-content + CORS 配置坑，跟 `/admin/data/oss` 走的
+ * `/api/v2/admin/system/oss/upload` 是同一套架构。
+ *
+ * 入参：
+ * - file: File（multipart file 字段）
+ * - contentType / fileSize: 元信息（前端 beforeUpload 已校验，后端会再校验一次）
+ *
+ * 出参：{ ossKey, ossUrl, uploadId, originalFileName, contentType, fileSize }
  *
  * 后端错误码：
  * - 400：contentType 不支持 / fileSize 超过上限 / fileName 不合法
+ * - 413：multipart body 超 Koa body parser 上限
  *
- * MIME 白名单（与后端 `src/module/ai/util/oss-token.util.ts` 同步）：
+ * MIME 白名单（与后端 `src/module/ai/util/oss-token.util.ts` `ALLOWED_AI_PROTOCOL_MIME` 同步）：
  * - application/pdf
  * - application/vnd.ms-excel / application/vnd.openxmlformats-officedocument.spreadsheetml.sheet
  * - application/msword / application/vnd.openxmlformats-officedocument.wordprocessingml.document
  * - text/plain / text/markdown
+ *
+ * ⚠️ 本函数**不能**用 lib/api/fetch.ts 的 Post（强制 JSON.stringify body）。
+ *    直接用 fetch + FormData，鉴权 token 从 cookie 读（fetch-impl 默认行为）。
+ */
+export const aiUpload = async (dto: UploadDto): Promise<UploadResult> => {
+  const fd = new FormData()
+  fd.append('file', dto.file, dto.file.name)
+  // 元信息走 query string，不放 body（midwayjs/upload 用 @Files 装饰器只读 file 字段，
+  // contentType / fileSize 从 multipart filename / data 长度直接读，避免再加 form field）
+  const qs = new URLSearchParams({
+    contentType: dto.contentType,
+    fileSize: String(dto.fileSize),
+  }).toString()
+
+  const res = await fetch(`/api/v2/admin/ai/upload?${qs}`, {
+    method: 'POST',
+    body: fd,
+    credentials: 'include',
+  })
+  const text = await res.text()
+  const json = text ? JSON.parse(text) : { code: res.status, data: null, msg: 'No Content' }
+  if (json.code !== 200 || !json.data) {
+    throw new Error(json.msg || `HTTP ${json.code || res.status}`)
+  }
+  return json.data as UploadResult
+}
+
+/**
+ * POST /api/v2/admin/ai/upload-token
+ * 拿 OSS 预签名 PUT URL。
+ *
+ * @deprecated 2026-06-26 — 改用 `aiUpload`（后端中转）。原「浏览器 → OSS 直传」踩了
+ *   mixed-content + CORS 配置坑（OSS bucket endpoint 是 HTTP，前端是 HTTPS 页面）。
+ *   这个 wrapper 保留仅为向后兼容 schema 参考，前端代码已不再调用。
  */
 export const aiUploadToken = (dto: UploadTokenDto) =>
   Post<{ code: number; data: UploadTokenResult; msg?: string }>(
