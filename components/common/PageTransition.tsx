@@ -47,8 +47,10 @@ export function PageTransition({ children, duration = 200 }: PageTransitionProps
     <div
       key={displayPath}
       style={{
-        animation: `page-${animState} ${duration}ms cubic-bezier(.4, 0, .2, 1)`,
-        animationFillMode: 'both',
+        // 注意：fill-mode 必须放在 animation 简写里（末尾），不要和
+        // animationFillMode 长写同时设置 —— React 19 rerender 时
+        // 会报 "don't mix shorthand and non-shorthand properties" 警告。
+        animation: `page-${animState} ${duration}ms cubic-bezier(.4, 0, .2, 1) both`,
         width: '100%',
         height: '100%',
       }}
