@@ -105,29 +105,61 @@ export interface DryRunResult {
 // 2026-06-25 决策 13 阶段 1：source 二选一（Text/Upload/URL）
 // ============================================================================
 
-/** POST /upload-token 入参 */
-export interface UploadTokenDto {
-  /** 原始文件名，含扩展名（用于 MIME 白名单校验 + OSS 路径） */
-  fileName: string
-  /** MIME，必需在白名单内（PDF/Excel/Word/TXT/MD） */
+/**
+ * POST /api/v2/admin/ai/upload 入参（multipart/form-data）
+ *
+ * 2026-06-26 改造：原 `/upload-token` 走「浏览器 → OSS 直传」踩了 mixed-content +
+ * CORS 配置坑（OSS bucket endpoint 是 HTTP），改回「浏览器 → 后端中转」架构，跟
+ * `/admin/data/oss` 页面的 `/api/v2/admin/system/oss/upload` 一致。后端 controller
+ * 接收 multipart，校验后用 OSS SDK putObject 落到 `ai-protocol/<userId>/tmp/upload_<uuid>/`。
+ *
+ * 后续 /commit 阶段（tmp → permanent 区）路径格式完全不变。
+ */
+export interface UploadDto {
+  /** multipart/form-data 的 file 字段 */
+  file: File
+  /** 文件 MIME（必传，mime 白名单强校验） */
   contentType: string
-  /** 字节数，1 ~ 20MB（后端有硬限制） */
+  /** 字节数（前端先校验 ≤20MB，后端再校验一次） */
   fileSize: number
 }
 
-/** POST /upload-token 出参 */
-export interface UploadTokenResult {
-  /** PUT 上去的预签名 URL（15min 有效） */
-  uploadUrl: string
+/** POST /api/v2/admin/ai/upload 出参 */
+export interface UploadResult {
   /** OSS 路径，形如 ai-protocol/u_abc/tmp/upload_xxx/P02.pdf */
   ossKey: string
   /** 公开 GET URL（admin 详情页展示用） */
   ossUrl: string
-  /** uuid，本次上传 session id */
+  /** 本次上传 session id */
   uploadId: string
-  /** 900s */
+  /** 原始文件名（从 multipart filename 字段提取） */
+  originalFileName: string
+  /** 落 OSS 的 mime（与 multipart 一致） */
+  contentType: string
+  /** 字节数 */
+  fileSize: number
+}
+
+/**
+ * @deprecated 2026-06-26 — 改用 `UploadDto` / `UploadResult` + 后端中转。
+ * 保留类型仅给旧版本 `/upload-token` 端点兼容性参考，前端代码已不再调用。
+ */
+// eslint-disable-next-line @typescript-eslint/no-empty-interface
+export interface UploadTokenDto {
+  fileName: string
+  contentType: string
+  fileSize: number
+}
+
+/**
+ * @deprecated 2026-06-26 — 改用 `UploadResult`。保留类型向后兼容参考。
+ */
+export interface UploadTokenResult {
+  uploadUrl: string
+  ossKey: string
+  ossUrl: string
+  uploadId: string
   expires: number
-  /** 20MB（与 AI_PROTOCOL_MAX_SIZE 同步） */
   maxSize: number
 }
 
