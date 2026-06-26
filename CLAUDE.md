@@ -159,7 +159,15 @@ redirect('/login')
 
 ## 环境注意
 
-- ⚠️ Vercel CLI 经常落后，每次部署前运行 `npm i -g vercel@latest` 或 `pnpm add -g vercel@latest`
+- ⚠️ **生产部署走 server Docker，不走 Vercel**（2026-06-26 确认）
+  - source: `cc@uart.ladishb.com:/home/cc/Web/uart-site-v3`（git repo on `main`）
+  - build: `docker build -t uart-site-v3:latest .`（3 阶段 Dockerfile，oven/bun:1 base + standalone output）
+  - 重启: `cd /home/cc/Web/docker && docker compose up -d --force-recreate --no-deps uartsite-v3`
+  - 容器: `docker-uartsite-v3-1`，端口 9004→3000
+  - **生产 server 访问 GitHub / Docker Hub 受限**，所有 git / docker 命令必加 `HTTPS_PROXY=http://100.76.101.62:7890`（不加会静默 hang 30s）
+  - build 走 5+ min 长跑命令模式：nohup + log file + pid 轮询
+  - 部署 hotfix 直接 push main，不走 PR 流程；日常 feature 走 PR
+  - 完整命令 / 故障排查见 agent memory `memory/MEMORY.md` 主题 "uart-site-v3 生产部署"
 
 ## Next.js 16.2 特有约定
 
