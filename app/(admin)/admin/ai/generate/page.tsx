@@ -112,20 +112,34 @@ export default function AiGeneratePage() {
       try {
         const res = await aiPreAnalyze(dto, { signal: controller.signal })
         if (res.code !== 200 || !res.data) {
-          console.warn('pre-analyze 失败:', res.msg || `HTTP ${res.code}`)
+          console.warn('[pre-analyze] 失败:', res.msg || `HTTP ${res.code}`)
           return
         }
         const { deviceModel, suggestedProtocolName, confidence, reasoning } = res.data
+        console.log('[pre-analyze] data:', res.data, {
+          deviceModelTouched: deviceModelTouchedRef.current,
+          hintProtocolNameTouched: hintProtocolNameTouchedRef.current,
+          protocolTypeTouched: protocolTypeTouchedRef.current,
+        })
         // prefilled：只在用户没手动改过的字段上
+        // 用 setFieldsValue 一次设多个字段（避免连续 setFieldValue 触发中间态 re-render）
+        const prefill: Record<string, unknown> = {}
         if (deviceModel && !deviceModelTouchedRef.current) {
-          form.setFieldValue('deviceModel', deviceModel)
+          prefill.deviceModel = deviceModel
         }
         if (suggestedProtocolName && !hintProtocolNameTouchedRef.current) {
-          form.setFieldValue('hintProtocolName', suggestedProtocolName)
+          prefill.hintProtocolName = suggestedProtocolName
         }
         // 决策 22：设备类型下拉也 prefill（admin 改过就不覆盖）
         if (res.data.protocolType && !protocolTypeTouchedRef.current) {
-          form.setFieldValue('protocolType', res.data.protocolType)
+          prefill.protocolType = res.data.protocolType
+        }
+        console.log('[pre-analyze] 准备 setFieldsValue:', prefill)
+        if (Object.keys(prefill).length > 0) {
+          form.setFieldsValue(prefill)
+          console.log('[pre-analyze] setFieldsValue 完成, 当前 values:', form.getFieldsValue())
+        } else {
+          console.log('[pre-analyze] 没有任何字段需要 prefill (全部 truthy 检查失败或 touched=true)')
         }
         setPreAnalyzeReasoning(reasoning)
         if (typeof confidence === 'number' && confidence < 0.6) {
@@ -135,7 +149,7 @@ export default function AiGeneratePage() {
         }
       } catch (err: any) {
         if (err?.name === 'AbortError') return
-        console.warn('pre-analyze 失败:', err)
+        console.warn('[pre-analyze] 异常:', err)
       } finally {
         if (preAnalyzeAbortRef.current === controller) {
           preAnalyzeAbortRef.current = null
