@@ -222,7 +222,9 @@ export default function AiGeneratePage() {
 
   const submitGenerate = useCallback(
     async (values: GenerateStreamDto & { overrideExisting?: boolean }) => {
+      console.log('[submit] 入口, values:', values, { sourceMode, manualText: manualText.slice(0, 30), fileSource })
       if (!values.protocolType) {
+        console.warn('[submit] 早 return: protocolType 缺失')
         message.warning('请选择设备类型')
         return
       }
@@ -285,6 +287,7 @@ export default function AiGeneratePage() {
         contentType: dtoContentType,
       }
 
+      console.log('[submit] 准备调 stream(), dto:', dto, 'isStreaming now:', isStreaming)
       await stream('/api/v2/admin/ai/generate-stream', dto, {
         onText: (delta) => {
           // 累积到当前 assistant 消息
@@ -445,6 +448,7 @@ export default function AiGeneratePage() {
           }
         },
         onError: (err) => {
+          console.error('[submit] stream onError:', err)
           setStats((s) => ({ ...s, finishedAt: Date.now(), error: err }))
           setMessages((prev) => [
             ...prev,
