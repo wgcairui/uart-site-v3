@@ -22,7 +22,7 @@ export function AdminSider() {
   const selectedKey = matchMenuKey(pathname)
   const [collapsed, setCollapsed] = useState(false)
 
-  const width = collapsed ? 64 : 240
+  const width = collapsed ? 64 : 200
 
   return (
     <aside

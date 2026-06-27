@@ -147,6 +147,11 @@ export function ChatPane({
             padding: '12px 16px',
             borderBottom: '1px solid var(--colorBorderSecondary, #e5e7eb)',
             background: 'var(--colorBgLayout, #fafafa)',
+            // 内容超出时可滚动，避免撑爆 ChatPane flex 布局
+            // 上限给到 60%（约 600-700px），保证 messages + Sender 还有空间
+            maxHeight: '60%',
+            overflowY: 'auto',
+            flexShrink: 0,
           }}
         >
           {inputForm}
