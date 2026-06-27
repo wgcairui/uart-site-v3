@@ -485,6 +485,12 @@ export default function AiGeneratePage() {
     }
   }
 
+  // 跳转到协议详情页（2026-06-27 决策：AI 生成完成后可以一键跳转）
+  const goProtocolDetail = (protocolName: string) => {
+    // 协议详情页路径：/admin/node/protocols/info?name=XXX
+    router.push(`/admin/node/protocols/info?name=${encodeURIComponent(protocolName)}`)
+  }
+
   // ============ 输入表单（左侧顶部）============
   const inputFormNode = (
     <Form
@@ -701,10 +707,16 @@ export default function AiGeneratePage() {
           />
         }
         left={
+          // 左列：表单（设备类型/型号/协议名/Source tabs/生成按钮）
+          // 2026-06-27 重构：form 从 ChatPane inputForm 拆出来，独立 section
+          <div style={{ padding: '16px' }}>
+            {inputFormNode}
+          </div>
+        }
+        right={
           <ChatPane
             messages={messages}
             isStreaming={isStreaming}
-            inputForm={inputFormNode}
             onSubmit={() => {
               // generate 页面的 Sender 由 inputForm 顶部的「生成协议」按钮触发，
               // 此处 Sender 仅供后续 chat 流使用（v2 接入），目前禁用
@@ -716,7 +728,17 @@ export default function AiGeneratePage() {
             }
           />
         }
-        right={<ProtocolPreviewForm value={protocol} onChange={setProtocol} mode="generate" />}
+        // 底部面板：协议预览（默认隐藏，生成后才出现）
+        bottomPanel={
+          protocol ? (
+            <ProtocolPreviewForm
+              value={protocol}
+              onChange={setProtocol}
+              mode="generate"
+              onJumpToDetail={goProtocolDetail}
+            />
+          ) : undefined
+        }
       />
     </>
   )

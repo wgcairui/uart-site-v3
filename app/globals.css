@@ -546,16 +546,16 @@ html, body {
  * - 移动（< 768px）：顶部 stats 横条 + form/preview 上下堆叠
  * ============================================================= */
 
-.ai-workspace-bottom {
+.ai-workspace-middle {
   display: flex;
   gap: 12px;
   flex: 1;
   min-height: 0;
 }
 
-/* 移动端：2 列堆叠为 1 列 */
+/* 移动端：middle 2 列堆叠为 1 列 */
 @media (max-width: 768px) {
-  .ai-workspace-bottom {
+  .ai-workspace-middle {
     flex-direction: column;
   }
   .ai-workspace-left,
@@ -572,7 +572,7 @@ html, body {
 
 /* 平板：缩小间距 */
 @media (min-width: 768px) and (max-width: 991px) {
-  .ai-workspace-bottom {
+  .ai-workspace-middle {
     gap: 8px;
   }
 }
@@ -603,8 +603,9 @@ html, body {
     min-width: 0 !important;
     width: 100% !important;
   }
-  /* ChatPane inputForm 容器：移动端 maxHeight 收紧到 45% */
-  .chat-pane-input-form-container {
-    max-height: 45% !important;
-  }
+}
+
+/* 已废弃 class（保留兼容） */
+.chat-pane-input-form-container {
+  /* 旧版 ChatPane inputForm 容器（2026-06-27 改为 form 独立 section） */
 }

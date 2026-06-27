@@ -1,7 +1,7 @@
 'use client'
 
 import { App, Button, Form, Input, Skeleton, Space, Tag, Typography } from 'antd'
-import { useParams } from 'next/navigation'
+import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { MessageOutlined } from '@ant-design/icons'
@@ -81,6 +81,7 @@ interface AiChatContentProps {
 function AiChatContent({ name }: AiChatContentProps) {
   const { message } = App.useApp()
   const { stream, abort, isStreaming, error: streamError } = useAiStream()
+  const router = useRouter()
 
   const [protocol, setProtocol] = useState<Partial<Uart.protocol> | null>(null)
   const [loadingProtocol, setLoadingProtocol] = useState(true)
@@ -90,6 +91,11 @@ function AiChatContent({ name }: AiChatContentProps) {
   const assistantMsgIdRef = useRef<string | null>(null)
   const toolJsonAccumRef = useRef<string>('')
   const [chatForm] = Form.useForm<{ userPrompt: string }>()
+
+  // 跳转到协议详情页（跟 generate 页保持一致）
+  const goProtocolDetail = (protocolName: string) => {
+    router.push(`/admin/node/protocols/info?name=${encodeURIComponent(protocolName)}`)
+  }
 
   // 加载当前协议（mount-only，靠父组件 key 触发 remount 来切换协议）
   useEffect(() => {
@@ -332,7 +338,7 @@ function AiChatContent({ name }: AiChatContentProps) {
               />
             </div>
           }
-          right={<ProtocolPreviewForm value={protocol} onChange={setProtocol} mode="chat" />}
+          right={<ProtocolPreviewForm value={protocol} onChange={setProtocol} mode="chat" onJumpToDetail={goProtocolDetail} />}
         />
       )}
     </>

@@ -1,7 +1,7 @@
 'use client'
 
 import { Bubble, Prompts, Sender } from '@ant-design/x'
-import { Button, Empty, Space, Tag, Typography } from 'antd'
+import { Empty, Space, Tag, Typography } from 'antd'
 import { CheckCircleOutlined, CodeOutlined, RobotOutlined, UserOutlined } from '@ant-design/icons'
 import type { ReactNode } from 'react'
 import type { AiStreamEvent } from '@/types/ai'
@@ -9,7 +9,11 @@ import type { AiStreamEvent } from '@/types/ai'
 const { Text } = Typography
 
 /**
- * ChatPane（左侧栏）— 输入 + 对话历史 + Sender
+ * ChatPane（对话栏）— 消息 + Sender（2026-06-27 重构 #2）
+ *
+ * 之前同时承担「消息 + 输入表单」，form 在 inputForm prop 里。
+ * cairui 想让 form 独立出来跟 ChatPane 左右分栏，所以现在 ChatPane 只负责
+ * 消息渲染 + Sender 输入框，form 由 page.tsx 自己渲染在左列 section。
  *
  * 消息角色：
  * - 'user'：admin 输入（generate / chat 提示词）
@@ -32,7 +36,11 @@ export interface ChatPaneMessage {
 export interface ChatPaneProps {
   messages: ChatPaneMessage[]
   isStreaming: boolean
-  /** 自定义上方区域（如 generate 的 protocolType 选择器 + manualText 输入框） */
+  /**
+   * 可选：自定义上方区域（如 chat 页的 chatForm）
+   * - generate 页已重构为 form 独立 section，不传此 prop
+   * - chat 页仍用此 prop 在 ChatPane 内嵌 form（保持兼容）
+   */
   inputForm?: ReactNode
   /** 空状态时显示的 Prompts 引导（首次进入页面） */
   prompts?: { key: string; label: string; description?: string }[]

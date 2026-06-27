@@ -1,13 +1,16 @@
 'use client'
 
-import { Card, Empty, Form, Input, InputNumber, Radio, Select, Space, Tag, Typography } from 'antd'
-import { CheckOutlined } from '@ant-design/icons'
+import { Button, Card, Empty, Form, Input, Radio, Select, Space, Tag, Typography } from 'antd'
+import { CheckOutlined, ExportOutlined } from '@ant-design/icons'
 import { useEffect, useMemo } from 'react'
 
 const { Text } = Typography
 
 /**
- * ProtocolPreviewForm（中间栏）— 协议预览表单
+ * ProtocolPreviewForm — 协议预览（2026-06-27 重构 #2）
+ *
+ * 之前是 AiWorkspace 的 right 列（占据 1.4 flex，跟 form 共享一行）
+ * 现在 cairui 想让它默认隐藏，生成后才在底部出现（占据整行）。
  *
  * 数据来源：LLM tool_done 事件 input（已落正式 + 双清缓存完成）
  * 也可在生成后由 admin 手动编辑字段（但 v1 不写回后端，决策 v2 加 /edit-stream）
@@ -17,6 +20,11 @@ const { Text } = Typography
  * - Protocol: PascalCase 协议名
  * - ProtocolType: ups | air | em | th | io
  * - instruct[]: 每条含 name + formResize[] + 可选 isUse / noStandard 等
+ *
+ * 2026-06-27 改动：
+ * - 加 onJumpToDetail prop：协议生成完可以跳转到详情页
+ * - 头部加 [跳转到详情页] 按钮（仅 Protocol 存在时显示）
+ * - 高度自适应（不再硬撑 100%），让外层 AiWorkspace 控制
  */
 export interface ProtocolPreviewFormProps {
   /** 当前协议（来自 LLM tool_done.input 或 db 加载） */
@@ -27,9 +35,17 @@ export interface ProtocolPreviewFormProps {
   mode: 'generate' | 'chat' | 'dry-run'
   /** admin 是否可编辑（v1 默认 false，v2 加 /edit-stream 后开 true） */
   editable?: boolean
+  /** 跳转到协议详情页回调（v1 用 router.push，v2 可换 Modal/Drawer） */
+  onJumpToDetail?: (protocolName: string) => void
 }
 
-export function ProtocolPreviewForm({ value, onChange, mode, editable = false }: ProtocolPreviewFormProps) {
+export function ProtocolPreviewForm({
+  value,
+  onChange,
+  mode,
+  editable = false,
+  onJumpToDetail,
+}: ProtocolPreviewFormProps) {
   const [form] = Form.useForm<Partial<Uart.protocol>>()
 
   // 协议变化时同步 form
@@ -54,8 +70,11 @@ export function ProtocolPreviewForm({ value, onChange, mode, editable = false }:
         ? 'AI 修改协议：每次 chat 后此处实时显示最新 version 的协议'
         : 'Dry-run 验证：此处仅展示协议快照，不修改'
 
+  const protocolName = value?.Protocol
+
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+    // 高度自适应（不再硬撑 100%），让外层 AiWorkspace 的 maxHeight: 50vh 控制
+    <div style={{ display: 'flex', flexDirection: 'column', minHeight: 0 }}>
       <div
         style={{
           padding: '12px 16px',
@@ -63,6 +82,7 @@ export function ProtocolPreviewForm({ value, onChange, mode, editable = false }:
           display: 'flex',
           alignItems: 'center',
           gap: 12,
+          flexWrap: 'wrap',
         }}
       >
         <Text strong style={{ fontSize: 14 }}>
@@ -70,14 +90,33 @@ export function ProtocolPreviewForm({ value, onChange, mode, editable = false }:
         </Text>
         <Tag color="blue">指令 {instructCount}</Tag>
         <Tag color="cyan">字段 {formResizeCount}</Tag>
-        {value?.Protocol && <Tag color="green">{value.Protocol}</Tag>}
+        {protocolName && <Tag color="green">{protocolName}</Tag>}
+
+        {/* 跳转到详情页按钮（仅协议存在时显示） */}
+        {protocolName && onJumpToDetail && (
+          <Button
+            type="primary"
+            size="small"
+            icon={<ExportOutlined />}
+            onClick={() => onJumpToDetail(protocolName)}
+            style={{ marginLeft: 'auto' }}
+          >
+            跳转到详情页
+          </Button>
+        )}
       </div>
-      <div style={{ padding: '8px 16px', background: 'var(--colorBgLayout, #fafafa)' }}>
+      <div
+        style={{
+          padding: '8px 16px',
+          background: 'var(--colorBgLayout, #fafafa)',
+          borderBottom: '1px solid var(--colorBorderSecondary, #e5e7eb)',
+        }}
+      >
         <Text type="secondary" style={{ fontSize: 12 }}>
           {headerTip}
         </Text>
       </div>
-      <div style={{ flex: 1, overflowY: 'auto', padding: 16 }}>
+      <div style={{ flex: 1, overflowY: 'auto', padding: 16, minHeight: 0 }}>
         {/* 始终渲染 Form 让 useForm 实例保持连接（避免 antd v6 "Forget to pass form prop" 警告），
             value=null 时显示 Empty 占位 */}
         <Form

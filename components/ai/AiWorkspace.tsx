@@ -3,42 +3,45 @@
 import { ReactNode } from 'react'
 
 /**
- * AI 工具两栏布局骨架（2026-06-27 重构）
+ * AI Workspace 布局骨架（2026-06-27 重构 #2）
  *
- * 之前是 3 列（Form | ProtocolPreview | StatsPane），StatsPane 占右侧 ~25% 宽度
- * 但内容只有 4 个统计指标，垂直堆叠浪费高度。cairui 反馈实时仪表可以放顶部
- * 做一整行（紧凑横条），释放中间栏给 form + preview。
+ * cairui 反馈之前布局（顶部 stats + 2 列 form/preview）还是太紧凑：
+ * 1. 左侧 form 和「对话」应该分成左右两侧（form 在左，messages + sender 在右）
+ * 2. 协议预览默认隐藏，生成后再下面创建新的一块（占据整行下方）
+ * 3. 协议生成完可以跳转到对应的协议详情页
  *
- * 新布局：
+ * 新布局（cairui 设计的版本）：
  * ```
- *  ┌──────────────────────────────────────────────┐
- *  │ StatsPane 顶部横条（紧凑 4 列）               │
- *  ├─────────────────┬────────────────────────────┤
- *  │ Form (left)     │ ProtocolPreview (right)    │
- *  │ flex 1          │ flex 1.6                   │
- *  │                 │                            │
- *  └─────────────────┴────────────────────────────┘
+ *  ┌──────────────────────────────────────────────────────┐
+ *  │ StatsPane 顶部紧凑横条                               │
+ *  ├───────────────────┬──────────────────────────────────┤
+ *  │ Form（左）        │ Chat（右）                        │
+ *  │ 设备类型/型号等    │ Messages + Sender                │
+ *  │ 生成按钮          │                                   │
+ *  ├───────────────────┴──────────────────────────────────┤
+ *  │ ProtocolPreview（底部整行）                          │
+ *  │ 仅在 protocol 非空时显示                              │
+ *  │ 头部：[跳转到详情页] 按钮 + 协议名                    │
+ *  │ 指令卡片列表（scroll）                               │
+ *  └──────────────────────────────────────────────────────┘
  * ```
  *
  * 响应式：
- * - ≥ 992px：顶部 stats + 2 列 form/preview
- * - 768-991px：顶部 stats + 2 列窄宽度
- * - < 768px：顶部 stats + form/preview 上下堆叠（单列），所有内部 Card 100%
- *
- * 高度计算：
- * - AdminHeader 64px + scroll-area padding 上下 32px x 2 = 64px + stats 横条 ~84px
- *   = 64 + 64 + 84 = 212px
- * - 旧版 calc(100vh - 128px) + 右侧 StatsPane 290px = 418px 总开销
- * - 新版 calc(100vh - 212px) 直接给 2 列，更紧凑
+ * - ≥ 768px：form/chat 左右 2 列 + preview 底部
+ * - < 768px：stats / form / chat / preview 全部垂直堆叠
  */
 export interface AiWorkspaceProps {
-  /** 顶部统计横条（紧凑横排 4 个指标） */
+  /** 顶部紧凑横条（实时仪表） */
   topBar: ReactNode
+  /** 左列：form（设备类型 / 设备型号 / Source / 生成按钮等） */
   left: ReactNode
+  /** 右列：chat（messages + sender） */
   right: ReactNode
+  /** 底部面板：协议预览，默认隐藏（生成后才传入） */
+  bottomPanel?: ReactNode
 }
 
-export function AiWorkspace({ topBar, left, right }: AiWorkspaceProps) {
+export function AiWorkspace({ topBar, left, right, bottomPanel }: AiWorkspaceProps) {
   return (
     <div
       className="ai-workspace"
@@ -67,9 +70,9 @@ export function AiWorkspace({ topBar, left, right }: AiWorkspaceProps) {
         {topBar}
       </section>
 
-      {/* 底部 2 列：form + preview */}
+      {/* 中部：form 左 + chat 右 */}
       <div
-        className="ai-workspace-bottom"
+        className="ai-workspace-middle"
         style={{
           flex: 1,
           display: 'flex',
@@ -87,7 +90,7 @@ export function AiWorkspace({ topBar, left, right }: AiWorkspaceProps) {
             background: 'var(--colorBgContainer, #fff)',
             borderRadius: 12,
             border: '1px solid var(--colorBorderSecondary, #e5e7eb)',
-            overflow: 'hidden',
+            overflow: 'hidden auto',
           }}
         >
           {left}
@@ -95,19 +98,40 @@ export function AiWorkspace({ topBar, left, right }: AiWorkspaceProps) {
         <section
           className="ai-workspace-right"
           style={{
-            flex: '1.6 1 0',
+            flex: '1.4 1 0',
             minWidth: 0,
             display: 'flex',
             flexDirection: 'column',
             background: 'var(--colorBgContainer, #fff)',
             borderRadius: 12,
             border: '1px solid var(--colorBorderSecondary, #e5e7eb)',
-            overflow: 'hidden auto',
+            overflow: 'hidden',
           }}
         >
           {right}
         </section>
       </div>
+
+      {/* 底部面板：协议预览（默认隐藏） */}
+      {bottomPanel && (
+        <section
+          className="ai-workspace-bottom-panel"
+          style={{
+            flexShrink: 0,
+            // 桌面端：高度自适应（最大 50vh），内部 scroll
+            // 移动端：自动 wrap 到所有 section 之下，高度自适应
+            maxHeight: '50vh',
+            display: 'flex',
+            flexDirection: 'column',
+            background: 'var(--colorBgContainer, #fff)',
+            borderRadius: 12,
+            border: '1px solid var(--colorBorderSecondary, #e5e7eb)',
+            overflow: 'hidden',
+          }}
+        >
+          {bottomPanel}
+        </section>
+      )}
     </div>
   )
 }
