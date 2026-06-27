@@ -20,6 +20,7 @@ import { ProtocolPreviewForm } from '@/components/ai/ProtocolPreviewForm'
 import { StatsPane } from '@/components/ai/StatsPane'
 import { useAiStream } from '@/lib/hooks/useAiStream'
 import { aiCommit, aiPreAnalyze } from '@/lib/api/endpoints/admin/ai'
+import { extractPartialProtocol } from '@/lib/utils/parse-partial-protocol'
 import type { AiRunStats, GenerateStreamDto, PreAnalyzeDto } from '@/types/ai'
 import { EMPTY_AI_STATS } from '@/types/ai'
 
@@ -95,6 +96,46 @@ export default function AiGeneratePage() {
   const assistantMsgIdRef = useRef<string | null>(null)
   // 维护一个"tool_delta JSON 字符串"累积值（tool_done 时一次性 apply 到 form）
   const toolJsonAccumRef = useRef<string>('')
+  // v2 prompt-instruct 模式下 LLM 在 text_delta 里 yield 完整 JSON（不像 v1 tool_use 是结构化）
+  // 这里累积 text，跟 toolJsonAccumRef 合并喂给 partial parser
+  const textJsonAccumRef = useRef<string>('')
+  // incremental parse throttle：用 requestAnimationFrame 合并高频更新，
+  // 避免每段 SSE 都触发 setProtocol（高频率会卡 UI）
+  const incrementalUpdateScheduledRef = useRef(false)
+  const scheduleIncrementalParse = useCallback(() => {
+    if (incrementalUpdateScheduledRef.current) return
+    incrementalUpdateScheduledRef.current = true
+    requestAnimationFrame(() => {
+      incrementalUpdateScheduledRef.current = false
+      const accum = textJsonAccumRef.current + toolJsonAccumRef.current
+      const partial = extractPartialProtocol(accum)
+      if (!partial) return
+      const hasInstruct = (partial.instruct?.length ?? 0) > 0
+      const hasHeader =
+        partial.Type !== undefined ||
+        partial.ProtocolType !== undefined ||
+        partial.Protocol !== undefined ||
+        partial.remark !== undefined
+      if (!hasInstruct && !hasHeader) return
+      // 增量 setProtocol，保留已有字段（避免覆盖 saved 时设置的 final 值）
+      setProtocol((prev) => {
+        // 如果 prev 已经有完整 instruct 且 partial 的 instruct 数 ≤ prev，skip（避免回头覆盖）
+        if (
+          prev?.instruct &&
+          (partial.instruct?.length ?? 0) <= prev.instruct.length
+        ) {
+          return prev
+        }
+        // cast: JSON.parse 返回 generic object，Uart.protocol.instruct 是 strict type
+        return {
+          ...prev,
+          ...partial,
+          instruct: partial.instruct as Uart.protocol['instruct'],
+        } as Partial<Uart.protocol>
+      })
+      // instructionCount 通过 protocol.instruct.length 派生（line 143），不需手动同步
+    })
+  }, [])
 
   const instructionCount = protocol?.instruct?.length ?? 0
 
@@ -268,6 +309,7 @@ export default function AiGeneratePage() {
       setToolStepCount(0)
       assistantMsgIdRef.current = null
       toolJsonAccumRef.current = ''
+      textJsonAccumRef.current = ''  // 2026-06-27 incremental parse 重置
       const userMsg = buildUserMessage(
         `[生成] ${values.protocolType}${values.deviceModel ? ' / ' + values.deviceModel : ''} · source=${sourceMode}`
       )
@@ -304,6 +346,11 @@ export default function AiGeneratePage() {
             assistantMsgIdRef.current = msg.id
             setMessages((prev) => [...prev, msg])
           }
+          // v2 prompt-instruct：LLM 在 text delta 里 yield 完整 JSON（不像 v1 tool_use 结构化）
+          // 这里累积 + throttle 增量 parse，让 ProtocolPreviewForm 慢慢填充
+          // 而不是等 saved 事件一次性 setProtocol
+          textJsonAccumRef.current += delta
+          scheduleIncrementalParse()
         },
         onToolStart: (toolName) => {
           setToolStepCount((n) => n + 1)
@@ -316,9 +363,13 @@ export default function AiGeneratePage() {
             },
           ])
           toolJsonAccumRef.current = ''
+          textJsonAccumRef.current = ''  // 2026-06-27 incremental parse 重置
         },
         onToolDelta: (delta) => {
+          // v1 Anthropic tool_use 模式下 tool_delta yield 结构化 JSON 片段
+          // 同样累积 + 增量 parse（跟 onText 累积统一处理）
           toolJsonAccumRef.current += delta
+          scheduleIncrementalParse()
         },
         onSaved: async (info) => {
           // 2026-06-25 改：优先用 info.protocol（后端 saved 事件带的完整 JSON，
