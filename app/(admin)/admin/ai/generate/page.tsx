@@ -693,6 +693,13 @@ export default function AiGeneratePage() {
         ]}
       />
       <AiWorkspace
+        topBar={
+          <StatsPane
+            stats={{ ...stats, error: stats.error ?? streamError ?? undefined }}
+            instructionCount={instructionCount}
+            toolStepCount={toolStepCount}
+          />
+        }
         left={
           <ChatPane
             messages={messages}
@@ -709,14 +716,7 @@ export default function AiGeneratePage() {
             }
           />
         }
-        middle={<ProtocolPreviewForm value={protocol} onChange={setProtocol} mode="generate" />}
-        right={
-          <StatsPane
-            stats={{ ...stats, error: stats.error ?? streamError ?? undefined }}
-            instructionCount={instructionCount}
-            toolStepCount={toolStepCount}
-          />
-        }
+        right={<ProtocolPreviewForm value={protocol} onChange={setProtocol} mode="generate" />}
       />
     </>
   )

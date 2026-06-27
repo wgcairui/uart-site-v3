@@ -295,6 +295,13 @@ function AiChatContent({ name }: AiChatContentProps) {
       </div>
       {(
         <AiWorkspace
+          topBar={
+            <StatsPane
+              stats={{ ...stats, error: stats.error ?? streamError ?? undefined }}
+              instructionCount={instructionCount}
+              toolStepCount={toolStepCount}
+            />
+          }
           left={
             <div style={{ position: 'relative', height: '100%' }}>
               {loadingProtocol && (
@@ -325,14 +332,7 @@ function AiChatContent({ name }: AiChatContentProps) {
               />
             </div>
           }
-          middle={<ProtocolPreviewForm value={protocol} onChange={setProtocol} mode="chat" />}
-          right={
-            <StatsPane
-              stats={{ ...stats, error: stats.error ?? streamError ?? undefined }}
-              instructionCount={instructionCount}
-              toolStepCount={toolStepCount}
-            />
-          }
+          right={<ProtocolPreviewForm value={protocol} onChange={setProtocol} mode="chat" />}
         />
       )}
     </>

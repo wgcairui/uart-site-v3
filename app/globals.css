@@ -538,3 +538,73 @@ html, body {
 @media (max-width: 768px) {
   .scroll-area { padding: 16px; }
 }
+
+/* =============================================================
+ * AI Workspace 响应式（2026-06-27）
+ * - 桌面（≥ 992px）：顶部 stats 横条 + 2 列（form + preview）
+ * - 平板（768-991px）：顶部 stats 横条 + 2 列窄宽度
+ * - 移动（< 768px）：顶部 stats 横条 + form/preview 上下堆叠
+ * ============================================================= */
+
+.ai-workspace-bottom {
+  display: flex;
+  gap: 12px;
+  flex: 1;
+  min-height: 0;
+}
+
+/* 移动端：2 列堆叠为 1 列 */
+@media (max-width: 768px) {
+  .ai-workspace-bottom {
+    flex-direction: column;
+  }
+  .ai-workspace-left,
+  .ai-workspace-right {
+    flex: 1 1 0 !important;
+  }
+  .ai-workspace-left {
+    min-height: 320px;
+  }
+  .ai-workspace-right {
+    min-height: 320px;
+  }
+}
+
+/* 平板：缩小间距 */
+@media (min-width: 768px) and (max-width: 991px) {
+  .ai-workspace-bottom {
+    gap: 8px;
+  }
+}
+
+/* StatsPane 紧凑横条：移动端 2x2 网格 */
+.stats-pane-compact {
+  display: flex;
+  align-items: center;
+  gap: 32px;
+  flex-wrap: wrap;
+}
+
+@media (max-width: 768px) {
+  .stats-pane-compact {
+    gap: 12px;
+    font-size: 12px;
+  }
+  /* 移动端隐藏部分分隔线减少视觉噪声 */
+  .stats-pane-compact > div[style*="width: 1"] {
+    display: none;
+  }
+}
+
+/* generate 页 form 字段：移动端 100% 宽度 */
+@media (max-width: 768px) {
+  .ant-form-item-control-input-content .ant-select,
+  .ant-form-item-control-input-content .ant-input {
+    min-width: 0 !important;
+    width: 100% !important;
+  }
+  /* ChatPane inputForm 容器：移动端 maxHeight 收紧到 45% */
+  .chat-pane-input-form-container {
+    max-height: 45% !important;
+  }
+}
