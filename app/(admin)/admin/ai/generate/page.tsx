@@ -1,6 +1,6 @@
 'use client'
 
-import { App, Button, Checkbox, Form, Input, Radio, Select, Space, Spin, Tabs, Tag, Tooltip, Typography } from 'antd'
+import { App, Button, Checkbox, Form, Input, Radio, Select, Space, Spin, Tabs, Tag, Typography } from 'antd'
 import { RobotOutlined, ThunderboltOutlined } from '@ant-design/icons'
 import { useRouter } from 'next/navigation'
 import { useCallback, useEffect, useRef, useState } from 'react'
@@ -519,26 +519,24 @@ export default function AiGeneratePage() {
               )}
             </Space>
           }
+          // 用 Form.Item 自带 tooltip（v6 内建），不要用 <Tooltip><Input /></Tooltip>
+          // 包 Input —— Tooltip 会拦截 Form.Item 注入的 value/onChange，Input 拿不到新值。
+          // 显示文字用 preAnalyzeReasoning：null 时不显示（antd tooltip 接受 string|undefined）
+          tooltip={preAnalyzeReasoning ?? undefined}
           name="deviceModel"
           style={{ marginBottom: 8 }}
         >
-          <Tooltip
-            title={preAnalyzeReasoning ?? null}
-            placement="top"
-            mouseEnterDelay={0.3}
-          >
-            <Input
-              placeholder="如：APC Smart-UPS 3000"
-              style={{ width: 180 }}
-              prefix={
-                // 固定 wrapper（占位 span），避免 loading 切换时 prefix 槽 add/remove
-                // 触发 antd v6 Input focus 丢失 warning
-                <span style={{ display: 'inline-block', width: 14, height: 14 }}>
-                  {preAnalyzeLoading ? <Spin size="small" /> : null}
-                </span>
-              }
-            />
-          </Tooltip>
+          <Input
+            placeholder="如：APC Smart-UPS 3000"
+            style={{ width: 180 }}
+            prefix={
+              // 固定 wrapper（占位 span），避免 loading 切换时 prefix 槽 add/remove
+              // 触发 antd v6 Input focus 丢失 warning
+              <span style={{ display: 'inline-block', width: 14, height: 14 }}>
+                {preAnalyzeLoading ? <Spin size="small" /> : null}
+              </span>
+            }
+          />
         </Form.Item>
         <Form.Item
           label={
@@ -551,24 +549,19 @@ export default function AiGeneratePage() {
               )}
             </Space>
           }
+          tooltip={preAnalyzeReasoning ?? undefined}
           name="hintProtocolName"
           style={{ marginBottom: 8 }}
         >
-          <Tooltip
-            title={preAnalyzeReasoning ?? null}
-            placement="top"
-            mouseEnterDelay={0.3}
-          >
-            <Input
-              placeholder="PascalCase，留空让 LLM 起"
-              style={{ width: 180 }}
-              prefix={
-                <span style={{ display: 'inline-block', width: 14, height: 14 }}>
-                  {preAnalyzeLoading ? <Spin size="small" /> : null}
-                </span>
-              }
-            />
-          </Tooltip>
+          <Input
+            placeholder="PascalCase，留空让 LLM 起"
+            style={{ width: 180 }}
+            prefix={
+              <span style={{ display: 'inline-block', width: 14, height: 14 }}>
+                {preAnalyzeLoading ? <Spin size="small" /> : null}
+              </span>
+            }
+          />
         </Form.Item>
         <Form.Item label="覆盖同名" name="overrideExisting" valuePropName="checked" style={{ marginBottom: 8 }}>
           <Checkbox>覆盖已存在的协议</Checkbox>
