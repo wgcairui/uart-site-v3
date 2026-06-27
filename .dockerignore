@@ -1,0 +1,51 @@
+# 避免 .next 进 build context（turbo cache 污染，导致 hotfix bundle 不更新）
+.next
+out
+dist
+
+# deps
+node_modules
+
+# git / vcs
+.git
+.gitignore
+
+# docker
+Dockerfile
+.dockerignore
+docker-compose*.yml
+
+# env / secrets
+.env
+.env.local
+.env.*.local
+.env.development
+.env.production
+
+# logs / tmp
+*.log
+*.pid
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+bun-debug.log*
+/tmp
+.eslintcache
+.vscode
+.idea
+.DS_Store
+
+# docs / dev
+README.md
+docs/
+*.md
+.claude
+.harness
+.mavis
+
+# 测试
+coverage/
+.nyc_output/
+
+# 锁文件（生产 build 不需要，已在 COPY 阶段单独处理）
+# bun.lock 已 COPY 进 builder，保留
