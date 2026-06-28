@@ -1,6 +1,6 @@
 'use client'
 import { DeleteFilled, EditFilled } from "@ant-design/icons";
-import { Button, Divider, Form, InputNumber, message, Modal, Select, Space, Table } from "antd";
+import { Button, Card, Divider, Form, InputNumber, message, Modal, Select, Space, Table } from "antd";
 import { ColumnsType } from "antd/lib/table";
 import React, { useMemo } from "react";
 import { addDevConstant } from "@/lib/api/fetchRoot";
@@ -97,6 +97,7 @@ export const ProtocolThreshold: React.FC<ProtocolProps> = ({ protocolName }) => 
 
     return (
         <>
+            <Card title="阈值配置" bordered={false}>
             <AiProtocolEmpty
                 typeName="阈值配置"
                 typeKey="Threshold"
@@ -182,6 +183,7 @@ export const ProtocolThreshold: React.FC<ProtocolProps> = ({ protocolName }) => 
                     }
                 ] as ColumnsType<Uart.Threshold>}
             ></Table>
+            </Card>
         </>
     )
 }

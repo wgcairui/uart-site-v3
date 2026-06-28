@@ -1,6 +1,6 @@
 'use client'
 import { DeleteFilled, EditFilled } from "@ant-design/icons";
-import { Button, Divider, Form, Input, message, Modal, Select, Space, Table } from "antd";
+import { Button, Card, Divider, Form, Input, message, Modal, Select, Space, Table } from "antd";
 import { ColumnsType } from "antd/lib/table";
 import React, { useMemo } from "react";
 import { addDevConstant } from "@/lib/api/fetchRoot";
@@ -112,6 +112,7 @@ export const ProtocolOprate: React.FC<ProtocolProps> = ({ protocolName }) => {
 
     return (
         <>
+            <Card title="操作指令" bordered={false}>
             <AiProtocolEmpty
                 typeName="操作指令"
                 typeKey="OprateInstruct"
@@ -187,7 +188,7 @@ export const ProtocolOprate: React.FC<ProtocolProps> = ({ protocolName }) => {
                     }
                 ] as ColumnsType<Uart.OprateInstruct>}
             ></Table>
-
+            </Card>
         </>
     )
 }

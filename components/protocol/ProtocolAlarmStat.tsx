@@ -1,5 +1,5 @@
 'use client'
-import { Button, Checkbox, Form, Tag, message } from 'antd'
+import { Button, Card, Checkbox, Form, Tag, message } from 'antd'
 import React, { useEffect, useMemo, useState } from "react";
 import { getProtocol, getProtocolSetup } from "@/lib/api/fetch";
 
@@ -72,6 +72,7 @@ export const ProtocolAlarmStat: React.FC<ProtocolProps> = ({ protocolName }) => 
 
     return (
         <>
+            <Card title="状态配置" bordered={false}>
             <AiProtocolEmpty
                 typeName="状态配置"
                 typeKey="AlarmStat"
@@ -92,6 +93,7 @@ export const ProtocolAlarmStat: React.FC<ProtocolProps> = ({ protocolName }) => 
                     <Button type="primary" htmlType="submit">上传提交</Button>
                 </Form.Item>
             </Form>
+            </Card>
         </>
     )
 }

@@ -1,5 +1,5 @@
 'use client'
-import { Button, Form, message, Select } from 'antd'
+import { Button, Card, Form, message, Select } from 'antd'
 import React, { useEffect, useMemo, useState } from "react";
 import { addDevConstant } from "@/lib/api/fetchRoot";
 import { getProtocol, getProtocolSetup } from "@/lib/api/fetch";
@@ -113,6 +113,7 @@ export const ProtocolContant: React.FC<ProtocolProps> = ({ protocolName }) => {
 
     return (
         <>
+            <Card title="常量配置" bordered={false}>
             <AiProtocolEmpty
                 typeName="常量配置"
                 typeKey="Constant"
@@ -139,6 +140,7 @@ export const ProtocolContant: React.FC<ProtocolProps> = ({ protocolName }) => {
                     <Button type="primary" htmlType="submit">上传保存</Button>
                 </Form.Item>
             </Form>
+            </Card>
         </>
     )
 }

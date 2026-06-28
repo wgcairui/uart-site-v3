@@ -1,5 +1,5 @@
 'use client'
-import { Button, Checkbox, CheckboxOptionType, Col, message, Row } from 'antd'
+import { Button, Card, Checkbox, CheckboxOptionType, Col, message, Row } from 'antd'
 
 import React, { useMemo, useState } from "react";
 import { addDevConstant } from "@/lib/api/fetchRoot";
@@ -46,6 +46,7 @@ export const ProtocolShowTag: React.FC<ProtocolProps> = ({ protocolName }) => {
 
     return (
         <>
+            <Card title="显示参数" bordered={false}>
             <AiProtocolEmpty
                 typeName="显示参数"
                 typeKey="ShowTag"
@@ -66,6 +67,7 @@ export const ProtocolShowTag: React.FC<ProtocolProps> = ({ protocolName }) => {
                     }
                 </Row>
             </Checkbox.Group>
+            </Card>
         </>
     )
 }
