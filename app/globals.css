@@ -429,29 +429,34 @@ html, body {
    使用方式见 PageHeader meta prop 注释 */
 .app-page-header-meta {
   margin-top: 16px;
-  padding-top: 16px;
+  padding-top: 12px;
   border-top: 1px solid var(--ink-100);
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-  gap: 16px 24px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px 28px;
 }
 
 .app-kv-cell {
   display: flex;
-  flex-direction: column;
-  gap: 4px;
+  align-items: baseline;
+  gap: 8px;
+  flex: 0 0 auto;
+  min-width: 0;
 }
 
 .app-kv-label {
   font-size: 12px;
   color: var(--ink-500, #64748b);
   font-weight: 500;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .app-kv-value {
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 600;
   color: var(--ink-900, #18181b);
+  white-space: nowrap;
 }
 
 /* =============================================================
