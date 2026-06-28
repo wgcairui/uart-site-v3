@@ -330,8 +330,14 @@ export const OssUpload: React.FC = () => {
           current: query.page ?? 1,
           pageSize: query.pageSize ?? 20,
           total: pagination.total ?? 0,
-          showTotal: t => (t > 0 ? `共 ${t} 个` : 'hasNext 模式（无 total）'),
+          showTotal: t =>
+            pagination.hasNext
+              ? `本页 ${files.length} 个 · 还有更多（点右下角切换 pageSize 看更多）`
+              : t > 0
+                ? `共 ${t} 个`
+                : '本页空',
           showSizeChanger: true,
+          pageSizeOptions: ['20', '50', '100', '200'],
         }}
         onChange={handleTableChange}
         columns={columns}
