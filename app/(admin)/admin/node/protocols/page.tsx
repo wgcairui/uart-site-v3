@@ -11,6 +11,7 @@ import { MoreOutlined } from "@ant-design/icons";
 import { MyCopy } from "@/components/common/MyCopy";
 import { PageHeader } from "@/components/common/PageHeader";
 import { PageSummary, type SummaryVariant } from "@/components/common/PageSummary";
+import { ProtocolSourceTag } from "@/components/protocol/ProtocolSourceTag";
 import { downJson } from "@/lib/utils/util";
 import { getProtocol } from "@/lib/api/fetch";
 import { PaginationReq } from '@/types'
@@ -90,7 +91,16 @@ export const Protocols: React.FC = () => {
 
     const nav = useNav()
 
-    const [query, setQuery] = useState<PaginationReq>({ page: 1, pageSize: 20, needTotal: true })
+    // 决策 23（2026-06-28）：协议列表默认按 updatedAt desc 排序
+    // 依赖后端 protocol schema 开启 mongoose timestamps（提供 updatedAt）
+    // + GET /api/v2/admin/protocols 支持 sortBy/sortOrder 接收
+    const [query, setQuery] = useState<PaginationReq>({
+        page: 1,
+        pageSize: 20,
+        needTotal: true,
+        sortBy: 'updatedAt',
+        sortOrder: 'desc',
+    })
     const [searchFields, setSearchFields] = useState<Record<string, string>>({})
     /** 协议类型 stat 筛选：多选叠加（点击切换） */
     const [statFilter, setStatFilter] = useState<string[]>([])
@@ -217,6 +227,14 @@ export const Protocols: React.FC = () => {
                         width: 220
                     },
                     {
+                        dataIndex: 'source',
+                        title: '来源',
+                        width: 100,
+                        render: (_, re: any) => (
+                            <ProtocolSourceTag source={re.source} remark={re.remark} />
+                        ),
+                    },
+                    {
                         dataIndex: 'ProtocolType',
                         title: "协议类型",
                         ...makeServerFilterProp('ProtocolType',
@@ -229,6 +247,13 @@ export const Protocols: React.FC = () => {
                         title: "串口类型",
                         ...makeServerFilterProp('Type', ['485', '232']),
                         width: 120
+                    },
+                    {
+                        dataIndex: 'updatedAt',
+                        title: '修改时间',
+                        width: 170,
+                        sorter: true,
+                        render: (val: string | undefined) => val ? new Date(val).toLocaleString('zh-CN') : '—',
                     },
                     {
                         dataIndex: "remark",

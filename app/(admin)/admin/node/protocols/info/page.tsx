@@ -37,6 +37,7 @@ import { ProtocolThreshold } from '@/components/protocol/ProtocolThreshold'
 import { ProtocolInstructForm } from '@/components/protocol/ProtocolInstructForm'
 import { usePromise } from '@/lib/hooks/usePromise'
 import { AiSourceInfoCard } from '@/components/ai/AiSourceInfoCard'
+import { ProtocolSourceTag } from '@/components/protocol/ProtocolSourceTag'
 
 interface props {
   Protocol: string
@@ -341,6 +342,14 @@ const ProtocolInfo: React.FC = () => {
   const router = useRouter()
   const Protocol = query.get('Protocol')
 
+  // 决策 23（2026-06-28）：顶层拿 protocol data 给 PageHeader 用 source Tag
+  // ProtocolDes 内部会再拉一次（loading 期间 PageHeader 已显示协议名）
+  const { data: protocolMeta } = usePromise<Uart.protocol | undefined>(async () => {
+    if (!Protocol) return undefined
+    const { data } = await getProtocol(Protocol)
+    return data
+  }, undefined, [Protocol])
+
   if (!Protocol) {
     return <Empty description="缺少协议参数 (Protocol)" />
   }
@@ -348,7 +357,14 @@ const ProtocolInfo: React.FC = () => {
   return (
     <>
       <PageHeader
-        title={Protocol}
+        title={
+          <Space size={8} align="center">
+            <span>{Protocol}</span>
+            {protocolMeta && (
+              <ProtocolSourceTag source={protocolMeta.source} remark={protocolMeta.remark} />
+            )}
+          </Space>
+        }
         breadcrumb={[{ title: '协议管理', href: '/admin/node/protocols' }]}
         back
         onBack={() => router.push('/admin/node/protocols')}

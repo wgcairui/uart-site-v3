@@ -14,6 +14,8 @@ declare namespace Uart {
     type secretType = "mail" | "aliSms" | "hf" | "wxopen" | "wxmp" | "wxwp" | "wxmpValidaton" | 'dyIot';
     interface id {
         _id?: string;
+        createdAt?: string;
+        updatedAt?: string;
     }
     interface Secret_app extends id {
         type: secretType;
