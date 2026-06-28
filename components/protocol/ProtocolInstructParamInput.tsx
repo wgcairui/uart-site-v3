@@ -2,6 +2,7 @@
 import { DeleteFilled } from '@ant-design/icons'
 import { Form, Input, Select } from 'antd'
 // `Uart` 是 global namespace (types/uart.d.ts)，无需 import
+import { UnitStatePreview } from '@/components/protocol/UnitStatePreview'
 
 interface Props {
   /** 查表函数：根据参数名查已有的 bl/unit 预设 */
@@ -80,6 +81,7 @@ export function ProtocolInstructParamInput({ protocolItemFun, re, onChange }: Pr
       >
         <Input.TextArea autoSize />
       </Form.Item>
+      <UnitStatePreview name="unit" />
       <Form.Item>
         <DeleteFilled onClick={() => onChange()} />
       </Form.Item>

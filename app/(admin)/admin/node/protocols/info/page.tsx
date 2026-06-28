@@ -36,6 +36,7 @@ import { ProtocolOprate } from '@/components/protocol/ProtocolOprate'
 import { ProtocolShowTag } from '@/components/protocol/ProtocolShowTag'
 import { ProtocolThreshold } from '@/components/protocol/ProtocolThreshold'
 import { ProtocolInstructForm } from '@/components/protocol/ProtocolInstructForm'
+import { UnitStatePreviewFromUnit } from '@/components/protocol/UnitStatePreview'
 import { usePromise } from '@/lib/hooks/usePromise'
 import { AiSourceInfoCard } from '@/components/ai/AiSourceInfoCard'
 import { ProtocolSourceTag } from '@/components/protocol/ProtocolSourceTag'
@@ -259,6 +260,12 @@ const ProtocolDesLocal: React.FC<{ Protocol: Uart.protocol }> = ({ Protocol }) =
                       { dataIndex: 'regx', title: 'regx' },
                       { dataIndex: 'bl', title: '系数' },
                       { dataIndex: 'unit', title: '单位' },
+                      {
+                        key: 'state',
+                        title: '状态值映射',
+                        render: (_, fr: Uart.protocolInstructFormrize) =>
+                          fr?.isState ? <UnitStatePreviewFromUnit unit={fr.unit || ''} /> : <span style={{ color: '#ccc' }}>—</span>,
+                      },
                     ] as ColumnsType<Uart.protocolInstructFormrize>
                   }
                 />
