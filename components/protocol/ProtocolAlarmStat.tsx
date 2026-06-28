@@ -1,7 +1,7 @@
 'use client'
 
 import { DeleteFilled, EditFilled, PlusOutlined } from '@ant-design/icons'
-import { Button, Card, Divider, Form, Input, message, Modal, Select, Space, Table, Tag } from 'antd'
+import { Alert, Button, Card, Divider, Form, Input, message, Modal, Select, Space, Table, Tag } from 'antd'
 import { ColumnsType } from 'antd/lib/table'
 import React, { useEffect, useMemo } from 'react'
 import { getProtocol, getProtocolSetup } from '@/lib/api/fetch'
@@ -67,42 +67,29 @@ export const ProtocolAlarmStat: React.FC<ProtocolProps> = ({ protocolName }) => 
     }, [Protocol.data])
 
     /**
-     * 解析告警状态码字符串为 [{code, label}] 格式
-     * - 输入 "0,1,2,3" → [{code:'0'},{code:'1'},{code:'2'},{code:'3'}]
-     * - 输入 "0=正常,1=故障,2=待机" → [{code:'0',label:'正常'},{code:'1',label:'故障'},{code:'2',label:'待机'}]
-     * - 输入 "0=正常,1" → [{code:'0',label:'正常'},{code:'1'}]
+     * 解析 alarmStat string[] 为 [{code, label?}] 数组 (供 Form.List / Table 渲染)
+     * - '0' → {code: '0'}
+     * - '0=正常' → {code: '0', label: '正常'}
      */
-    const parseAlarmCodes = (input: string): Array<{ code: string; label?: string }> => {
-        return (input || '')
-            .split(/[,，]/)
-            .map((s) => s.trim())
-            .filter(Boolean)
-            .map((s) => {
-                const eqIdx = s.indexOf('=')
-                if (eqIdx === -1) return { code: s }
-                return { code: s.slice(0, eqIdx).trim(), label: s.slice(eqIdx + 1).trim() }
-            })
-            .filter((c) => c.code)
+    const parseAlarmEntry = (s: string): { code: string; label?: string } => {
+        const eqIdx = s.indexOf('=')
+        if (eqIdx === -1) return { code: s }
+        return { code: s.slice(0, eqIdx).trim(), label: s.slice(eqIdx + 1).trim() }
     }
 
-    /** 反向: [{code, label?}] → 字符串 (供 Form edit 回填) */
-    const stringifyAlarmCodes = (codes: Array<{ code: string; label?: string }>): string => {
-        return (codes || [])
-            .map((c) => (c.label ? `${c.code}=${c.label}` : c.code))
-            .join(',')
+    /** 序列化: [{code, label?}] → string[] (存到 device.constants) */
+    const serializeAlarmEntries = (entries: Array<{ code: string; label?: string }>): string[] => {
+        return entries
+            .filter((e) => e.code)
+            .map((e) => (e.label ? `${e.code}=${e.label}` : e.code))
     }
 
-    // 编辑行
+    // 编辑行 — Form.List 回填
     const edit = (item: Uart.ConstantAlarmStat) => {
-        // device.constants.AlarmStat.alarmStat 是 string[], 兼容 code=label 格式
-        const codes = (item.alarmStat || []).map((s) => {
-            const eqIdx = s.indexOf('=')
-            if (eqIdx === -1) return { code: s }
-            return { code: s.slice(0, eqIdx).trim(), label: s.slice(eqIdx + 1).trim() }
-        })
+        const codes = (item.alarmStat || []).map(parseAlarmEntry)
         form.setFieldsValue({
             name: item.name,
-            alarmStat: stringifyAlarmCodes(codes),
+            codes: codes.length ? codes : [{ code: '' }],
         })
     }
 
@@ -124,15 +111,22 @@ export const ProtocolAlarmStat: React.FC<ProtocolProps> = ({ protocolName }) => 
     /**
      * 保存单行（添加到 data 或覆盖现有）
      */
-    const save = (values: { name: string; alarmStat: string }) => {
-        // 解析支持 "0=正常,1=故障" 或 "0,1,2" 格式
-        const parsed = parseAlarmCodes(values.alarmStat || '')
-        if (!values.name || parsed.length === 0) {
-            message.warning('请填写状态名称和至少一个告警状态码')
+    const save = (values: { name?: string; codes?: Array<{ code?: string; label?: string }> }) => {
+        if (!values.name) {
+            message.warning('请选择状态名称')
             return
         }
-        // 存到 entity schema string[] 时保留 "code=label" 格式
-        const codes = parsed.map((c) => (c.label ? `${c.code}=${c.label}` : c.code))
+        const entries = (values.codes || []).filter((e) => e?.code?.trim())
+        if (entries.length === 0) {
+            message.warning('请至少添加一个告警状态码 (code)')
+            return
+        }
+        const alarmStat = serializeAlarmEntries(
+            entries.map((e) => ({
+                code: e.code!.trim(),
+                ...(e.label?.trim() ? { label: e.label.trim() } : {}),
+            })),
+        )
         const next = [...(data || [])]
         const idx = next.findIndex((el) => el.name === values.name)
         const existing = idx !== -1 ? next[idx] : undefined
@@ -141,7 +135,7 @@ export const ProtocolAlarmStat: React.FC<ProtocolProps> = ({ protocolName }) => 
             value: existing?.value ?? '',
             parseValue: existing?.parseValue ?? '',
             unit: existing?.unit ?? null,
-            alarmStat: codes,
+            alarmStat,
         }
         if (idx === -1) {
             next.unshift(newRow)
@@ -149,7 +143,7 @@ export const ProtocolAlarmStat: React.FC<ProtocolProps> = ({ protocolName }) => 
             next.splice(idx, 1, newRow)
         }
         setData(next)
-        form.setFieldsValue({ name: undefined, alarmStat: '' })
+        form.setFieldsValue({ name: undefined, codes: [{ code: '', label: '' }] })
     }
 
     /**
@@ -194,16 +188,16 @@ export const ProtocolAlarmStat: React.FC<ProtocolProps> = ({ protocolName }) => 
 
                 <Form
                     form={form}
-                    layout="inline"
-                    initialValues={{ name: undefined, alarmStat: '' }}
+                    layout="vertical"
+                    initialValues={{ name: undefined, codes: [{ code: '', label: '' }] }}
                     onFinish={save}
-                    style={{ marginBottom: 16, rowGap: 8 }}
+                    style={{ marginBottom: 16 }}
                 >
                     <Form.Item
                         name="name"
                         label="状态名称"
                         rules={[{ required: true, message: '请选择状态名称' }]}
-                        style={{ minWidth: 220 }}
+                        style={{ maxWidth: 360 }}
                     >
                         <Select
                             placeholder="从 instruct state fields 选"
@@ -218,28 +212,80 @@ export const ProtocolAlarmStat: React.FC<ProtocolProps> = ({ protocolName }) => 
                             ))}
                         </Select>
                     </Form.Item>
-                    <Form.Item
-                        name="alarmStat"
-                        label="告警状态码"
-                        rules={[{ required: true, message: '请输入告警状态码' }]}
-                        extra={
-                            <>
-                                格式: <code className="app-code-inline">code</code> 或 <code className="app-code-inline">code=中文标签</code>
-                                ，多个用逗号分隔。例: <code className="app-code-inline">0,1,2,3</code> 或 <code className="app-code-inline">0=正常,1=故障,2=待机</code>
-                            </>
-                        }
-                        style={{ minWidth: 360 }}
-                    >
-                        <Input placeholder="0=正常,1=故障,2=待机" />
+
+                    <Form.Item label="告警状态码映射" style={{ marginBottom: 8 }}>
+                        <Alert
+                            type="info"
+                            showIcon
+                            message="每行一个 code → 中文标签映射, 例如 0 → 正常"
+                            style={{ marginBottom: 12 }}
+                        />
+                        <Form.List name="codes">
+                            {(fields, { add, remove }) => (
+                                <>
+                                    {fields.map(({ key, name, ...restField }, idx) => (
+                                        <Space
+                                            key={key}
+                                            align="baseline"
+                                            style={{ display: 'flex', marginBottom: 8 }}
+                                        >
+                                            <span style={{ color: '#999', minWidth: 28 }}>
+                                                {idx + 1}.
+                                            </span>
+                                            <Form.Item
+                                                {...restField}
+                                                name={[name, 'code']}
+                                                rules={[{ required: true, message: 'code 必填' }]}
+                                                style={{ marginBottom: 0 }}
+                                            >
+                                                <Input
+                                                    placeholder="code (如 0)"
+                                                    style={{ width: 100 }}
+                                                    allowClear
+                                                />
+                                            </Form.Item>
+                                            <span style={{ color: '#999' }}>→</span>
+                                            <Form.Item
+                                                {...restField}
+                                                name={[name, 'label']}
+                                                style={{ marginBottom: 0 }}
+                                            >
+                                                <Input
+                                                    placeholder="中文标签 (如 正常, 可选)"
+                                                    style={{ width: 200 }}
+                                                    allowClear
+                                                />
+                                            </Form.Item>
+                                            <Button
+                                                type="text"
+                                                danger
+                                                icon={<DeleteFilled />}
+                                                onClick={() => remove(name)}
+                                                disabled={fields.length <= 1}
+                                            >
+                                                删除
+                                            </Button>
+                                        </Space>
+                                    ))}
+                                    <Button
+                                        type="dashed"
+                                        onClick={() => add({ code: '', label: '' })}
+                                        icon={<PlusOutlined />}
+                                        block
+                                    >
+                                        添加一个状态码映射
+                                    </Button>
+                                </>
+                            )}
+                        </Form.List>
                     </Form.Item>
-                    <Form.Item>
-                        <Space>
-                            <Button type="primary" htmlType="submit" icon={<PlusOutlined />}>
-                                添加到列表
-                            </Button>
-                            <Button onClick={() => form.resetFields()}>清空</Button>
-                        </Space>
-                    </Form.Item>
+
+                    <Space>
+                        <Button type="primary" htmlType="submit" icon={<PlusOutlined />}>
+                            添加到列表
+                        </Button>
+                        <Button onClick={() => form.resetFields()}>清空</Button>
+                    </Space>
                 </Form>
 
                 <Divider plain>已配置状态码 ({(data || []).length})</Divider>
