@@ -270,9 +270,16 @@ const ProtocolDesLocal: React.FC<{ Protocol: Uart.protocol }> = ({ Protocol }) =
 }
 
 /**
- * 从本地 JSON 文件更新协议
+ * 从本地 JSON 文件更新协议 (Modal 触发版, T2 改造)
+ *
+ * 之前: 作为 tab 渲染 (跟协议本身无关, 占用 tab 槽位)
+ * 现在: 作为 Modal, 由 PageHeader extra 「上传本地 JSON」按钮唤出
  */
-const ProtocolUpload: React.FC<props> = (props) => {
+const ProtocolUploadModal: React.FC<props & { open: boolean; onClose: () => void }> = ({
+  Protocol: protocolName,
+  open,
+  onClose,
+}) => {
   const [protocol, setProtocol] = useState<Uart.protocol>()
 
   const upfile = (file: RcFile) => {
@@ -281,7 +288,7 @@ const ProtocolUpload: React.FC<props> = (props) => {
     reader.onload = (event) => {
       const [result] = JSON.parse(event.target?.result as string) as Uart.protocol[]
       if (typeof result === 'object' && Object.prototype.hasOwnProperty.call(result, 'Protocol')) {
-        if (result.Protocol === props.Protocol) {
+        if (result.Protocol === protocolName) {
           setProtocol(result)
         } else {
           message.warning('协议名称不一致')
@@ -301,25 +308,43 @@ const ProtocolUpload: React.FC<props> = (props) => {
         updateProtocol(protocol!).then(() => {
           loading()
           Modal.info({ content: '更新完成,更新页面查看最新的协议配置' })
+          // 更新成功后关闭 modal + 刷新
+          setProtocol(undefined)
+          onClose()
         })
       },
     })
   }
 
   return (
-    <Space orientation="vertical">
-      <Upload beforeUpload={upfile}>
-        <Button icon={<UploadOutlined />}>Select File</Button>
-      </Upload>
-      {protocol && (
-        <Card>
-          <Button type="primary" onClick={updateP}>
-            更新协议
-          </Button>
-          <ProtocolDesLocal Protocol={protocol} />
-        </Card>
-      )}
-    </Space>
+    <Modal
+      title={`上传本地 JSON 更新协议: ${protocolName}`}
+      open={open}
+      onCancel={() => {
+        setProtocol(undefined)
+        onClose()
+      }}
+      footer={null}
+      width={900}
+      destroyOnClose
+    >
+      <Space orientation="vertical" style={{ width: '100%' }}>
+        <Upload beforeUpload={upfile}>
+          <Button icon={<UploadOutlined />}>选择本地 JSON 文件</Button>
+        </Upload>
+        {protocol && (
+          <Card>
+            <Space style={{ marginBottom: 16 }}>
+              <Button type="primary" onClick={updateP}>
+                更新协议
+              </Button>
+              <Button onClick={() => setProtocol(undefined)}>清除</Button>
+            </Space>
+            <ProtocolDesLocal Protocol={protocol} />
+          </Card>
+        )}
+      </Space>
+    </Modal>
   )
 }
 
@@ -344,6 +369,9 @@ const ProtocolInfo: React.FC = () => {
     const { data } = await getProtocol(Protocol)
     return data
   }, undefined, [Protocol])
+
+  // T2 改造: 「本地文件更新」改 Modal, 由 PageHeader extra 按钮唤出
+  const [uploadModalOpen, setUploadModalOpen] = useState(false)
 
   if (!Protocol) {
     return <Empty description="缺少协议参数 (Protocol)" />
@@ -399,6 +427,13 @@ const ProtocolInfo: React.FC = () => {
             </>
           ) : undefined
         }
+        extra={
+          <Space>
+            <Button icon={<UploadOutlined />} onClick={() => setUploadModalOpen(true)}>
+              上传本地 JSON
+            </Button>
+          </Space>
+        }
       />
       <Tabs
         items={[
@@ -408,8 +443,12 @@ const ProtocolInfo: React.FC = () => {
           { key: 'show', label: '显示参数', children: <ProtocolShowTag protocolName={Protocol} /> },
           { key: 'Threld', label: '阈值配置', children: <ProtocolThreshold protocolName={Protocol} /> },
           { key: 'stat', label: '状态配置', children: <ProtocolAlarmStat protocolName={Protocol} /> },
-          { key: 'localFileUpload', label: '本地文件更新', children: <ProtocolUpload Protocol={Protocol} /> },
         ]}
+      />
+      <ProtocolUploadModal
+        Protocol={Protocol}
+        open={uploadModalOpen}
+        onClose={() => setUploadModalOpen(false)}
       />
     </>
   )
