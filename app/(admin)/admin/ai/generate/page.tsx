@@ -1,6 +1,6 @@
 'use client'
 
-import { App, Button, Checkbox, Form, Input, Radio, Select, Space, Spin, Tabs, Tag, Typography } from 'antd'
+import { App, Button, Col, Form, Input, Row, Select, Space, Spin, Switch, Tabs, Tag, Typography } from 'antd'
 import { RobotOutlined, ThunderboltOutlined } from '@ant-design/icons'
 import { useRouter } from 'next/navigation'
 import { useCallback, useEffect, useRef, useState } from 'react'
@@ -548,6 +548,7 @@ export default function AiGeneratePage() {
       form={form}
       layout="vertical"
       size="small"
+      colon={false}
       initialValues={{
         protocolType: 'ups',
         overrideExisting: false,
@@ -556,97 +557,114 @@ export default function AiGeneratePage() {
       onValuesChange={handleValuesChange}
       disabled={isStreaming || submitting}
     >
-      <Space size={12} wrap align="end">
-        <Form.Item label="设备类型" name="protocolType" rules={[{ required: true }]} style={{ marginBottom: 8 }}>
-          <Select
-            style={{ width: 160 }}
-            options={[
-              { value: 'ups', label: 'UPS 电源' },
-              { value: 'air', label: '精密空调' },
-              { value: 'em', label: '电表' },
-              { value: 'th', label: '温湿度' },
-              { value: 'io', label: '开关量' },
-            ]}
-          />
-        </Form.Item>
-        <Form.Item
-          label={
-            <Space size={4}>
-              <Text style={{ fontSize: 12 }}>设备型号</Text>
-              {preAnalyzeLoading && (
-                <Tag color="processing" icon={<RobotOutlined />} style={{ fontSize: 10, margin: 0 }}>
-                  AI 推断中
-                </Tag>
-              )}
-            </Space>
-          }
-          // 用 Form.Item 自带 tooltip（v6 内建），不要用 <Tooltip><Input /></Tooltip>
-          // 包 Input —— Tooltip 会拦截 Form.Item 注入的 value/onChange，Input 拿不到新值。
-          // 显示文字用 preAnalyzeReasoning：null 时不显示（antd tooltip 接受 string|undefined）
-          tooltip={preAnalyzeReasoning ?? undefined}
-          name="deviceModel"
-          style={{ marginBottom: 8 }}
-        >
-          <Input
-            placeholder="如：APC Smart-UPS 3000"
-            style={{ width: 180 }}
-            prefix={
-              // 固定 wrapper（占位 span），避免 loading 切换时 prefix 槽 add/remove
-              // 触发 antd v6 Input focus 丢失 warning
-              <span style={{ display: 'inline-block', width: 14, height: 14 }}>
-                {preAnalyzeLoading ? <Spin size="small" /> : null}
-              </span>
+      <Row gutter={[16, 0]}>
+        <Col span={12}>
+          <Form.Item label="设备类型" name="protocolType" rules={[{ required: true }]} style={{ marginBottom: 12 }}>
+            <Select
+              style={{ width: '100%' }}
+              options={[
+                { value: 'ups', label: 'UPS 电源' },
+                { value: 'air', label: '精密空调' },
+                { value: 'em', label: '电表' },
+                { value: 'th', label: '温湿度' },
+                { value: 'io', label: '开关量' },
+              ]}
+            />
+          </Form.Item>
+        </Col>
+        <Col span={12}>
+          <Form.Item
+            label={
+              <Space size={4}>
+                <Text style={{ fontSize: 12 }}>设备型号</Text>
+                {preAnalyzeLoading && (
+                  <Tag color="processing" style={{ fontSize: 10, margin: 0, lineHeight: '16px', padding: '0 6px' }}>
+                    AI 推断中
+                  </Tag>
+                )}
+              </Space>
             }
-          />
-        </Form.Item>
-        <Form.Item
-          label={
-            <Space size={4}>
-              <Text style={{ fontSize: 12 }}>建议协议名</Text>
-              {preAnalyzeLoading && (
-                <Tag color="processing" icon={<RobotOutlined />} style={{ fontSize: 10, margin: 0 }}>
-                  AI 推断中
-                </Tag>
-              )}
-            </Space>
-          }
-          tooltip={preAnalyzeReasoning ?? undefined}
-          name="hintProtocolName"
-          style={{ marginBottom: 8 }}
-        >
-          <Input
-            placeholder="PascalCase，留空让 LLM 起"
-            style={{ width: 180 }}
-            prefix={
-              <span style={{ display: 'inline-block', width: 14, height: 14 }}>
-                {preAnalyzeLoading ? <Spin size="small" /> : null}
-              </span>
+            // 用 Form.Item 自带 tooltip（v6 内建），不要用 <Tooltip><Input /></Tooltip>
+            // 包 Input —— Tooltip 会拦截 Form.Item 注入的 value/onChange，Input 拿不到新值。
+            // 显示文字用 preAnalyzeReasoning：null 时不显示（antd tooltip 接受 string|undefined）
+            tooltip={preAnalyzeReasoning ?? undefined}
+            name="deviceModel"
+            style={{ marginBottom: 12 }}
+          >
+            <Input
+              placeholder="如：APC Smart-UPS 3000"
+              prefix={
+                // 固定 wrapper（占位 span），避免 loading 切换时 prefix 槽 add/remove
+                // 触发 antd v6 Input focus 丢失 warning
+                <span style={{ display: 'inline-block', width: 14, height: 14 }}>
+                  {preAnalyzeLoading ? <Spin size="small" /> : null}
+                </span>
+              }
+            />
+          </Form.Item>
+        </Col>
+        <Col span={12}>
+          <Form.Item
+            label={
+              <Space size={4}>
+                <Text style={{ fontSize: 12 }}>建议协议名</Text>
+                {preAnalyzeLoading && (
+                  <Tag color="processing" style={{ fontSize: 10, margin: 0, lineHeight: '16px', padding: '0 6px' }}>
+                    AI 推断中
+                  </Tag>
+                )}
+              </Space>
             }
-          />
-        </Form.Item>
-        <Form.Item label="覆盖同名" name="overrideExisting" valuePropName="checked" style={{ marginBottom: 8 }}>
-          <Checkbox>覆盖已存在的协议</Checkbox>
-        </Form.Item>
-      </Space>
+            tooltip={preAnalyzeReasoning ?? undefined}
+            name="hintProtocolName"
+            style={{ marginBottom: 12 }}
+          >
+            <Input
+              placeholder="PascalCase，留空让 LLM 起"
+              prefix={
+                <span style={{ display: 'inline-block', width: 14, height: 14 }}>
+                  {preAnalyzeLoading ? <Spin size="small" /> : null}
+                </span>
+              }
+            />
+          </Form.Item>
+        </Col>
+        <Col span={12}>
+          {/* 覆盖同名：label + Switch 在一行右侧对齐，跟其他 Form.Item baseline 齐 */}
+          <Form.Item
+            label="覆盖同名"
+            name="overrideExisting"
+            valuePropName="checked"
+            style={{ marginBottom: 12 }}
+          >
+            <Space size={6} align="center">
+              <Switch size="small" />
+              <Text type="secondary" style={{ fontSize: 12 }}>覆盖已存在的协议</Text>
+            </Space>
+          </Form.Item>
+        </Col>
+      </Row>
       <Form.Item
         label={
-          <Space size={4}>
-            <Text style={{ fontSize: 12 }}>Source（设备手册 / 文件 / URL）</Text>
+          <Space size={6}>
+            <Text style={{ fontSize: 12 }}>Source</Text>
+            <Text type="secondary" style={{ fontSize: 12 }}>（设备手册 / 文件 / URL）</Text>
             {sourceMode === 'text' && (
-              <Tag style={{ fontSize: 10 }}>≤ 8000 字</Tag>
+              <Tag style={{ fontSize: 10, lineHeight: '16px', padding: '0 6px', margin: 0 }}>≤ 8000 字</Tag>
             )}
             {sourceMode === 'upload' && (
-              <Tag style={{ fontSize: 10 }}>PDF/Excel/Word ≤ 20MB</Tag>
+              <Tag style={{ fontSize: 10, lineHeight: '16px', padding: '0 6px', margin: 0 }}>PDF/Excel/Word ≤ 20MB</Tag>
             )}
             {sourceMode === 'url' && (
-              <Tag style={{ fontSize: 10 }}>http/https 网页</Tag>
+              <Tag style={{ fontSize: 10, lineHeight: '16px', padding: '0 6px', margin: 0 }}>http/https 网页</Tag>
             )}
           </Space>
         }
-        style={{ marginBottom: 8 }}
+        style={{ marginBottom: 12 }}
       >
         <Tabs
           size="small"
+          tabBarGutter={24}
           activeKey={sourceMode}
           onChange={(k) => {
             const next = k as SourceMode
@@ -661,7 +679,7 @@ export default function AiGeneratePage() {
           items={[
             {
               key: 'text',
-              label: '📝 粘文字',
+              label: '粘文字',
               children: (
                 <Input.TextArea
                   value={manualText}
@@ -673,7 +691,7 @@ export default function AiGeneratePage() {
             },
             {
               key: 'upload',
-              label: '📤 上传文件',
+              label: '上传文件',
               children: (
                 <SourceUploadTab
                   disabled={isStreaming || submitting}
@@ -697,7 +715,7 @@ export default function AiGeneratePage() {
             },
             {
               key: 'url',
-              label: '🌐 抓 URL',
+              label: '抓 URL',
               children: (
                 <SourceUrlTab
                   disabled={isStreaming || submitting}
@@ -722,20 +740,24 @@ export default function AiGeneratePage() {
           ]}
         />
       </Form.Item>
-      <Space>
-        <Button
-          type="primary"
-          htmlType="submit"
-          loading={isStreaming || submitting}
-          icon={<ThunderboltOutlined />}
-        >
-          {isStreaming ? '生成中…' : '生成协议'}
-        </Button>
-        {isStreaming && <Button onClick={abort}>中止</Button>}
-        {protocol?.Protocol && !isStreaming && (
-          <Button onClick={goChat}>用 AI 继续修改 →</Button>
-        )}
-      </Space>
+      <Row justify="end" style={{ marginTop: 4 }}>
+        <Col>
+          <Space>
+            <Button
+              type="primary"
+              htmlType="submit"
+              loading={isStreaming || submitting}
+              icon={<ThunderboltOutlined />}
+            >
+              {isStreaming ? '生成中…' : '生成协议'}
+            </Button>
+            {isStreaming && <Button onClick={abort}>中止</Button>}
+            {protocol?.Protocol && !isStreaming && (
+              <Button onClick={goChat}>用 AI 继续修改 →</Button>
+            )}
+          </Space>
+        </Col>
+      </Row>
     </Form>
   )
 
@@ -760,7 +782,8 @@ export default function AiGeneratePage() {
         left={
           // 左列：表单（设备类型/型号/协议名/Source tabs/生成按钮）
           // 2026-06-27 重构：form 从 ChatPane inputForm 拆出来，独立 section
-          <div style={{ padding: '16px' }}>
+          // 2026-06-28：Row/Col 网格对齐 + 容器 padding 收紧
+          <div style={{ padding: '20px 24px' }}>
             {inputFormNode}
           </div>
         }
