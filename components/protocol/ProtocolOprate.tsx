@@ -7,6 +7,7 @@ import { addDevConstant } from "@/lib/api/fetchRoot";
 import { getProtocol, getProtocolSetup } from "@/lib/api/fetch";
 import { generateTableKey } from "@/lib/utils/tableCommon";
 import { usePromise } from "@/lib/hooks/usePromise";
+import { AiProtocolEmpty } from "./AiProtocolEmpty";
 
 interface ProtocolProps {
     protocolName: string
@@ -111,6 +112,14 @@ export const ProtocolOprate: React.FC<ProtocolProps> = ({ protocolName }) => {
 
     return (
         <>
+            <AiProtocolEmpty
+                typeName="操作指令"
+                typeKey="OprateInstruct"
+                protocolName={protocolName}
+                source={Protocol.data?.source}
+                remark={Protocol.data?.remark}
+                empty={!loading && (!data || data.length === 0)}
+            />
             <Form form={form} onFinish={save} labelCol={{ span: 3 }} initialValues={initData}>
                 <Form.Item name="name" label="指令名称" required>
                     <Input />

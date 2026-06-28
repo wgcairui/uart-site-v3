@@ -4,6 +4,7 @@ import { Button, Checkbox, CheckboxOptionType, Col, message, Row } from 'antd'
 import React, { useMemo, useState } from "react";
 import { addDevConstant } from "@/lib/api/fetchRoot";
 import { getProtocol, getProtocolSetup } from "@/lib/api/fetch";
+import { AiProtocolEmpty } from "./AiProtocolEmpty";
 
 import { usePromise } from "@/lib/hooks/usePromise";
 
@@ -45,6 +46,14 @@ export const ProtocolShowTag: React.FC<ProtocolProps> = ({ protocolName }) => {
 
     return (
         <>
+            <AiProtocolEmpty
+                typeName="显示参数"
+                typeKey="ShowTag"
+                protocolName={protocolName}
+                source={Protocol.data?.source}
+                remark={Protocol.data?.remark}
+                empty={!loading && (!data || data.length === 0)}
+            />
             <Button type="primary" onClick={() => save()} style={{ marginBottom: 22 }}>上传保存</Button>
             <Checkbox.Group value={data} style={{ width: '100%' }} onChange={(val: any[]) => setData(val)}>
                 <Row>

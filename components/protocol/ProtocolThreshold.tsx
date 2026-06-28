@@ -7,6 +7,7 @@ import { addDevConstant } from "@/lib/api/fetchRoot";
 import { getProtocol, getProtocolSetup } from "@/lib/api/fetch";
 import { generateTableKey } from "@/lib/utils/tableCommon";
 import { usePromise } from "@/lib/hooks/usePromise";
+import { AiProtocolEmpty } from "./AiProtocolEmpty";
 
 interface ProtocolProps {
     protocolName: string
@@ -96,6 +97,14 @@ export const ProtocolThreshold: React.FC<ProtocolProps> = ({ protocolName }) => 
 
     return (
         <>
+            <AiProtocolEmpty
+                typeName="阈值配置"
+                typeKey="Threshold"
+                protocolName={protocolName}
+                source={Protocol.data?.source}
+                remark={Protocol.data?.remark}
+                empty={!loading && (!data || data.length === 0)}
+            />
             <Form form={form} initialValues={initData} onFinish={save} layout="inline">
                 <Form.Item name="name" label="参数" required
                     rules={[

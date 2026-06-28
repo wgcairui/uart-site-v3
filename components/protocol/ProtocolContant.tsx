@@ -3,6 +3,7 @@ import { Button, Form, message, Select } from 'antd'
 import React, { useEffect, useMemo, useState } from "react";
 import { addDevConstant } from "@/lib/api/fetchRoot";
 import { getProtocol, getProtocolSetup } from "@/lib/api/fetch";
+import { AiProtocolEmpty } from "./AiProtocolEmpty";
 
 
 import { usePromise } from "@/lib/hooks/usePromise";
@@ -112,6 +113,14 @@ export const ProtocolContant: React.FC<ProtocolProps> = ({ protocolName }) => {
 
     return (
         <>
+            <AiProtocolEmpty
+                typeName="常量配置"
+                typeKey="Constant"
+                protocolName={protocolName}
+                source={Protocol.data?.source}
+                remark={Protocol.data?.remark}
+                empty={!loading && (!data || Object.keys(data).length === 0)}
+            />
             <Form form={form} labelCol={{ span: 3 }} onValuesChange={change} onFinish={submit}>
                 {
                     vals.map(el => <Form.Item name={el.label} label={el.text} key={el.text as string}>
