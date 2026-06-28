@@ -66,11 +66,43 @@ export const ProtocolAlarmStat: React.FC<ProtocolProps> = ({ protocolName }) => 
         return Array.from(set)
     }, [Protocol.data])
 
+    /**
+     * 解析告警状态码字符串为 [{code, label}] 格式
+     * - 输入 "0,1,2,3" → [{code:'0'},{code:'1'},{code:'2'},{code:'3'}]
+     * - 输入 "0=正常,1=故障,2=待机" → [{code:'0',label:'正常'},{code:'1',label:'故障'},{code:'2',label:'待机'}]
+     * - 输入 "0=正常,1" → [{code:'0',label:'正常'},{code:'1'}]
+     */
+    const parseAlarmCodes = (input: string): Array<{ code: string; label?: string }> => {
+        return (input || '')
+            .split(/[,，]/)
+            .map((s) => s.trim())
+            .filter(Boolean)
+            .map((s) => {
+                const eqIdx = s.indexOf('=')
+                if (eqIdx === -1) return { code: s }
+                return { code: s.slice(0, eqIdx).trim(), label: s.slice(eqIdx + 1).trim() }
+            })
+            .filter((c) => c.code)
+    }
+
+    /** 反向: [{code, label?}] → 字符串 (供 Form edit 回填) */
+    const stringifyAlarmCodes = (codes: Array<{ code: string; label?: string }>): string => {
+        return (codes || [])
+            .map((c) => (c.label ? `${c.code}=${c.label}` : c.code))
+            .join(',')
+    }
+
     // 编辑行
     const edit = (item: Uart.ConstantAlarmStat) => {
+        // device.constants.AlarmStat.alarmStat 是 string[], 兼容 code=label 格式
+        const codes = (item.alarmStat || []).map((s) => {
+            const eqIdx = s.indexOf('=')
+            if (eqIdx === -1) return { code: s }
+            return { code: s.slice(0, eqIdx).trim(), label: s.slice(eqIdx + 1).trim() }
+        })
         form.setFieldsValue({
             name: item.name,
-            alarmStat: (item.alarmStat || []).join(','),
+            alarmStat: stringifyAlarmCodes(codes),
         })
     }
 
@@ -93,14 +125,14 @@ export const ProtocolAlarmStat: React.FC<ProtocolProps> = ({ protocolName }) => 
      * 保存单行（添加到 data 或覆盖现有）
      */
     const save = (values: { name: string; alarmStat: string }) => {
-        const codes = (values.alarmStat || '')
-            .split(/[,，]/)
-            .map((s) => s.trim())
-            .filter(Boolean)
-        if (!values.name || codes.length === 0) {
+        // 解析支持 "0=正常,1=故障" 或 "0,1,2" 格式
+        const parsed = parseAlarmCodes(values.alarmStat || '')
+        if (!values.name || parsed.length === 0) {
             message.warning('请填写状态名称和至少一个告警状态码')
             return
         }
+        // 存到 entity schema string[] 时保留 "code=label" 格式
+        const codes = parsed.map((c) => (c.label ? `${c.code}=${c.label}` : c.code))
         const next = [...(data || [])]
         const idx = next.findIndex((el) => el.name === values.name)
         const existing = idx !== -1 ? next[idx] : undefined
@@ -190,10 +222,15 @@ export const ProtocolAlarmStat: React.FC<ProtocolProps> = ({ protocolName }) => 
                         name="alarmStat"
                         label="告警状态码"
                         rules={[{ required: true, message: '请输入告警状态码' }]}
-                        extra="多个用英文/中文逗号分隔，如 0,1,2,3 或 0，1，2，3"
+                        extra={
+                            <>
+                                格式: <code className="app-code-inline">code</code> 或 <code className="app-code-inline">code=中文标签</code>
+                                ，多个用逗号分隔。例: <code className="app-code-inline">0,1,2,3</code> 或 <code className="app-code-inline">0=正常,1=故障,2=待机</code>
+                            </>
+                        }
                         style={{ minWidth: 360 }}
                     >
-                        <Input placeholder="0,1,2,3" />
+                        <Input placeholder="0=正常,1=故障,2=待机" />
                     </Form.Item>
                     <Form.Item>
                         <Space>
@@ -226,11 +263,28 @@ export const ProtocolAlarmStat: React.FC<ProtocolProps> = ({ protocolName }) => 
                                 title: '告警状态码',
                                 render: (_, re: Uart.ConstantAlarmStat) => (
                                     <Space wrap size={4}>
-                                        {(re.alarmStat || []).map((code, i) => (
-                                            <Tag key={i} color="blue">
-                                                {code}
-                                            </Tag>
-                                        ))}
+                                        {(re.alarmStat || []).map((entry, i) => {
+                                            // 解析 "code" 或 "code=label" 格式
+                                            const eqIdx = entry.indexOf('=')
+                                            const code = eqIdx === -1 ? entry : entry.slice(0, eqIdx).trim()
+                                            const label = eqIdx === -1 ? null : entry.slice(eqIdx + 1).trim()
+                                            return (
+                                                <Tag
+                                                    key={i}
+                                                    color={label ? 'geekblue' : 'blue'}
+                                                    style={{ fontSize: 12 }}
+                                                >
+                                                    {label ? (
+                                                        <>
+                                                            <strong style={{ marginRight: 4 }}>{code}</strong>
+                                                            <span style={{ color: '#fff', opacity: 0.85 }}>= {label}</span>
+                                                        </>
+                                                    ) : (
+                                                        <strong>{code}</strong>
+                                                    )}
+                                                </Tag>
+                                            )
+                                        })}
                                         {!re.alarmStat?.length && (
                                             <span style={{ color: '#999', fontSize: 12 }}>—</span>
                                         )}
