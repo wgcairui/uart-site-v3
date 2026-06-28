@@ -149,11 +149,27 @@ export const downloadWithBlob = (url: string, filename: string) => {
  * @returns
  */
 export const ProtocolInstructFormrizeParse = (item: Uart.protocolInstructFormrize) => {
-    const objUnit = item.unit!.replaceAll('{', '{"').replaceAll(':', '":"').replaceAll(',', '","').replaceAll('}', '"}')
-    return {
-        name: item.name,
-        parse: JSON.parse(objUnit) as Record<string, string>
+    const name = item.name
+    const unit = item.unit
+
+    // 容错: unit 空/undefined/格式不对都返回空 parse (2026-06-28 fix)
+    // 之前 `item.unit!.replaceAll(...)` + `JSON.parse(objUnit)` 在 AI 生成协议的 state field
+    // unit="" 时会抛 "Unexpected end of JSON input", 整个「状态配置」tab 渲染挂掉
+    let parse: Record<string, string> = {}
+    if (unit && typeof unit === 'string' && unit.trim()) {
+        try {
+            const objUnit = unit.replaceAll('{', '{"').replaceAll(':', '":"').replaceAll(',', '","').replaceAll('}', '"}')
+            if (objUnit && objUnit.trim()) {
+                parse = JSON.parse(objUnit) as Record<string, string>
+            }
+        } catch (err) {
+            // unit 格式错 (e.g. 缺 {/}, 键值对语法不对), warn + 返回空 parse
+            // 上层 ProtocolAlarmStat 会渲染空 Checkbox.Group (admin 可手动加告警状态码)
+            console.warn(`[ProtocolInstructFormrizeParse] ${name} unit 解析失败:`, err, 'unit=', JSON.stringify(unit))
+        }
     }
+
+    return { name, parse }
 }
 
 
