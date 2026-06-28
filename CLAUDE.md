@@ -167,7 +167,7 @@ redirect('/login')
   - **生产 server 访问 GitHub / Docker Hub 受限**，所有 git / docker 命令必加 `HTTPS_PROXY=http://100.76.101.62:7890`（不加会静默 hang 30s）
   - build 走 5+ min 长跑命令模式：nohup + log file + pid 轮询
   - 部署 hotfix 直接 push main，不走 PR 流程；日常 feature 走 PR
-  - 完整命令 / 故障排查见 agent memory `memory/MEMORY.md` 主题 "uart-site-v3 生产部署"
+  - 完整命令 / 故障排查见 agent memory `memory/frontend-stack-gotchas.md`（含 Next.js + bun + Docker 实战 gotcha 集合）
 
 ## Next.js 16.2 特有约定
 
