@@ -14,7 +14,13 @@ export const wx_send_info = (type: number, openid: string, content?: string) =>
 
 interface DeleteMultiResult { deleted: { Key: string }[]; res: any }
 interface ObjectMeta { name: string; lastModified: string; size: number; url: string; etag: string; type: string }
-export type ossfiles = Pick<ObjectMeta, 'name' | 'lastModified' | 'size' | 'url'>
+/**
+ * OSS 文件元数据（与 admin-system.controller.ts L147-159 返回结构一致）
+ *
+ * `etag` / `type` 是 server 在 Stage 1 P0 契约下新增字段（之前没返回）。
+ * 标 optional 以保持向后兼容（旧的 list 响应可能仍不带这两字段）。
+ */
+export type ossfiles = Pick<ObjectMeta, 'name' | 'lastModified' | 'size' | 'url'> & { etag?: string; type?: string }
 
 export const redisflushall = () => Post<universalResult<any>>('/api/v2/admin/system/redis/flush-all')
 export const redisflushdb = () => Post<universalResult<any>>('/api/v2/admin/system/redis/flush-db')
