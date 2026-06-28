@@ -25,7 +25,7 @@ import {
   setProtocol,
   updateProtocol,
 } from '@/lib/api/fetchRoot'
-import { getProtocol } from '@/lib/api/fetch'
+import { getProtocol, getProtocolSetup } from '@/lib/api/fetch'
 import { prompt } from '@/lib/utils/prompt'
 import { generateTableKey } from '@/lib/utils/tableCommon'
 import { MyInput } from '@/components/common/MyInput'
@@ -39,6 +39,7 @@ import { ProtocolInstructForm } from '@/components/protocol/ProtocolInstructForm
 import { usePromise } from '@/lib/hooks/usePromise'
 import { AiSourceInfoCard } from '@/components/ai/AiSourceInfoCard'
 import { ProtocolSourceTag } from '@/components/protocol/ProtocolSourceTag'
+import { ProtocolAiInferred } from '@/components/protocol/ProtocolAiInferred'
 
 interface props {
   Protocol: string
@@ -373,6 +374,39 @@ const ProtocolInfo: React.FC = () => {
   // T2 改造: 「本地文件更新」改 Modal, 由 PageHeader extra 按钮唤出
   const [uploadModalOpen, setUploadModalOpen] = useState(false)
 
+  // T4 改造: 5 段 device.constants count (Tab 角标计数 + AI 推断 tab 数据源)
+  const { data: counts } = usePromise<{
+    OprateInstruct: number
+    Constant: number
+    ShowTag: number
+    Threshold: number
+    AlarmStat: number
+  }>(async () => {
+    const empty = { OprateInstruct: 0, Constant: 0, ShowTag: 0, Threshold: 0, AlarmStat: 0 }
+    if (!Protocol) return empty
+    const types = ['OprateInstruct', 'Constant', 'ShowTag', 'Threshold', 'AlarmStat'] as const
+    const results = await Promise.all(
+      types.map(async (t) => {
+        try {
+          const { data } = await getProtocolSetup<any>(Protocol, t as any)
+          if (t === 'Constant') {
+            return Object.keys(data.sys || {}).filter(k => k !== '_id').length
+          }
+          return Array.isArray(data.sys) ? data.sys.length : 0
+        } catch {
+          return 0
+        }
+      }),
+    )
+    return {
+      OprateInstruct: results[0] ?? 0,
+      Constant: results[1] ?? 0,
+      ShowTag: results[2] ?? 0,
+      Threshold: results[3] ?? 0,
+      AlarmStat: results[4] ?? 0,
+    }
+  }, { OprateInstruct: 0, Constant: 0, ShowTag: 0, Threshold: 0, AlarmStat: 0 }, [Protocol])
+
   if (!Protocol) {
     return <Empty description="缺少协议参数 (Protocol)" />
   }
@@ -437,12 +471,13 @@ const ProtocolInfo: React.FC = () => {
       />
       <Tabs
         items={[
-          { key: 'info', label: '采集指令', children: <ProtocolDes Protocol={Protocol} /> },
-          { key: 'oprate', label: '操作指令', children: <ProtocolOprate protocolName={Protocol} /> },
-          { key: 'Constant', label: '常量配置', children: <ProtocolContant protocolName={Protocol} /> },
-          { key: 'show', label: '显示参数', children: <ProtocolShowTag protocolName={Protocol} /> },
-          { key: 'Threld', label: '阈值配置', children: <ProtocolThreshold protocolName={Protocol} /> },
-          { key: 'stat', label: '状态配置', children: <ProtocolAlarmStat protocolName={Protocol} /> },
+          { key: 'info', label: `采集指令 (${protocolMeta?.instruct?.length ?? '—'})`, children: <ProtocolDes Protocol={Protocol} /> },
+          { key: 'oprate', label: `操作指令 (${counts.OprateInstruct})`, children: <ProtocolOprate protocolName={Protocol} /> },
+          { key: 'Constant', label: `常量配置 (${counts.Constant})`, children: <ProtocolContant protocolName={Protocol} /> },
+          { key: 'show', label: `显示参数 (${counts.ShowTag})`, children: <ProtocolShowTag protocolName={Protocol} /> },
+          { key: 'Threld', label: `阈值配置 (${counts.Threshold})`, children: <ProtocolThreshold protocolName={Protocol} /> },
+          { key: 'stat', label: `状态配置 (${counts.AlarmStat})`, children: <ProtocolAlarmStat protocolName={Protocol} /> },
+          { key: 'aiInferred', label: 'AI 推断', children: <ProtocolAiInferred protocolName={Protocol} /> },
         ]}
       />
       <ProtocolUploadModal
