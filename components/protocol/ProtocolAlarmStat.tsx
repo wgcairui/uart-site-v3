@@ -9,6 +9,7 @@ import { getProtocol, getProtocolSetup } from '@/lib/api/fetch'
 import { usePromise } from '@/lib/hooks/usePromise'
 import { addDevConstant } from '@/lib/api/fetchRoot'
 import { generateTableKey } from '@/lib/utils/tableCommon'
+import { ProtocolInstructFormrizeParse } from '@/lib/utils/util'
 import { AiProtocolEmpty } from './AiProtocolEmpty'
 
 interface ProtocolProps {
@@ -65,6 +66,61 @@ export const ProtocolAlarmStat: React.FC<ProtocolProps> = ({ protocolName }) => 
         })
         return Array.from(set)
     }, [Protocol.data])
+
+    /**
+     * state field name → code→label 映射 (从 device 协议 unit 字段 parse)
+     * 用于渲染 Table 告警状态码时, 把纯 code 自动翻译成中文 label
+     *
+     * 例如:
+     *   "当前状态" → {'0':'正常','1':'异常','2':'未知'}
+     *   "机组状态" → {}  (unit="" 没映射)
+     */
+    const stateParseMap = useMemo(() => {
+        const instructs = Protocol.data?.instruct
+        if (!Array.isArray(instructs)) return {} as Record<string, Record<string, string>>
+        const map: Record<string, Record<string, string>> = {}
+        instructs.forEach((ins: any) => {
+            if (Array.isArray(ins.formResize)) {
+                ins.formResize.forEach((fr: any) => {
+                    if (fr?.isState === true && typeof fr.name === 'string') {
+                        const { parse } = ProtocolInstructFormrizeParse(fr)
+                        if (parse && Object.keys(parse).length) {
+                            map[fr.name] = parse
+                        }
+                    }
+                })
+            }
+        })
+        return map
+    }, [Protocol.data])
+
+    /** 渲染告警状态码 Tag: 优先用 alarmStat 自带 label, fallback 到 device 协议 unit 映射 */
+    const renderAlarmCodes = (name: string, alarmStat?: string[]) => {
+        const protocolMap = stateParseMap[name] || {}
+        return (alarmStat || []).map((entry, i) => {
+            const eqIdx = entry.indexOf('=')
+            const code = eqIdx === -1 ? entry : entry.slice(0, eqIdx).trim()
+            const inlineLabel = eqIdx === -1 ? null : entry.slice(eqIdx + 1).trim()
+            // 优先用 alarmStat 自带 label, 否则查协议 unit.parse 映射
+            const label = inlineLabel || protocolMap[code] || null
+            return (
+                <Tag
+                    key={i}
+                    color={label ? 'geekblue' : 'blue'}
+                    style={{ fontSize: 12 }}
+                >
+                    {label ? (
+                        <>
+                            <strong style={{ marginRight: 4 }}>{code}</strong>
+                            <span style={{ color: '#fff', opacity: 0.85 }}>= {label}</span>
+                        </>
+                    ) : (
+                        <strong>{code}</strong>
+                    )}
+                </Tag>
+            )
+        })
+    }
 
     /**
      * 解析 alarmStat string[] 为 [{code, label?}] 数组 (供 Form.List / Table 渲染)
@@ -309,28 +365,7 @@ export const ProtocolAlarmStat: React.FC<ProtocolProps> = ({ protocolName }) => 
                                 title: '告警状态码',
                                 render: (_, re: Uart.ConstantAlarmStat) => (
                                     <Space wrap size={4}>
-                                        {(re.alarmStat || []).map((entry, i) => {
-                                            // 解析 "code" 或 "code=label" 格式
-                                            const eqIdx = entry.indexOf('=')
-                                            const code = eqIdx === -1 ? entry : entry.slice(0, eqIdx).trim()
-                                            const label = eqIdx === -1 ? null : entry.slice(eqIdx + 1).trim()
-                                            return (
-                                                <Tag
-                                                    key={i}
-                                                    color={label ? 'geekblue' : 'blue'}
-                                                    style={{ fontSize: 12 }}
-                                                >
-                                                    {label ? (
-                                                        <>
-                                                            <strong style={{ marginRight: 4 }}>{code}</strong>
-                                                            <span style={{ color: '#fff', opacity: 0.85 }}>= {label}</span>
-                                                        </>
-                                                    ) : (
-                                                        <strong>{code}</strong>
-                                                    )}
-                                                </Tag>
-                                            )
-                                        })}
+                                        {renderAlarmCodes(re.name, re.alarmStat)}
                                         {!re.alarmStat?.length && (
                                             <span style={{ color: '#999', fontSize: 12 }}>—</span>
                                         )}

@@ -477,6 +477,13 @@ const ProtocolInfo: React.FC = () => {
         }
       />
       <Tabs
+        activeKey={query.get('tab') ?? 'info'}
+        onChange={(key) => {
+          // 同步当前 tab 到 URL query, 刷新页面后保持选中状态 (2026-06-28 cai 反馈)
+          const params = new URLSearchParams(query.toString())
+          params.set('tab', key)
+          router.replace(`/admin/node/protocols/info?${params.toString()}`)
+        }}
         items={[
           { key: 'info', label: `采集指令 (${protocolMeta?.instruct?.length ?? '—'})`, children: <ProtocolDes Protocol={Protocol} /> },
           { key: 'oprate', label: `操作指令 (${counts.OprateInstruct})`, children: <ProtocolOprate protocolName={Protocol} /> },
