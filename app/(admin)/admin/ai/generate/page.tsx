@@ -538,8 +538,10 @@ export default function AiGeneratePage() {
 
   // 跳转到协议详情页（2026-06-27 决策：AI 生成完成后可以一键跳转）
   const goProtocolDetail = (protocolName: string) => {
-    // 协议详情页路径：/admin/node/protocols/info?name=XXX
-    router.push(`/admin/node/protocols/info?name=${encodeURIComponent(protocolName)}`)
+    // 协议详情页路径：/admin/node/protocols/info?Protocol=XXX
+    // 必须用 Protocol 参数名（跟 admin protocols 列表「查看」按钮 + info page query.get('Protocol') 对齐），
+    // 之前误用 name= 导致 AI 路径跳转后 info page 拿不到参数显示「缺少协议参数」
+    router.push(`/admin/node/protocols/info?Protocol=${encodeURIComponent(protocolName)}`)
   }
 
   // ============ 输入表单（左侧顶部）============

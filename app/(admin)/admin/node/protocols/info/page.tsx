@@ -340,7 +340,16 @@ const ProtocolUpload: React.FC<props> = (props) => {
 const ProtocolInfo: React.FC = () => {
   const query = useSearchParams()
   const router = useRouter()
-  const Protocol = query.get('Protocol')
+  // 决策 23b（2026-06-28）：兼容历史 URL 参数名（admin 列表用 Protocol，AI 路径曾误用 name）
+  // 防御性：如果 Protocol 没拿到，fallback 到 name，同时 console.warn 提醒调用方改用 Protocol
+  const protocolParam = query.get('Protocol') ?? query.get('name')
+  if (typeof window !== 'undefined' && !query.get('Protocol') && query.get('name')) {
+    // eslint-disable-next-line no-console
+    console.warn(
+      '[protocols/info] URL 参数 "name" 已废弃, 请改用 "Protocol" (跟 admin 列表 + info page 对齐)',
+    )
+  }
+  const Protocol = protocolParam
 
   // 决策 23（2026-06-28）：顶层拿 protocol data 给 PageHeader 用 source Tag
   // ProtocolDes 内部会再拉一次（loading 期间 PageHeader 已显示协议名）

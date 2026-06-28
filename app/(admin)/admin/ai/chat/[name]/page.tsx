@@ -92,9 +92,9 @@ function AiChatContent({ name }: AiChatContentProps) {
   const toolJsonAccumRef = useRef<string>('')
   const [chatForm] = Form.useForm<{ userPrompt: string }>()
 
-  // 跳转到协议详情页（跟 generate 页保持一致）
+  // 跳转到协议详情页（跟 generate 页 + admin protocols 列表「查看」按钮对齐用 Protocol 参数名）
   const goProtocolDetail = (protocolName: string) => {
-    router.push(`/admin/node/protocols/info?name=${encodeURIComponent(protocolName)}`)
+    router.push(`/admin/node/protocols/info?Protocol=${encodeURIComponent(protocolName)}`)
   }
 
   // 加载当前协议（mount-only，靠父组件 key 触发 remount 来切换协议）
