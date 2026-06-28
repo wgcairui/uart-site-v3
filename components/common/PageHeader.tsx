@@ -21,6 +21,16 @@ interface PageHeaderProps {
   back?: boolean
   /** 覆盖 back 行为 */
   onBack?: () => void
+  /**
+   * 元信息区（KV grid 形式，渲染在 title 下面，border-top 分隔）
+   *
+   * 用法示例：
+   *   meta={<div className="app-kv-grid">
+   *     <div className="app-kv-cell"><span className="app-kv-label">类型</span><span>空调</span></div>
+   *     <div className="app-kv-cell"><span className="app-kv-label">版本</span><span>v3</span></div>
+   *   </div>}
+   */
+  meta?: ReactNode
 }
 
 /**
@@ -38,6 +48,7 @@ export function PageHeader({
   extra,
   back = false,
   onBack,
+  meta,
 }: PageHeaderProps) {
   const router = useRouter()
   const handleBack = () => (onBack ? onBack() : router.back())
@@ -78,6 +89,7 @@ export function PageHeader({
         )}
         <h1 className="app-page-header-title">{title}</h1>
         {subtitle && <p className="app-page-header-subtitle">{subtitle}</p>}
+        {meta && <div className="app-page-header-meta">{meta}</div>}
       </div>
       {extra && <div className="app-page-header-extra">{extra}</div>}
     </header>

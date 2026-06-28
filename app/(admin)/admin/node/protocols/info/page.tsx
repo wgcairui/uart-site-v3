@@ -17,6 +17,7 @@ import { ColumnsType } from 'antd/lib/table'
 import { RcFile } from 'antd/lib/upload'
 import { Suspense, useCallback, useEffect, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
+import dayjs from 'dayjs'
 import { CopyFilled, DeleteFilled, UploadOutlined } from '@ant-design/icons'
 import {
   getProtocols,
@@ -162,29 +163,14 @@ const ProtocolDes: React.FC<props> = ({ Protocol }) => {
     <Empty description="未能加载协议详情" />
   ) : (
     <>
-      <Descriptions>
-        <Descriptions.Item label="名称">{data.Protocol}</Descriptions.Item>
-        <Descriptions.Item label="类型">{data.Type}</Descriptions.Item>
-        <Descriptions.Item label="设备类型">{data.ProtocolType}</Descriptions.Item>
-        <Descriptions.Item label="备注" span={3}>
-          <AiSourceInfoCard remark={data.remark} />
-          <MyInput
-            {...(data.remark !== undefined ? { value: data.remark } : {})}
-            onSave={remark}
-            textArea
-          />
-        </Descriptions.Item>
-        <Descriptions.Item>
-          <Space>
-            <Button size="small" type="primary" onClick={addInstruct}>
-              添加指令
-            </Button>
-            <Button size="small" type="primary" onClick={saveProtocol}>
-              保存协议
-            </Button>
-          </Space>
-        </Descriptions.Item>
-      </Descriptions>
+      <Space style={{ marginBottom: 16 }}>
+        <Button size="small" type="primary" onClick={addInstruct}>
+          添加指令
+        </Button>
+        <Button size="small" type="primary" onClick={saveProtocol}>
+          保存协议
+        </Button>
+      </Space>
       {data.instruct && (
         <Table
           dataSource={generateTableKey(instructs, 'name')}
@@ -377,10 +363,46 @@ const ProtocolInfo: React.FC = () => {
         breadcrumb={[{ title: '协议管理', href: '/admin/node/protocols' }]}
         back
         onBack={() => router.push('/admin/node/protocols')}
+        meta={
+          protocolMeta ? (
+            <>
+              <div className="app-kv-cell">
+                <span className="app-kv-label">类型</span>
+                <span className="app-kv-value">{protocolMeta.Type || '—'}</span>
+              </div>
+              <div className="app-kv-cell">
+                <span className="app-kv-label">设备类型</span>
+                <span className="app-kv-value">{protocolMeta.ProtocolType || '—'}</span>
+              </div>
+              <div className="app-kv-cell">
+                <span className="app-kv-label">版本</span>
+                <span className="app-kv-value">v{protocolMeta.version ?? '—'}</span>
+              </div>
+              <div className="app-kv-cell">
+                <span className="app-kv-label">最后修改</span>
+                <span className="app-kv-value">
+                  {protocolMeta.updatedAt
+                    ? dayjs(protocolMeta.updatedAt).format('YYYY-MM-DD HH:mm')
+                    : '—'}
+                </span>
+              </div>
+              <div className="app-kv-cell">
+                <span className="app-kv-label">来源</span>
+                <span className="app-kv-value">
+                  <ProtocolSourceTag source={protocolMeta.source} remark={protocolMeta.remark} />
+                </span>
+              </div>
+              <div className="app-kv-cell">
+                <span className="app-kv-label">已挂载终端</span>
+                <span className="app-kv-value">— (TODO)</span>
+              </div>
+            </>
+          ) : undefined
+        }
       />
       <Tabs
         items={[
-          { key: 'info', label: '详细信息', children: <ProtocolDes Protocol={Protocol} /> },
+          { key: 'info', label: '采集指令', children: <ProtocolDes Protocol={Protocol} /> },
           { key: 'oprate', label: '操作指令', children: <ProtocolOprate protocolName={Protocol} /> },
           { key: 'Constant', label: '常量配置', children: <ProtocolContant protocolName={Protocol} /> },
           { key: 'show', label: '显示参数', children: <ProtocolShowTag protocolName={Protocol} /> },

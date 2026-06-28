@@ -425,6 +425,35 @@ html, body {
   gap: 12px;
 }
 
+/* 元信息区（在 title 下面，border-top 分隔，KV grid 横向布局）
+   使用方式见 PageHeader meta prop 注释 */
+.app-page-header-meta {
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid var(--ink-100);
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 16px 24px;
+}
+
+.app-kv-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.app-kv-label {
+  font-size: 12px;
+  color: var(--ink-500, #64748b);
+  font-weight: 500;
+}
+
+.app-kv-value {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--ink-900, #18181b);
+}
+
 /* =============================================================
  * Section title
  * ============================================================= */
