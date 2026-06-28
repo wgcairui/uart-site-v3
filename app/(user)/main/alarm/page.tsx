@@ -53,18 +53,24 @@ const Alarm: React.FC = () => {
 
     /**
      * 确认告警,然后变更数据
-     * @param _id
+     * @param _id 24 位 hex alarm id; undefined 直接返回（不发请求）
      * @returns
      */
     const confirm = async (_id?: string) => {
+        // 2026-06-29 加守卫：_id 缺失 / 非 24 位 hex 直接 return + warning，
+        // 不发明知会 400 的请求（用户体验差）。
+        // 触发场景：报警数据 _id 字段缺失 / navigation 时 id 未就绪
+        if (!_id || !/^[a-f0-9]{24}$/i.test(_id)) {
+            message.warning('告警 id 缺失或格式不合法，无法确认')
+            console.warn('[Alarm.confirm] invalid _id:', _id)
+            return
+        }
         await confrimAlarm(_id);
-        if (_id) {
-            const a = alarms.find(el_1 => el_1._id === _id);
-            if (a)
-                a.isOk = true;
+        const a = alarms.find(el_1 => el_1._id === _id);
+        if (a)
+            a.isOk = true;
 
-            setAlarmsData([...alarms])
-        } else fecth()
+        setAlarmsData([...alarms])
         message.success("操作成功")
     }
 

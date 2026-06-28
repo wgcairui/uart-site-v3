@@ -43,9 +43,27 @@ export const getAlarm = (
   })
 }
 
-/** 确认用户告警 v2: POST /api/v2/user/alarms/:id/confirm */
+/** 确认用户告警 v2: POST /api/v2/user/alarms/:id/confirm
+ *
+ * 2026-06-29 加 guard：24 位 hex regex 校验。fail 直接 console.warn + 返回
+ * 类似成功的 Promise，避免发出明知会 400 的请求（用户体验差）。
+ *
+ * 背景：server-errors-daily-scan 报告真实用户在 HarmonyOS + WeChat 内嵌
+ * 浏览器触发 POST /alarms/undefined/confirm（id 是字面字符串 "undefined"），
+ * server-side hex guard 正确返 400，但用户点了按钮没响应。根因是
+ * 调用方传入 undefined / 缺失字段的 _id。
+ *
+ * 服务端 commit 0ea3bd5 (P4.1) 的 hex guard 已生效，这里不重复 server 校验，
+ * 只是**防止发出明知会失败的请求**。
+ */
 export const confrimAlarm = (id?: string) => {
-  return Post<universalResult<any>>(`/api/v2/user/alarms/${id || ''}/confirm`, {})
+  if (!id || !/^[a-f0-9]{24}$/i.test(id)) {
+    if (typeof console !== 'undefined') {
+      console.warn('[confrimAlarm] invalid alarmId, skip request:', id)
+    }
+    return Promise.resolve({ code: 0, data: null, msg: 'invalid alarmId (frontend guard)' } as unknown as universalResult<any>)
+  }
+  return Post<universalResult<any>>(`/api/v2/user/alarms/${id}/confirm`, {})
 }
 
 /** 获取指定且在线的终端 v2: GET /api/v2/user/devices/:mac/online */
