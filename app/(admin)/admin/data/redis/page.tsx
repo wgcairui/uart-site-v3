@@ -454,6 +454,7 @@ export const Redis: React.FC = () => {
           selectedRowKeys,
           onChange: setSelectedRowKeys,
           preserveSelectedRowKeys: true,
+          columnWidth: 48,
         }}
         pagination={{
           current: query.page ?? 1,
