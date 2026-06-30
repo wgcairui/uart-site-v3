@@ -3,7 +3,8 @@ import { Col, Divider, Form, Modal, Row, Switch } from "antd";
 import React, { useMemo } from "react";
 import { getProtocolSetup, getTerminalPidProtocol } from "@/lib/api/fetch";
 import { usePromise } from "@/lib/hooks/usePromise";
-import { sendOprateInstruct } from "@/lib/utils/util";
+import { useScheduleOpModal } from "./useScheduleOpModal";
+import { ScheduleOpModal } from "@/components/scheduled-op/ScheduleOpModal";
 import { DevDataProps } from "./TerminalRunData";
 
 interface ios {
@@ -34,6 +35,8 @@ interface result extends DevDataProps {
  * @returns
  */
 export const TerminalDevIO: React.FC<result> = ({ mac, pid, result }) => {
+
+    const { openScheduleOp, isOpen, currentItem, currentMac, currentPid, currentMountDev, currentProtocol, closeModal, handleSuccess } = useScheduleOpModal()
 
     const { data: Constant } = usePromise(async () => {
         const mountDev = await getTerminalPidProtocol(mac, pid)
@@ -72,7 +75,7 @@ export const TerminalDevIO: React.FC<result> = ({ mac, pid, result }) => {
             onOk() {
                 // 获取index
                 const index = io.out.findIndex(el => el.name === item.name)
-                sendOprateInstruct(mac, pid, tag, index + 1)
+                openScheduleOp({ mac, pid, tag, value: index + 1 })
             }
         })
     }
@@ -80,6 +83,19 @@ export const TerminalDevIO: React.FC<result> = ({ mac, pid, result }) => {
     return (
 
         <Row>
+            {currentItem && (
+                <ScheduleOpModal
+                    open={isOpen}
+                    mac={currentMac}
+                    pid={currentPid}
+                    item={currentItem}
+                    protocolName={currentProtocol}
+                    mountDev={currentMountDev}
+                    api="user"
+                    onCancel={closeModal}
+                    onSuccess={handleSuccess}
+                />
+            )}
             <Col span={12} md={24}>
                 <Divider plain>DI</Divider>
                 <Form layout="inline" style={{ justifyContent: "center" }}>

@@ -1,27 +1,31 @@
 'use client'
 
-import React, { useEffect, useState } from "react";
-import { useParams } from "next/navigation";
+import React, { Suspense, useEffect, useState } from "react";
+import { useParams, useSearchParams } from "next/navigation";
 import { useUserStore } from "@/lib/store/userStore";
-import { Empty, Dropdown, Button } from "antd";
+import { Empty, Dropdown, Button, Tabs, Spin } from "antd";
 import { DownOutlined } from '@ant-design/icons'
 import { TerminalDevPage } from "@/components/terminal/TerminalDevPage";
+import { UserScheduledOpTab } from "@/components/terminal/UserScheduledOpTab";
 import { useNav } from "@/lib/hooks/useNav";
 import { PageHeader } from "@/components/common/PageHeader";
 import { PageSummary } from "@/components/common/PageSummary";
 
-export default function Dev() {
-
+function DevInner() {
     const nav = useNav()
     const params = useParams()
+    const searchParams = useSearchParams()
     const id = params.id as string
 
     const terminals = useUserStore(s => s.terminals)
     const user = useUserStore(s => s.user)
 
     const [terminal, setTerminal] = useState<Uart.Terminal>()
-
     const [mountDev, setMountDev] = useState<Uart.TerminalMountDevs>()
+
+    const [activeKey, setActiveKey] = useState<string>(
+        () => searchParams.get('tab') || 'data'
+    )
 
     useEffect(() => {
         const ter = terminals.find(el => RegExp("^" + el.DevMac).test(id || ''))
@@ -30,6 +34,18 @@ export default function Dev() {
             setMountDev(ter.mountDevs.find(el => ter.DevMac + el.pid === id))
         }
     }, [id, terminals])
+
+    useEffect(() => {
+        const tab = searchParams.get('tab')
+        if (tab) setActiveKey(tab)
+    }, [searchParams])
+
+    const handleTabChange = (key: string) => {
+        setActiveKey(key)
+        const url = new URL(window.location.href)
+        url.searchParams.set('tab', key)
+        window.history.pushState({}, '', url.toString())
+    }
 
     return (
         (!terminal || !mountDev) ? <Empty />
@@ -66,10 +82,38 @@ export default function Dev() {
                         },
                     ]}
                 />
-                <section style={{ padding: 16 }}>
-                    <TerminalDevPage mac={terminal.DevMac} pid={mountDev.pid} {...(user?.user ? { user: user.user } : {})}></TerminalDevPage>
-                </section>
-
+                <Tabs
+                    activeKey={activeKey}
+                    onChange={handleTabChange}
+                    items={[
+                        {
+                            key: 'data',
+                            label: '设备数据',
+                            children: (
+                                <section style={{ padding: 16 }}>
+                                    <TerminalDevPage mac={terminal.DevMac} pid={mountDev.pid} {...(user?.user ? { user: user.user } : {})}></TerminalDevPage>
+                                </section>
+                            ),
+                        },
+                        {
+                            key: 'scheduled-op',
+                            label: '定时操作',
+                            children: (
+                                <section style={{ padding: 16 }}>
+                                    <UserScheduledOpTab mac={terminal.DevMac} pid={mountDev.pid} />
+                                </section>
+                            ),
+                        },
+                    ]}
+                />
             </>
+    )
+}
+
+export default function Dev() {
+    return (
+        <Suspense fallback={<Spin />}>
+            <DevInner />
+        </Suspense>
     )
 }

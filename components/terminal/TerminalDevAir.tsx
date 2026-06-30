@@ -3,9 +3,10 @@ import { Col, Image, Modal, Row, Switch } from "antd";
 import React, { useMemo } from "react";
 import { getProtocolSetup, getTerminalPidProtocol } from "@/lib/api/fetch";
 import { usePromise } from "@/lib/hooks/usePromise";
-import { sendOprateInstruct } from "@/lib/utils/util";
 import { devAir } from "@/lib/utils/devImgSource";
 import { IconFontSpin } from "@/components/common/IconFont";
+import { useScheduleOpModal } from "./useScheduleOpModal";
+import { ScheduleOpModal } from "@/components/scheduled-op/ScheduleOpModal";
 import { DevDataProps } from "./TerminalRunData";
 
 interface result extends DevDataProps {
@@ -18,6 +19,8 @@ interface result extends DevDataProps {
  * @returns
  */
 export const TerminalDevAir: React.FC<result> = ({ mac, pid, result }) => {
+
+    const { openScheduleOp, isOpen, currentItem, currentMac, currentPid, currentMountDev, currentProtocol, closeModal, handleSuccess } = useScheduleOpModal()
 
     const { data: Constant } = usePromise(async () => {
         const mountDev = await getTerminalPidProtocol(mac, pid)
@@ -58,13 +61,26 @@ export const TerminalDevAir: React.FC<result> = ({ mac, pid, result }) => {
         Modal.confirm({
             content: `确定${!val ? '关闭' : '打开'}空调??`,
             onOk: () => {
-                sendOprateInstruct(mac, pid, !val ? '关机' : '开机')
+                openScheduleOp({ mac, pid, tag: !val ? '关机' : '开机' })
             }
         })
     }
 
     return (
         <Row style={{ padding: 12 }}>
+            {currentItem && (
+                <ScheduleOpModal
+                    open={isOpen}
+                    mac={currentMac}
+                    pid={currentPid}
+                    item={currentItem}
+                    protocolName={currentProtocol}
+                    mountDev={currentMountDev}
+                    api="user"
+                    onCancel={closeModal}
+                    onSuccess={handleSuccess}
+                />
+            )}
             <Col span={24} md={12} style={{ backgroundColor: "black", padding: 12 }}>
                 <Image src={devAir} preview={false} />
             </Col>
