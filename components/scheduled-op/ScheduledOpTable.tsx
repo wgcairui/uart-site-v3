@@ -135,7 +135,12 @@ export const ScheduledOpTable: React.FC<ScheduledOpTableProps> = ({ api, fixedMa
                 ? deleteScheduledOp
                 : deleteUserScheduledOp
         const res = await (fn as any)(op._id)
-        if (res.code) {
+        // 仓库 Result 约定: code === 200 = 成功, 其他 (0/400/5xx) = 失败
+        // 之前 `if (res.code)` 把 code:400 校验错 + code:0 一般错都误判, 真成功会被静默吞
+        // 13+ callsite 现状 MailStatsChart / SmsStatsChart / TerminalAddMountDev /
+        // AlarmLogTab / TerminalTimelineTab / RequestLogTab / LoginLogTab 都是
+        // `if (res.code === 200)`
+        if (res.code === 200) {
             message.success(
                 kind === 'cancel'
                     ? '已取消'

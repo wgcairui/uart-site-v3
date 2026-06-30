@@ -34,7 +34,9 @@ export const AdminScheduledOpTab: React.FC<AdminScheduledOpTabProps> = ({ mac })
         async () => {
             const { data: term } = await adminGetTerminal(mac)
             // 拉所有协议 (admin 端无 getProtocol(name) 单查, 走 list 拉全集 + 客户端过滤)
-            const { data: protPage } = await getProtocols({ page: 1, pageSize: 500 })
+            // 之前 pageSize: 500 违反 AGENTS.md `max(200)` 硬约束 + PaginationReqDto @Rule.max(200)
+            // 后端 getProtocols 会拒 / clamp, 实际拉到只 200 条, 余下静默漏建快捷按钮
+            const { data: protPage } = await getProtocols({ page: 1, pageSize: 200 })
             const protMap = new Map<string, Uart.protocol>(
                 (protPage?.items ?? []).map((p) => [p.Protocol, p])
             )
