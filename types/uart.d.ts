@@ -873,4 +873,42 @@ declare namespace Uart {
             openlink: string;
         }
     }
+
+    // ─── scheduled-op 定时操作指令 (2026-06-30 决策 18 第一阶段) ─────────────
+    type ScheduledOpStatus = 'PENDING' | 'RUNNING' | 'SUCCESS' | 'FAILED' | 'CANCELED';
+    type ScheduledOpNotifyStatus = 'PENDING' | 'DISPATCHED' | 'SKIPPED';
+
+    interface ScheduledOperation extends id {
+        mac: string;
+        pid: number;
+        protocol: string;
+        /** 已组装好的最终指令 (admin 端: instruct name; user 端: fillInstructTemplate 后) */
+        content: string;
+        /** 计划触发时间 (UTC ms) */
+        scheduledAt: number;
+        createdBy: string;
+        createdByGroup: 'admin' | 'root' | 'user';
+        status: ScheduledOpStatus;
+        bullJobId?: string;
+        executedAt?: number;
+        result?: ApolloMongoResult;
+        failReason?: string;
+        notifyStatus: ScheduledOpNotifyStatus;
+        /** 实际投递的通知通道, 优先级 wx > mail > sms */
+        notifiedChannels: string[];
+        remark?: string;
+        createdAt?: string;
+        updatedAt?: string;
+    }
+
+    /** 创建定时操作请求体 (前后端都用, 走 endpoint 内部字段映射) */
+    interface CreateScheduledOpReq {
+        mac: string;
+        pid: number;
+        protocol: string;
+        content: string;
+        /** ISO 字符串 (前端 Date.toISOString()) */
+        scheduledAt: string;
+        remark?: string;
+    }
 }

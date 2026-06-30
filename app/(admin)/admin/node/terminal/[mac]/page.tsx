@@ -14,6 +14,7 @@ import { TerminalDevPage } from "@/components/terminal/TerminalDevPage";
 import { LogTerminal } from "@/components/log/LogTerminal";
 import { AlarmLogTab } from "@/components/log/AlarmLogTab";
 import { TerminalTimelineTab } from "@/components/log/TerminalTimelineTab";
+import { AdminScheduledOpTab } from "@/components/terminal/AdminScheduledOpTab";
 import { useTerminalUpdate } from "@/lib/hooks/useTerminalData";
 import { DevRealTimeLog } from "@/components/data/devRealTimeLog";
 import { TerminalCurData, TerminalHistoryData } from "./TerminalDataTab";
@@ -56,6 +57,7 @@ function TerminalDetailPageInner() {
         { key: 'mountDevs', label: '挂载设备', children: <TerminalMountDevs terminal={data} ex={true} showTitle={false} InterValShow onChange={fecth} /> },
         { key: 'at', label: 'AT调试', children: <TerminalAT mac={data.DevMac} /> },
         { key: 'query', label: '指令调试', children: <TerminalOprate mac={data.DevMac} /> },
+        { key: 'scheduled-op', label: '定时操作', children: <AdminScheduledOpTab mac={data.DevMac} /> },
         { key: 'listenMacLog', label: 'console', children: <DevRealTimeLog terminal={data} /> },
         { key: 'log', label: '日志', children: <TerminalRunLog mac={data.DevMac} /> },
         { key: 'terminalLog', label: '设备通信日志', children: <LogTerminal mac={data.DevMac} /> },

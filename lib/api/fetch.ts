@@ -9,6 +9,7 @@ export * from '@/lib/api/endpoints/auth'
 
 // User Profile / Device / Alarm / Data / Protocol
 export * from '@/lib/api/endpoints/user'
+export * from '@/lib/api/endpoints/user/scheduledOps'
 
 // Amap (external)
 export * from '@/lib/api/endpoints/amap'
