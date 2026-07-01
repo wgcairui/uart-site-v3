@@ -15,6 +15,7 @@ import { AddUserTerminalModal } from "@/components/common/AddUserTerminalModal";
 import { getTerminal } from "@/lib/api/fetch";
 import { TerminalAT } from "@/components/terminal/TerminalAT";
 import { TerminalOprate } from "@/components/terminal/TerminalOprate";
+import { AdminScheduledOpTab } from "@/components/terminal/AdminScheduledOpTab";
 import { TerminalRunLog } from "@/components/terminal/TerminalRunLog";
 import { TerminalDevPage } from "@/components/terminal/TerminalDevPage";
 import { useTerminalUpdate } from "@/lib/hooks/useTerminalData";
@@ -56,6 +57,7 @@ const TerminalInfos: React.FC<TerminalInfosProps> = ({ mac }) => {
                 { key: 'mountDevs', label: '挂载设备', children: <TerminalMountDevs terminal={data} ex={true} showTitle={false} InterValShow onChange={fecth}></TerminalMountDevs> },
                                                                 { key: 'at', label: 'AT调试', children: <TerminalAT mac={data.DevMac} /> },
                 { key: 'query', label: '指令调试', children: <TerminalOprate mac={data.DevMac} /> },
+                { key: 'scheduled-op', label: '定时操作', children: <AdminScheduledOpTab mac={data.DevMac} /> },
                 { key: 'listenMacLog', label: 'console', children: <DevRealTimeLog terminal={data} /> },
                 { key: 'log', label: '日志', children: <TerminalRunLog mac={data.DevMac}></TerminalRunLog> },
                 ...(data.mountDevs
