@@ -43,25 +43,40 @@ export const getAlarm = (
   })
 }
 
+/**
+ * 校验 alarmId 是否是合法的 MongoDB ObjectId (24 位 hex)
+ *
+ * 用于 alarms 列表 / 详情页 / confirm 操作的统一守卫。
+ * 2026-07-04 抽出独立函数，alarm/page.tsx + confrimAlarm 复用，
+ * 避免在多处 inline regex 导致规则漂移。
+ */
+export const isValidAlarmId = (id?: string | null): id is string => {
+  return typeof id === 'string' && /^[a-f0-9]{24}$/i.test(id)
+}
+
 /** 确认用户告警 v2: POST /api/v2/user/alarms/:id/confirm
  *
- * 2026-06-29 加 guard：24 位 hex regex 校验。fail 直接 console.warn + 返回
- * 类似成功的 Promise，避免发出明知会 400 的请求（用户体验差）。
+ * 2026-06-29 加 guard：24 位 hex regex 校验。fail 直接 reject，
+ * 避免发出明知会 400 的请求（用户体验差）。
  *
  * 背景：server-errors-daily-scan 报告真实用户在 HarmonyOS + WeChat 内嵌
  * 浏览器触发 POST /alarms/undefined/confirm（id 是字面字符串 "undefined"），
  * server-side hex guard 正确返 400，但用户点了按钮没响应。根因是
  * 调用方传入 undefined / 缺失字段的 _id。
  *
+ * 2026-07-04 加固：reject 替代 fake success response，避免 caller 误判
+ * 为成功（之前用 code:0 模拟成功，caller 拿到后继续 setAlarmsData +
+ * message.success，会误导用户）。
+ *
  * 服务端 commit 0ea3bd5 (P4.1) 的 hex guard 已生效，这里不重复 server 校验，
  * 只是**防止发出明知会失败的请求**。
  */
 export const confrimAlarm = (id?: string) => {
-  if (!id || !/^[a-f0-9]{24}$/i.test(id)) {
+  if (!isValidAlarmId(id)) {
     if (typeof console !== 'undefined') {
-      console.warn('[confrimAlarm] invalid alarmId, skip request:', id)
+      console.warn('[confrimAlarm] invalid alarmId, reject:', id)
     }
-    return Promise.resolve({ code: 0, data: null, msg: 'invalid alarmId (frontend guard)' } as unknown as universalResult<any>)
+    return Promise.reject(new Error(`invalid alarmId (frontend guard): ${JSON.stringify(id)}`))
   }
   return Post<universalResult<any>>(`/api/v2/user/alarms/${id}/confirm`, {})
 }

@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useMemo, useState } from "react";
-import { getAlarm, confrimAlarm } from "@/lib/api/fetch";
+import { getAlarm, confrimAlarm, isValidAlarmId } from "@/lib/api/fetch";
 import { Card, Row, Col, DatePicker, Table, Space, Button, Form, Popconfirm, message, Divider, Descriptions } from "antd"
 import dayjs from "dayjs"
 import { generateTableKey, getColumnSearchProp, tableColumnsFilter } from "@/lib/utils/tableCommon";
@@ -60,12 +60,19 @@ const Alarm: React.FC = () => {
         // 2026-06-29 加守卫：_id 缺失 / 非 24 位 hex 直接 return + warning，
         // 不发明知会 400 的请求（用户体验差）。
         // 触发场景：报警数据 _id 字段缺失 / navigation 时 id 未就绪
-        if (!_id || !/^[a-f0-9]{24}$/i.test(_id)) {
+        if (!isValidAlarmId(_id)) {
             message.warning('告警 id 缺失或格式不合法，无法确认')
             console.warn('[Alarm.confirm] invalid _id:', _id)
             return
         }
-        await confrimAlarm(_id);
+        try {
+            await confrimAlarm(_id);
+        } catch (err) {
+            // 2026-07-04 加固：confrimAlarm 现在 reject 替代 fake success，
+            // 捕获并提示，不让 caller 继续走 setAlarmsData + message.success
+            message.error('确认失败：' + (err instanceof Error ? err.message : '未知错误'))
+            return
+        }
         const a = alarms.find(el_1 => el_1._id === _id);
         if (a)
             a.isOk = true;
@@ -128,14 +135,20 @@ const Alarm: React.FC = () => {
                             <Table.Column title='设备' dataIndex='devName' key="devName" {...tableColumnsFilter(alarms, 'devName')}></Table.Column>
                             <Table.Column title='消息' dataIndex='msg' key="msg" ellipsis  {...getColumnSearchProp<alarms>('msg')}
                                 render={(val, record:any) =>
-                                    <Popconfirm
-                                        title={val}
-                                        onConfirm={() => confirm(record._id)}
-                                        okText="Yes"
-                                        cancelText="No"
-                                    >
-                                       {val}
-                                    </Popconfirm>
+                                    // 2026-07-04 加固：record._id 非 24-hex 直接显示纯文本，
+                                    // 不渲染 Popconfirm，避免点击发送 /alarms/undefined/confirm
+                                    isValidAlarmId(record._id) ? (
+                                        <Popconfirm
+                                            title={val}
+                                            onConfirm={() => confirm(record._id)}
+                                            okText="Yes"
+                                            cancelText="No"
+                                        >
+                                           {val}
+                                        </Popconfirm>
+                                    ) : (
+                                        <span style={{ color: '#999' }}>{val}</span>
+                                    )
                                 }
                             ></Table.Column>
                             <Table.Column responsive={["sm"]} title='类型' dataIndex='tag' key="tag" {...tableColumnsFilter(alarms, "tag")}></Table.Column>
@@ -148,9 +161,13 @@ const Alarm: React.FC = () => {
                                     )
                                 }></Table.Column>
                             <Table.Column title='操作' key="oprate" render={(_, record: alarms) => {
-                                return (
-                                    record.isOk ? <a >已确认</a> : <Button type="primary" danger size="small" onClick={() => confirm(record._id)}>确认告警</Button>
-                                )
+                                // 2026-07-04 加固：record._id 非 24-hex 时 button disabled，
+                                // 防止用户点出 /alarms/undefined/confirm 请求
+                                if (record.isOk) return <a >已确认</a>
+                                if (!isValidAlarmId(record._id)) {
+                                    return <Button type="primary" danger size="small" disabled title="告警 id 不合法，无法确认">确认告警</Button>
+                                }
+                                return <Button type="primary" danger size="small" onClick={() => confirm(record._id)}>确认告警</Button>
                             }}></Table.Column>
                         </Table>
                     </Col>
