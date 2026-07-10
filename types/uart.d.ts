@@ -874,27 +874,41 @@ declare namespace Uart {
         }
     }
 
-    // ─── scheduled-op 定时操作指令 (2026-06-30 决策 18 第一阶段) ─────────────
+    // ─── scheduled-op 定时操作指令 (2026-06-30 决策 18 第一阶段 + 2026-07-10 决策 19 IMMEDIATE) ─
     type ScheduledOpStatus = 'PENDING' | 'RUNNING' | 'SUCCESS' | 'FAILED' | 'CANCELED';
     type ScheduledOpNotifyStatus = 'PENDING' | 'DISPATCHED' | 'SKIPPED';
+    /** 决策 19: entry 类型 — SCHEDULED (异步定时) / IMMEDIATE (同步立即执行) */
+    type ScheduledOpKind = 'SCHEDULED' | 'IMMEDIATE';
+    /** 决策 19: IMMEDIATE 专用 — 区分 InstructQuery (device) / OprateDTU (dtu) */
+    type ScheduledOpOperationType = 'device' | 'dtu';
 
     interface ScheduledOperation extends id {
         mac: string;
         pid: number;
+        /** 0 = DTU 操作 (无 pid), 1+ = 子设备 pid */
         protocol: string;
-        /** 已组装好的最终指令 (admin 端: instruct name; user 端: fillInstructTemplate 后) */
+        /** 已组装好的最终指令
+         *  - SCHEDULED + device: protocol 替换过的最终指令字符串 (hex 字节)
+         *  - IMMEDIATE + device: 同 SCHEDULED + device
+         *  - IMMEDIATE + dtu: AT 指令裸字符串 (无 protocol 包装) */
         content: string;
-        /** 计划触发时间 (UTC ms) */
+        /** 计划触发时间 (UTC ms, SCHEDULED 用) */
         scheduledAt: number;
         createdBy: string;
         createdByGroup: 'admin' | 'root' | 'user';
         status: ScheduledOpStatus;
+        /** 决策 19 — 后端 normalize, 老 doc 为 undefined, 前端 fallback 'SCHEDULED' */
+        kind?: ScheduledOpKind;
+        /** 决策 19 — IMMEDIATE 专用, 区分 InstructQuery / OprateDTU; 老 doc + SCHEDULED 都 undefined, fallback 'device' */
+        operationType?: ScheduledOpOperationType;
         bullJobId?: string;
+        /** 实际执行时间 (SCHEDULED + IMMEDIATE 都写, 复用同字段) */
         executedAt?: number;
-        result?: ApolloMongoResult;
+        /** IMMEDIATE + SUCCESS/FAILED 才返回 — Partial<ApolloMongoResult>: { ok?: 0|1, msg?: string, n?, nModified?, ... } */
+        result?: Partial<ApolloMongoResult>;
         failReason?: string;
         notifyStatus: ScheduledOpNotifyStatus;
-        /** 实际投递的通知通道, 优先级 wx > mail > sms */
+        /** 实际投递的通知通道, 优先级 wx > mail > sms (IMMEDIATE 无此字段) */
         notifiedChannels: string[];
         remark?: string;
         createdAt?: string;
