@@ -221,8 +221,12 @@ export const ScheduledOpTable: React.FC<ScheduledOpTableProps> = ({ api, fixedMa
                 key: 'pid',
                 width: 60,
                 render: (pid: number, op) => {
-                    // 决策 19: IMMEDIATE 的 dtu 操作 pid=0
-                    if (getKind(op) === 'IMMEDIATE' && pid === 0) return 'DTU'
+                    // 决策 19: IMMEDIATE + operationType='dtu' 是 DTU 操作 (跟 protocol 列同条件, 不靠 pid=0 判定)
+                    if (
+                        getKind(op) === 'IMMEDIATE' &&
+                        getOperationType(op) === 'dtu'
+                    )
+                        return 'DTU'
                     return pid
                 },
             },
