@@ -164,10 +164,20 @@ redirect('/login')
   - build: `docker build -t uart-site-v3:latest .`（3 阶段 Dockerfile，oven/bun:1 base + standalone output）
   - 重启: `cd /home/cc/Web/docker && docker compose up -d --force-recreate --no-deps uartsite-v3`
   - 容器: `docker-uartsite-v3-1`，端口 9004→3000
-  - **生产 server 访问 GitHub / Docker Hub 受限**，所有 git / docker 命令必加 `HTTPS_PROXY=http://100.76.101.62:7890`（不加会静默 hang 30s）
+  - **生产 server 直连公网 (aliyun ECS)**：不需要 `HTTPS_PROXY`。gost proxy `100.76.101.62:7890` 已 down (2026-06-24)。`git fetch origin` 偶尔 2m timeout，retry 即可
   - build 走 5+ min 长跑命令模式：nohup + log file + pid 轮询
   - 部署 hotfix 直接 push main，不走 PR 流程；日常 feature 走 PR
   - 完整命令 / 故障排查见 agent memory `memory/frontend-stack-gotchas.md`（含 Next.js + bun + Docker 实战 gotcha 集合）
+
+- ⚠️ **prod 架构：nginx 在前，Next.js 在后**（2026-07-09 确认）
+  - `client → nginx (:443) → midwayuartserver (:9010) [API] | uartsite-v3 (:9004) [web]`
+  - nginx 配置: `cc@uart.ladishb.com:/home/cc/Web/docker/nginx.conf` (git repo, master branch)
+  - **nginx 已用 `location ~ /api/*` 把所有 `/api/*` 抢走** → uartsite-v3 的 `next.config.ts` rewrite (`/api/:path* → backend`) 在 prod **几乎不会被触发**
+  - **加任何 `/api/*` 本地路由必须双层改**：
+    1. uartsite-v3 加 route handler (e.g. `app/api/<path>/route.ts`)
+    2. nginx.conf 加精确匹配 `location = /api/<path> { proxy_pass http://172.18.0.1:9004; }` (精确匹配优先级高于 `~ /api/*` 正则)
+  - 不改 nginx 的话，外部 `curl https://uart.ladishb.com/api/<path>` 还是会 404 (因为打到 midwayuartserver, 它没这 path)
+  - 部署 nginx 改动流程: `cp nginx.conf nginx.conf.bak` → patch → `docker exec docker-nginx-1 nginx -t` → `docker exec docker-nginx-1 nginx -s reload` (无需容器重启) → curl verify
 
 ## Next.js 16.2 特有约定
 
