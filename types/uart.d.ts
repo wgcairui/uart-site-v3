@@ -460,6 +460,60 @@ declare namespace Uart {
         type: string;
         argument?: any;
     }
+    // ─── UserJourney 业务事件追踪 (cairui 09:09 拍板 #1+2+3+4) ─────────────
+    // 跟 logUserRequst per-request 平行, journey 30d TTL 业务事件摘要
+    // (cairui 拍板 #4 = journey + UserRequests 双轨 30d, 之后根据 admin 反馈定)
+    type UserJourneyStatus = 'active' | 'ended' | 'timeout';
+    type UserJourneyStepType =
+        | 'view'
+        | 'operate'
+        | 'alarm'
+        | 'login'
+        | 'logout';
+    type UserJourneyStepStatus = 'ok' | 'fail';
+
+    interface UserJourneyStep {
+        ts: Date | string;
+        type: UserJourneyStepType;
+        label: string;
+        deviceMac?: string;
+        /** 软引用 scheduledOperations._id — 仅 IMMEDIATE type='operate' 自动关联 */
+        relatedOpId?: string;
+        status: UserJourneyStepStatus;
+        durationMs?: number;
+    }
+    interface UserJourney extends id {
+        /** session 唯一 uuid */
+        journeyId: string;
+        user: string;
+        userGroup: string;
+        startedAt: Date | string;
+        endedAt?: Date | string | null;
+        status: UserJourneyStatus;
+        stepCount: number;
+        steps: UserJourneyStep[];
+        timeStamp: number;
+        createdAt?: Date | string;
+    }
+    /** journey list 端点 query — 跟 server-errors / scheduled-ops 一致 pattern */
+    interface UserJourneyListReq {
+        startTs: number;
+        endTs: number;
+        filters?: {
+            user?: string[];
+            userGroup?: string[];
+            status?: UserJourneyStatus[];
+        };
+        search?: {
+            journeyId?: string;
+            user?: string;
+        };
+        sortBy?: 'timeStamp' | 'startedAt' | 'stepCount';
+        sortOrder?: 'asc' | 'desc';
+        page?: number;
+        pageSize?: number;
+        needTotal?: boolean;
+    }
     type logLogins = "用户登陆" | '用户登出' | '用户注册' | "用户重置密码" | "用户修改信息";
     interface logUserLogins extends id {
         user: string;
