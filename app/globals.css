@@ -607,6 +607,27 @@ html, body {
   top: 0;
   z-index: 10;
 }
+.app-topbar-menu-item {
+  padding: 8px 14px;
+  border-radius: var(--radius-md);
+  font-size: 14px;
+  color: var(--ink-700);
+  text-decoration: none;
+  cursor: pointer;
+  transition: all var(--motion-fast) var(--ease);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.app-topbar-menu-item:hover {
+  background: var(--brand-50);
+  color: var(--brand-600);
+}
+.app-topbar-menu-item.active {
+  background: var(--brand-50);
+  color: var(--brand-600);
+  font-weight: 600;
+}
 
 /* =============================================================
  * Ant Design v5 样式覆盖 (Bento 表格 + 输入框 + Tabs)
