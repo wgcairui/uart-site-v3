@@ -13,6 +13,7 @@
  */
 
 import { Button, Card, Divider, Form, Input, message, Modal, Space, Table, Tag } from 'antd'
+import { StatusTag } from '@/components/common/StatusTag'
 import { DeleteFilled, ReloadOutlined, SafetyCertificateOutlined } from '@ant-design/icons'
 import dayjs from 'dayjs'
 import relativeTime from 'dayjs/plugin/relativeTime'
@@ -347,7 +348,7 @@ export const Nodes: React.FC = () => {
                 <Table.Column
                     dataIndex="online"
                     title="在线设备"
-                    render={(v) => v ?? <span style={{ color: '#b0b8c8' }}>—</span>}
+                    render={(v) => v ? <StatusTag variant="online" /> : <StatusTag variant="offline" />}
                 />
                 <Table.Column
                     key="auth"

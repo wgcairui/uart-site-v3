@@ -1050,6 +1050,37 @@ html, body {
 }
 
 /* =============================================================
+ * v3 DevCard (user 端设备卡 · hybrid Page D 2 列网格)
+ * ============================================================= */
+
+.v3-dev-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 30px -8px rgba(139, 92, 246, 0.25) !important;
+  background: rgba(255, 255, 255, 0.85) !important;
+}
+.v3-dev-card .ant-card-cover {
+  border-radius: 18px 18px 0 0;
+  overflow: hidden;
+  background: linear-gradient(135deg, rgba(237, 233, 254, 0.5) 0%, rgba(252, 231, 243, 0.3) 100%);
+}
+.v3-dev-card .ant-card-meta-title {
+  color: var(--ink-900) !important;
+  font-weight: 600;
+  font-size: 15px;
+}
+.v3-dev-card .ant-card-meta-description {
+  color: var(--ink-500) !important;
+  font-size: 13px;
+}
+.v3-dev-card .ant-card-actions {
+  background: rgba(255, 255, 255, 0.5) !important;
+  border-top: 1px solid rgba(139, 92, 246, 0.08) !important;
+}
+.v3-dev-card .ant-card-actions > li {
+  color: var(--ink-500) !important;
+}
+
+/* =============================================================
  * Ant Design v5 样式覆盖 (Bento 表格 + 输入框 + Tabs)
  * ============================================================= */
 

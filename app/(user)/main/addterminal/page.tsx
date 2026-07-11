@@ -101,7 +101,7 @@ const AddTerminal: React.FC = () => {
                                     (ter.mountDevs && ter.mountDevs.length > 0) &&
                                     <>
                                         <Divider plain>挂载设备</Divider>
-                                        <Table dataSource={ter.mountDevs.map((el, key) => ({ ...el, key }))}>
+                                        <Table className="v3-table" dataSource={ter.mountDevs.map((el, key) => ({ ...el, key }))}>
                                             <Table.Column dataIndex="Type" title="类型"></Table.Column>
                                             <Table.Column dataIndex="mountDev" title="设备"></Table.Column>
                                             <Table.Column dataIndex="pid" title="地址"></Table.Column>

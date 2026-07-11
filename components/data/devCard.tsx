@@ -36,7 +36,18 @@ export const DevCard: React.FC<card> = (props) => {
 
 
     return (
-        <Card style={{ margin: 12, borderRadius: 16, boxShadow: '0 1px 3px rgba(15,23,42,.04), 0 1px 2px rgba(15,23,42,.06)' }}
+        <Card
+            hoverable
+            className="v3-dev-card"
+            style={{
+                margin: 12,
+                borderRadius: 18,
+                background: 'rgba(255, 255, 255, 0.7)',
+                backdropFilter: 'blur(20px)',
+                border: '1px solid rgba(255, 255, 255, 0.9)',
+                boxShadow: '0 4px 20px -8px rgba(99, 102, 241, 0.12)',
+                transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
+            }}
 
             cover={
                 typeof props.img === 'string' ?
