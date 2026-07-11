@@ -127,7 +127,7 @@ export const Log: React.FC<log> = (props) => {
                                                 if (el.event) el.event(item, {} as any)
                                                 else target(el.key, item.type)
                                             }}
-                                            style={{cursor: 'pointer', color: '#6366f1', fontWeight: 500}}
+                                            style={{cursor: 'pointer', color: '#8b5cf6', fontWeight: 500}}
                                         >
                                             {item.value}
                                         </div>
