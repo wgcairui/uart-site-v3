@@ -46,12 +46,12 @@ export function AdminSider() {
         {!collapsed && <BrandLogo href="/admin" />}
         {collapsed && (
           <div
+            className="brand-gradient"
             style={{
               width: 36, height: 36, borderRadius: 12,
-              background: 'linear-gradient(135deg, #6366f1 0%, #06b6d4 100%)',
               color: '#fff', fontWeight: 700, fontSize: 16,
               display: 'flex', alignItems: 'center', justifyContent: 'center',
-              boxShadow: '0 6px 16px rgba(99,102,241,.25)',
+              boxShadow: '0 6px 16px rgba(139, 92, 246, .35)',
             }}
           >
             U
