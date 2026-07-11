@@ -630,6 +630,76 @@ html, body {
 }
 
 /* =============================================================
+ * Sider v3 (深色玻璃风) — hybrid Page A
+ * ============================================================= */
+
+.app-sider-v3 .sider-menu-item-v3 {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 2px 12px;
+  border-radius: var(--radius-lg);
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.85);
+  cursor: pointer;
+  text-decoration: none;
+  position: relative;
+  transition: all var(--motion-fast) var(--ease);
+}
+.app-sider-v3 .sider-menu-item-v3:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: #fff;
+}
+.app-sider-v3 .sider-menu-item-v3-active {
+  background: linear-gradient(135deg, rgba(139, 92, 246, 0.25) 0%, rgba(244, 114, 182, 0.18) 100%);
+  color: #fff;
+  font-weight: 600;
+  box-shadow: 0 4px 12px -4px rgba(139, 92, 246, 0.4);
+}
+
+/* =============================================================
+ * Topbar v3 (深色玻璃 + 紫粉) — hybrid Page A
+ * ============================================================= */
+
+.app-topbar-v3 {
+  height: 64px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.95) 0%, rgba(255, 255, 255, 0.85) 100%);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-bottom: 1px solid var(--ink-100);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 32px;
+  flex-shrink: 0;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+.app-topbar-v3 .app-topbar-menu-item-v3 {
+  padding: 8px 14px;
+  border-radius: var(--radius-md);
+  font-size: 14px;
+  color: var(--ink-700);
+  text-decoration: none;
+  cursor: pointer;
+  transition: all var(--motion-fast) var(--ease);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  position: relative;
+}
+.app-topbar-v3 .app-topbar-menu-item-v3:hover {
+  background: var(--brand-50);
+  color: var(--brand-600);
+}
+.app-topbar-v3 .app-topbar-menu-item-v3.active {
+  background: var(--brand-50);
+  color: var(--brand-600);
+  font-weight: 600;
+}
+
+/* =============================================================
  * Ant Design v5 样式覆盖 (Bento 表格 + 输入框 + Tabs)
  * ============================================================= */
 
