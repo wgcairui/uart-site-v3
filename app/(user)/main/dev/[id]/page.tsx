@@ -50,7 +50,7 @@ function DevInner() {
     return (
         (!terminal || !mountDev) ? <Empty />
             :
-            <>
+            <div className="bg-bento-canvas" style={{ position: 'relative', zIndex: 0 }}>
                 <PageHeader
                     title={mountDev.mountDev}
                     extra={
@@ -106,7 +106,7 @@ function DevInner() {
                         },
                     ]}
                 />
-            </>
+            </div>
     )
 }
 

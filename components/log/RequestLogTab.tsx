@@ -86,7 +86,7 @@ const STEP_TYPE_ICON: Record<Uart.UserJourneyStepType, React.ReactNode> = {
     view: <EyeOutlined style={{ color: '#8b5cf6' }} />,
     operate: <EditOutlined style={{ color: '#fa8c16' }} />,
     alarm: <WarningOutlined style={{ color: '#f5222d' }} />,
-    login: <LoginOutlined style={{ color: '#52c41a' }} />,
+    login: <LoginOutlined style={{ color: '#10b981' }} />,
     logout: <LogoutOutlined style={{ color: '#999' }} />,
 }
 const STEP_STATUS_COLOR: Record<Uart.UserJourneyStepStatus, string> = {

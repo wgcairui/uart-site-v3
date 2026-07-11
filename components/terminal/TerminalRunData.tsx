@@ -71,7 +71,7 @@ export const TerminalRunData: React.FC<UserRunDataProps> = ({ mac, pid, user, cl
 											</Link>
 										</Tooltip>
 									}
-									{record.alarm ? <InfoCircleFilled style={{ color: "#E6A23C" }} /> : <a />}
+									{record.alarm ? <InfoCircleFilled style={{ color: "#f59e0b" }} /> : <a />}
 								</span>
 							),
 						},

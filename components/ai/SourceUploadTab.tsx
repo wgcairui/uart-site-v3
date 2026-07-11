@@ -144,7 +144,7 @@ function UploadStateView({ state, onRetry }: UploadStateViewProps) {
   if (state.status === 'done') {
     return (
       <Space size={6} align="center" wrap>
-        <FileTextOutlined style={{ color: '#52c41a' }} />
+        <FileTextOutlined style={{ color: '#10b981' }} />
         <Text style={{ fontSize: 12 }}>{state.fileName}</Text>
         <Text type="secondary" style={{ fontSize: 12 }}>
           ({formatSize(state.fileSize)})

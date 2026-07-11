@@ -185,7 +185,7 @@ export const TerminalMountDevs: React.FC<infoProps> = (props) => {
 							img={devType[el.Type]}
 							title={
 								<Space>
-									<Tooltip title={el.online ? "在线" : "离线"}>{el.online ? <CheckCircleFilled style={{ color: "#67C23A" }} /> : <WarningFilled style={{ color: "#E6A23C" }} />}</Tooltip>
+									<Tooltip title={el.online ? "在线" : "离线"}>{el.online ? <CheckCircleFilled style={{ color: "#10b981" }} /> : <WarningFilled style={{ color: "#f59e0b" }} />}</Tooltip>
 									{`${el.mountDev} - PID: ${el.pid}`}
 								</Space>
 							}

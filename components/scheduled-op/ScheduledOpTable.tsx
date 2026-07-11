@@ -500,7 +500,7 @@ const ScheduledOpDetail: React.FC<{
                 )}
                 <Descriptions.Item label="执行结果">
                     {op.status === 'SUCCESS' && op.result && (
-                        <span style={{ color: '#52c41a' }}>
+                        <span style={{ color: '#10b981' }}>
                             {op.result.ok ? '✓' : '✗'}{' '}
                             {op.result.msg || ''}
                             {op.result.n !== undefined &&
