@@ -473,6 +473,8 @@ declare namespace Uart {
     type UserJourneyStepStatus = 'ok' | 'fail';
 
     interface UserJourneyStep {
+        /** mongoose subdoc _id — sibling 实测 prod response 必返, key 用这个更 unique */
+        _id?: string;
         ts: Date | string;
         type: UserJourneyStepType;
         label: string;

@@ -352,7 +352,9 @@ const JourneyView: React.FC<{
                                     items={detail.steps.map((step, i) => {
                                         const relatedOp = step.relatedOpId
                                         return {
-                                            key: i,
+                                            // mongoose subdoc _id (sibling 实测 prod response 必返)
+                                            // key 用 step._id 优先 (更 unique), fallback step.ts (toString 防 Date 不在 Key 类型)
+                                            key: step._id ?? (typeof step.ts === 'string' ? step.ts : new Date(step.ts).toISOString()) ?? i,
                                             dot: STEP_TYPE_ICON[step.type],
                                             color: STEP_STATUS_COLOR[step.status],
                                             children: (
