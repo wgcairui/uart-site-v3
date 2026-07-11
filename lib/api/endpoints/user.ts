@@ -286,3 +286,18 @@ export const setUserLayout = (
 export const getTerminalPidProtocol = (mac: string, pid: number | string) => {
   return Get<universalResult<Uart.TerminalMountDevs>>(`/api/v2/user/protocols/device/${encodeURIComponent(mac)}/mount/${pid}`)
 }
+
+// ─── v2 multi-tile endpoint (server feat/status-enum-v2 @ 5th commit, cairui 21:00 拍 Option A) ───
+// 6 tile 固定 UPS 标准 modbus 寄存器 (Ua/Ia/P/Q/PF/E) 设备详情页 v2 visual 用
+// 跟 docs/components.md §3.4 ctrl-tile 设计稿对齐, 旧 /data 端点 raw register array 兼容保留
+/** GET /api/v2/user/devices/:mac/mount/:pid/tiles */
+export const getDeviceTiles = (mac: string, pid: number | string) =>
+  Get<universalResult<Uart.DeviceTileSnapshotResp>>(
+    `/api/v2/user/devices/${encodeURIComponent(mac)}/mount/${pid}/tiles`
+  )
+/** GET /api/v2/user/devices/:mac/mount/:pid/tiles/:name/history?hours=24 */
+export const getDeviceTileHistory = (mac: string, pid: number | string, name: Uart.DeviceTileName, hours: number = 24) =>
+  Get<universalResult<Uart.DeviceTileHistoryResp>>(
+    `/api/v2/user/devices/${encodeURIComponent(mac)}/mount/${pid}/tiles/${name}/history`,
+    { hours: String(hours) }
+  )

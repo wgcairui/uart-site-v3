@@ -22,6 +22,16 @@ export const getAlarmStats = () => Get<universalResult<any>>('/api/v2/admin/dash
 export const getProtocolDetailedStats = () => Get<universalResult<any>>('/api/v2/admin/dashboard/protocols/detailed-stats')
 export const getDataStats = () => Get<universalResult<any>>('/api/v2/admin/dashboard/data/stats')
 
+// ─── v2 status enum admin dashboard (server feat/status-enum-v2 @ commit 0bd6cdf) ───
+// admin 仪表盘 6 status 分布 (online/offline/warning/error/info/idle) + 单 status 24h trend
+// 跟 designTokens.STATUS 6 variant 对齐, 部署后 admin dashboard 加渲染
+/** GET /api/v2/admin/dashboard/tiles */
+export const getAdminTileCounts = () =>
+  Get<universalResult<Uart.AdminStatusCounts>>('/api/v2/admin/dashboard/tiles')
+/** GET /api/v2/admin/dashboard/tiles/:name/history?hours=24 */
+export const getAdminTileHistory = (name: Uart.DeviceStatus, hours: number = 24) =>
+  Get<universalResult<Uart.AdminStatusHistoryResp>>(`/api/v2/admin/dashboard/tiles/${name}/history`, { hours: String(hours) })
+
 /** 当前数据列表 (mac 搜索 + 分页) */
 export const ClientResultSingle = (query?: PaginationReq) =>
   Post<universalResult<V2ListResponse<queryResultSave>>>('/api/v2/admin/dashboard/current/list', { ...query })
