@@ -7,6 +7,7 @@ import { runingState } from '@/lib/api/fetchRoot'
 import { getAdminTileCounts } from '@/lib/api/endpoints/admin/dashboard'
 import { TrendChartBento } from './_sections/TrendChartBento'
 import { NodeStatusBento } from './_sections/NodeStatusBento'
+import { LiveControls } from '@/components/common/LiveControls'
 import { DevicesBento } from './_sections/DevicesBento'
 import { ServerStatusTable } from './_sections/ServerStatusTable'
 
@@ -307,12 +308,9 @@ export default function AdminDashboardPage() {
           </div>
         </div>
 
-        {/* Trend Chart · 8 列 */}
-        <div
-          className="bento-card chart-bento"
-          style={{ gridColumn: 'span 8', padding: 24 }}
-        >
-          <TrendChartBento />
+        {/* Live Controls (admin 6 status variant) · 8 列 */}
+        <div style={{ gridColumn: 'span 8' }}>
+          <LiveControls variant="admin" title="实时状态 · 6 variant" />
         </div>
 
         {/* Node Status Bento · 4 列 */}
@@ -321,6 +319,14 @@ export default function AdminDashboardPage() {
           style={{ gridColumn: 'span 4', padding: 24 }}
         >
           <NodeStatusBento refreshTick={refreshTick} />
+        </div>
+
+        {/* Trend Chart · 12 列 full width */}
+        <div
+          className="bento-card chart-bento"
+          style={{ gridColumn: 'span 12', padding: 24 }}
+        >
+          <TrendChartBento />
         </div>
 
         {/* Devices Bento · 12 列 (full width) */}
