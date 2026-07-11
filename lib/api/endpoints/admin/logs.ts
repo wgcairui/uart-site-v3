@@ -83,3 +83,36 @@ export const getUseBtyes = (_mac: string, _query?: PaginationReq) => Promise.res
 export const getDtuBusy = (_mac: string, _start: string, _end: string, _query?: PaginationReq) => Promise.resolve({ code: 0, data: { items: [], pagination: { page: 1, pageSize: 20, total: 0 } }, msg: 'DEPRECATED' } as any)
 export const logDevUseTime = (_mac: string, _start: string, _end: string, _query?: PaginationReq) => Promise.resolve({ code: 0, data: { items: [], pagination: { page: 1, pageSize: 20, total: 0 } }, msg: 'DEPRECATED' } as any)
 export const logInstructQuery = (_mac: string) => Promise.resolve({ code: 0, data: [], msg: 'DEPRECATED' } as any)
+
+// ─── UserJourney 业务事件追踪 (cairui 09:09 拍板 #1+2+3+4) ─────────────
+// 跟 loguserrequsts (per-request) 双轨 30d, 后续根据 admin 反馈再决定是否废弃 UserRequests
+// 端点 schema 跟 server-errors / scheduled-ops 一致 (复用 buildPaginationQuery)
+
+/** journey list 端点 — POST 风格, time range + filters + search + sort + pagination
+ *  ⚠️ 跟 server-errors 一致: path 用 /log/ (单数) 跟 admin-log.controller.ts 对齐
+ *  ⚠️ query 字段名权威源: midwayuartserver src/module/log/dto/list-user-journey.dto.ts
+ */
+export const loguserjourneys = (query: Uart.UserJourneyListReq) =>
+  Post<universalResult<V2ListResponse<Uart.UserJourney>>>(
+    '/api/v2/admin/log/user-journeys/list',
+    {
+      startTs: query.startTs,
+      endTs: query.endTs,
+      ...(query.filters && Object.keys(query.filters).length ? { filters: query.filters } : {}),
+      ...(query.search && Object.keys(query.search).length ? { search: query.search } : {}),
+      ...(query.sortBy ? { sortBy: query.sortBy } : {}),
+      sortOrder: query.sortOrder ?? 'desc',
+      page: query.page ?? 1,
+      pageSize: query.pageSize ?? 20,
+      needTotal: query.needTotal ?? true,
+    },
+  )
+
+/** journey 详情 — GET 风格, 一次返完整 steps (limit=1000 兜底, sibling 拍板不分页)
+ *  ⚠️ journeyId 字段加了 @index 但时序表不生效, server 端走 timeStamp 30d 范围扫描
+ *  404 case: server 端抛 Error → middleware 返 500, 前端按 500 处理 (跟 logservererrorById 一致)
+ */
+export const loguserjourneyById = (journeyId: string) =>
+  Get<universalResult<Uart.UserJourney>>(
+    `/api/v2/admin/log/user-journeys/${encodeURIComponent(journeyId)}`,
+  )
