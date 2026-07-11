@@ -76,11 +76,52 @@ function TerminalDetailPageInner() {
     }));
 
     return (
-        <div className="bg-bento-canvas" style={{ position: 'relative', zIndex: 0 }}>
-            <div className="bento-card" style={{ marginBottom: 20 }}>
-                <h2 style={{ fontSize: 22, fontWeight: 600, letterSpacing: '-0.015em', margin: 0 }}>{data.DevMac} / {data.name}</h2>
+        <div className="bg-bento-canvas" style={{ position: 'relative', zIndex: 0, padding: '0 32px 32px' }}>
+            <div
+                className="bento-card v3-device-hero"
+                style={{
+                    marginBottom: 20,
+                    padding: '24px 32px',
+                    background: 'linear-gradient(135deg, #1e1b4b 0%, #312e81 60%, #6d28d9 100%)',
+                    color: '#fff',
+                    border: 'none',
+                    position: 'relative',
+                    overflow: 'hidden',
+                }}
+            >
+                <div
+                    style={{
+                        position: 'absolute', top: -80, right: -80,
+                        width: 280, height: 280,
+                        background: 'radial-gradient(circle, var(--accent-400) 0%, transparent 70%)',
+                        opacity: 0.4, pointerEvents: 'none',
+                    }}
+                />
+                <div style={{ position: 'relative', zIndex: 1, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                    <div>
+                        <h2 style={{ fontSize: 24, fontWeight: 600, letterSpacing: '-0.02em', color: '#fff', margin: 0 }}>{data.DevMac}</h2>
+                        <div style={{ fontFamily: 'var(--font-mono)', fontSize: 13, color: 'rgba(255,255,255,0.7)', marginTop: 6 }}>
+                            {data.name} · 协议: {(data as any).protocol ?? '-'} · 节点: {(data as any).NodeName ?? '-'}
+                        </div>
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                        <span
+                            style={{
+                                display: 'inline-flex', alignItems: 'center', gap: 6,
+                                padding: '6px 14px', borderRadius: 999,
+                                background: data.online ? 'rgba(16, 185, 129, 0.2)' : 'rgba(244, 63, 94, 0.2)',
+                                border: `1px solid ${data.online ? 'rgba(16, 185, 129, 0.3)' : 'rgba(244, 63, 94, 0.3)'}`,
+                                color: data.online ? '#86efac' : '#fda4af',
+                                fontSize: 13, fontWeight: 600,
+                            }}
+                        >
+                            <span style={{ width: 6, height: 6, borderRadius: '50%', background: data.online ? '#86efac' : '#fda4af', animation: 'pulse-dot 2s infinite' }} />
+                            {data.online ? '实时连接' : '离线'}
+                        </span>
+                    </div>
+                </div>
             </div>
-            <div className="bento-card">
+            <div className="bento-card" style={{ padding: 24 }}>
                 <Tabs
                     activeKey={activeKey}
                     onChange={handleTabChange}

@@ -50,7 +50,51 @@ function DevInner() {
     return (
         (!terminal || !mountDev) ? <Empty />
             :
-            <div className="bg-bento-canvas" style={{ position: 'relative', zIndex: 0 }}>
+            <div className="bg-bento-canvas" style={{ position: 'relative', zIndex: 0, padding: '0 32px 32px' }}>
+                <div
+                    className="bento-card v3-device-hero"
+                    style={{
+                        marginBottom: 20,
+                        padding: '24px 32px',
+                        background: 'linear-gradient(135deg, #1e1b4b 0%, #312e81 60%, #6d28d9 100%)',
+                        color: '#fff',
+                        border: 'none',
+                        position: 'relative',
+                        overflow: 'hidden',
+                    }}
+                >
+                    <div
+                        style={{
+                            position: 'absolute', top: -80, right: -80,
+                            width: 280, height: 280,
+                            background: 'radial-gradient(circle, var(--accent-400) 0%, transparent 70%)',
+                            opacity: 0.4, pointerEvents: 'none',
+                        }}
+                    />
+                    <div style={{ position: 'relative', zIndex: 1, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                        <div>
+                            <h2 style={{ fontSize: 24, fontWeight: 600, letterSpacing: '-0.02em', color: '#fff', margin: 0 }}>{mountDev.mountDev}</h2>
+                            <div style={{ fontFamily: 'var(--font-mono)', fontSize: 13, color: 'rgba(255,255,255,0.7)', marginTop: 6 }}>
+                                {terminal.DevMac} · 协议: {mountDev.protocol} · PID: {mountDev.pid}
+                            </div>
+                        </div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                            <span
+                                style={{
+                                    display: 'inline-flex', alignItems: 'center', gap: 6,
+                                    padding: '6px 14px', borderRadius: 999,
+                                    background: terminal.online ? 'rgba(16, 185, 129, 0.2)' : 'rgba(244, 63, 94, 0.2)',
+                                    border: `1px solid ${terminal.online ? 'rgba(16, 185, 129, 0.3)' : 'rgba(244, 63, 94, 0.3)'}`,
+                                    color: terminal.online ? '#86efac' : '#fda4af',
+                                    fontSize: 13, fontWeight: 600,
+                                }}
+                            >
+                                <span style={{ width: 6, height: 6, borderRadius: '50%', background: terminal.online ? '#86efac' : '#fda4af', animation: 'pulse-dot 2s infinite' }} />
+                                {terminal.online ? '实时连接' : '离线'}
+                            </span>
+                        </div>
+                    </div>
+                </div>
                 <PageHeader
                     title={mountDev.mountDev}
                     extra={
