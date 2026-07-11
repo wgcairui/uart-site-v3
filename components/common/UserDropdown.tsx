@@ -70,10 +70,11 @@ export const UserDropDown: React.FC<props> = ({ userPage }) => {
                         />
                     ) : (
                         <span
+                            className="shadow-avatar"
                             style={{
                                 width: 32, height: 32, borderRadius: '50%',
                                 display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-                                background: 'linear-gradient(135deg, #6366f1 0%, #06b6d4 100%)',
+                                background: 'linear-gradient(135deg, #8b5cf6 0%, #f472b6 100%)',
                                 color: '#fff', fontWeight: 600, fontSize: 13,
                             }}
                         >

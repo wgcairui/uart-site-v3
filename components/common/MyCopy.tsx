@@ -41,13 +41,13 @@ export const MyCopy: React.FC<copy> = props => {
             {(props.value && props.value.length > 5) && (
                 <CopyOutlined
                     onClick={copy}
-                    style={{ color: '#6366f1', cursor: 'pointer' }}
+                    style={{ color: '#8b5cf6', cursor: 'pointer' }}
                 />
             )}
             {/(^http|^<.*>$)/.test(props.value) && (
                 <IeOutlined
                     onClick={show}
-                    style={{ color: '#6366f1', cursor: 'pointer' }}
+                    style={{ color: '#8b5cf6', cursor: 'pointer' }}
                 />
             )}
         </section>
