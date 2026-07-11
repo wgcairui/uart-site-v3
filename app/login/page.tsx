@@ -157,12 +157,44 @@ const Login: React.FC = () => {
 						<Row className="content-row">
 							<Col span={24} md={12}>
 								<div className="content-row-col1">
-									<h3>物联网ITO监控服务平台</h3>
-									<h4>适用于数据中心,微模块机房,单体UPS,空调等设备监控</h4>
-									<div>
-										<Image height={288} width={288} src="https://besiv-uart.oss-cn-hangzhou.aliyuncs.com/png/4713b946f778b3a2cdd94512eda43fa2.png" />
+									<div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 40 }}>
+										<div
+											style={{
+												width: 48, height: 48, borderRadius: 14,
+												background: 'rgba(255, 255, 255, 0.2)',
+												backdropFilter: 'blur(20px)',
+												border: '1px solid rgba(255, 255, 255, 0.3)',
+												display: 'flex', alignItems: 'center', justifyContent: 'center',
+												color: '#fff', fontFamily: 'var(--font-mono)', fontSize: 18, fontWeight: 700,
+											}}
+										>
+											U
+										</div>
+										<div style={{ fontSize: 20, fontWeight: 600, color: '#fff', letterSpacing: '-0.01em' }}>
+											UART Server
+										</div>
 									</div>
-									<h5>百事服云平台小程序</h5>
+									<h3>管理 <em style={{ fontStyle: 'normal', background: 'linear-gradient(135deg, #fbbf24 0%, #f97316 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>941 台</em><br />工业 IoT 设备</h3>
+									<h4>实时采集 · 远程控制 · 告警通知 · 数据分析。一套平台搞定从 DTU 到云端的所有环节。</h4>
+									<div
+										style={{
+											marginTop: 48, display: 'flex', gap: 40,
+											paddingTop: 32, borderTop: '1px solid rgba(255, 255, 255, 0.2)',
+										}}
+									>
+										<div style={{ fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.15em', opacity: 0.7, fontFamily: 'var(--font-mono)' }}>
+											在线设备
+											<strong style={{ display: 'block', fontSize: 32, fontWeight: 600, opacity: 1, letterSpacing: '-0.02em', marginTop: 6, fontFamily: 'var(--font-sans)' }}>291</strong>
+										</div>
+										<div style={{ fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.15em', opacity: 0.7, fontFamily: 'var(--font-mono)' }}>
+											覆盖协议
+											<strong style={{ display: 'block', fontSize: 32, fontWeight: 600, opacity: 1, letterSpacing: '-0.02em', marginTop: 6, fontFamily: 'var(--font-sans)' }}>47</strong>
+										</div>
+										<div style={{ fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.15em', opacity: 0.7, fontFamily: 'var(--font-mono)' }}>
+											服务节点
+											<strong style={{ display: 'block', fontSize: 32, fontWeight: 600, opacity: 1, letterSpacing: '-0.02em', marginTop: 6, fontFamily: 'var(--font-sans)' }}>12</strong>
+										</div>
+									</div>
 								</div>
 							</Col>
 							<Col span={24} md={12} className="content-row-col2">

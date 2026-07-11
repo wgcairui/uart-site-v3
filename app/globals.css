@@ -700,6 +700,86 @@ html, body {
 }
 
 /* =============================================================
+ * 移动端响应式 (v3 hybrid Page D)
+ * 跟 hybrid.html mobile preview 3 屏风格: 2 列 Bento + 1 大 hero + tab bar
+ * ============================================================= */
+
+@media (max-width: 768px) {
+  /* Sider 折叠成抽屉 (默认隐藏) */
+  .app-sider-v3 {
+    position: fixed !important;
+    left: -240px;
+    top: 0;
+    height: 100vh;
+    z-index: 100;
+    transition: left .25s cubic-bezier(.4, 0, .2, 1);
+  }
+  .app-sider-v3.sider-mobile-open {
+    left: 0;
+  }
+
+  /* main 区域占满 */
+  .bg-bento-canvas {
+    padding: 0 16px 16px !important;
+  }
+
+  /* 12 列 Bento 改为 1 列堆叠 */
+  [style*="grid-template-columns: repeat(12, 1fr)"] {
+    grid-template-columns: 1fr !important;
+  }
+  [style*="gridColumn: 'span 5'"],
+  [style*="gridColumn: 'span 3'"],
+  [style*="gridColumn: 'span 2'"],
+  [style*="gridColumn: 'span 8'"],
+  [style*="gridColumn: 'span 4'"],
+  [style*="gridColumn: 'span 12'"] {
+    grid-column: span 1 !important;
+  }
+
+  /* KPI 数字缩小 */
+  [style*="font-size: 64px"] {
+    font-size: 48px !important;
+  }
+  [style*="font-size: 36px"] {
+    font-size: 28px !important;
+  }
+
+  /* 顶部 header padding 缩 */
+  .app-topbar-v3 {
+    padding: 0 16px !important;
+  }
+
+  /* PageHeader 缩 */
+  .page-header-v3 {
+    padding: 0 !important;
+  }
+
+  /* Topbar 菜单文字隐藏, 只显示 logo + menu icon */
+  .app-topbar-menu-item-v3 {
+    padding: 8px 10px !important;
+    font-size: 13px !important;
+  }
+  .app-topbar-menu-item-v3 span:not(.topbar-icon) {
+    display: none;
+  }
+
+  /* device hero 缩 */
+  [class*="v3-device-hero"] {
+    padding: 20px !important;
+  }
+  [class*="v3-device-hero"] h2 {
+    font-size: 18px !important;
+  }
+}
+
+@media (max-width: 480px) {
+  /* phone 屏: hero 数字更小, layout 更紧凑 */
+  [style*="font-size: 48px"] {
+    font-size: 36px !important;
+  }
+}
+
+/* =============================================================
  * Ant Design v5 样式覆盖 (Bento 表格 + 输入框 + Tabs)
  * ============================================================= */
 
