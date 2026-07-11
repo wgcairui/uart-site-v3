@@ -477,6 +477,11 @@ declare namespace Uart {
         _id?: string;
         ts: Date | string;
         type: UserJourneyStepType;
+        /** P2: 决策 22 (cairui 13:02 拍) — 区分非 GET 请求用
+         *  - GET: type='view' 默认
+         *  - POST/PUT/DELETE: type='operate' 或 'login'/'logout'
+         * 老 doc 缺 method 字段 → 走 type fallback (GET 蓝色 eye / 非 GET 橙色 edit/delete) */
+        method?: 'GET' | 'POST' | 'PUT' | 'DELETE';
         label: string;
         deviceMac?: string;
         /** 软引用 scheduledOperations._id — 仅 IMMEDIATE type='operate' 自动关联 */

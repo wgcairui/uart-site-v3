@@ -28,7 +28,8 @@ import {
 } from 'antd'
 import {
     EyeOutlined,
-    ToolOutlined,
+    EditOutlined,
+    DeleteOutlined,
     WarningOutlined,
     LoginOutlined,
     LogoutOutlined,
@@ -66,9 +67,24 @@ const JOURNEY_STATUS_TEXT: Record<Uart.UserJourneyStatus, string> = {
     ended: '已结束',
     timeout: '超时',
 }
+// 决策 22 (cairui 13:02 拍): step icon 按 method 区分 (重点标明非 GET 请求)
+// 老 doc 缺 method 字段 → 走 type fallback
+const STEP_METHOD_ICON: Record<'GET' | 'POST' | 'PUT' | 'DELETE', React.ReactNode> = {
+    GET: <EyeOutlined style={{ color: '#1677ff' }} />,
+    POST: <EditOutlined style={{ color: '#fa8c16' }} />,
+    PUT: <EditOutlined style={{ color: '#fa8c16' }} />,
+    DELETE: <DeleteOutlined style={{ color: '#f5222d' }} />,
+}
+const STEP_METHOD_COLOR: Record<'GET' | 'POST' | 'PUT' | 'DELETE', string> = {
+    GET: '#1677ff', // 蓝 (antd blue-6)
+    POST: '#fa8c16', // 橙 (antd orange-6)
+    PUT: '#fa8c16', // 橙
+    DELETE: '#f5222d', // 红 (antd red-6)
+}
+// type chip 保留 (login/logout/alarm 这些非 view/operate 类别仍能标识)
 const STEP_TYPE_ICON: Record<Uart.UserJourneyStepType, React.ReactNode> = {
     view: <EyeOutlined style={{ color: '#1677ff' }} />,
-    operate: <ToolOutlined style={{ color: '#fa8c16' }} />,
+    operate: <EditOutlined style={{ color: '#fa8c16' }} />,
     alarm: <WarningOutlined style={{ color: '#f5222d' }} />,
     login: <LoginOutlined style={{ color: '#52c41a' }} />,
     logout: <LogoutOutlined style={{ color: '#999' }} />,
@@ -351,12 +367,15 @@ const JourneyView: React.FC<{
                                     style={{ marginTop: 12 }}
                                     items={detail.steps.map((step, i) => {
                                         const relatedOp = step.relatedOpId
+                                        // 决策 22 (cairui 13:02 拍): icon 按 method, type 走 fallback
+                                        // 老 doc 缺 method 字段 → type=view 当 GET, 否则 当 operate
+                                        const method = step.method ?? (step.type === 'view' ? 'GET' : 'POST')
                                         return {
                                             // mongoose subdoc _id (sibling 实测 prod response 必返)
                                             // key 用 step._id 优先 (更 unique), fallback step.ts (toString 防 Date 不在 Key 类型)
                                             key: step._id ?? (typeof step.ts === 'string' ? step.ts : new Date(step.ts).toISOString()) ?? i,
-                                            dot: STEP_TYPE_ICON[step.type],
-                                            color: STEP_STATUS_COLOR[step.status],
+                                            dot: STEP_METHOD_ICON[method],
+                                            color: STEP_METHOD_COLOR[method],
                                             children: (
                                                 <Space
                                                     orientation="vertical"
@@ -364,7 +383,14 @@ const JourneyView: React.FC<{
                                                     style={{ width: '100%' }}
                                                 >
                                                     <Space wrap>
-                                                        <Tag color="blue">{step.type}</Tag>
+                                                        {/* 决策 22: method badge 彩色 chip 重点标明非 GET */}
+                                                        <Tag color={STEP_METHOD_COLOR[method]}>
+                                                            {method}
+                                                        </Tag>
+                                                        {/* type chip 保留 (login/logout/alarm 这些非默认类别仍标识) */}
+                                                        {step.type !== 'view' && step.type !== 'operate' && (
+                                                            <Tag color="blue">{step.type}</Tag>
+                                                        )}
                                                         <Tag
                                                             color={STEP_STATUS_COLOR[step.status]}
                                                         >
