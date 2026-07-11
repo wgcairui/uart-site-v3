@@ -84,7 +84,7 @@ const UserIndex: React.FC = (props) => {
     }
 
     return (
-        <>
+        <div className="bg-bento-canvas" style={{ position: 'relative', zIndex: 0 }}>
             <PageHeader title="我的设备" subtitle="查看所有绑定设备、网关、聚合设备" />
             <Row style={{ paddingBottom: 24 }}>
                 <Col span={24} lg={18}>
@@ -119,7 +119,7 @@ const UserIndex: React.FC = (props) => {
                                                     img={devType[el.Type]}
                                                     title={<Space>
                                                         <Tooltip title={el.online ? '在线' : '离线'}>
-                                                            {el.online ? <CheckCircleFilled style={{ color: "#67C23A" }} /> : <WarningFilled style={{ color: "#E6A23C" }} />}
+                                                            {el.online ? <CheckCircleFilled style={{ color: "#10b981" }} /> : <WarningFilled style={{ color: "#f59e0b" }} />}
                                                         </Tooltip>
                                                         {el.mountDev}
                                                     </Space>}
@@ -162,7 +162,7 @@ const UserIndex: React.FC = (props) => {
                                                     img={devDTU[el.PID || 'null']}
                                                     title={<Space>
                                                         <Tooltip title={el.online ? '在线' : '离线'}>
-                                                            {el.online ? <CheckCircleFilled style={{ color: "#67C23A" }} /> : <WarningFilled style={{ color: "#E6A23C" }} />}
+                                                            {el.online ? <CheckCircleFilled style={{ color: "#10b981" }} /> : <WarningFilled style={{ color: "#f59e0b" }} />}
                                                         </Tooltip>
                                                         {el.name}
                                                     </Space>}
@@ -172,7 +172,7 @@ const UserIndex: React.FC = (props) => {
                                                             <EyeFilled style={{ color: "#67C23B" }} onClick={() => nav("/main/terminal/" + el.DevMac)} />
                                                         </Tooltip>,
                                                         <Tooltip title="重命名">
-                                                            <EditFilled style={{ color: "#409EFF" }} onClick={() => renameTerminal(el)} />
+                                                            <EditFilled style={{ color: "#8b5cf6" }} onClick={() => renameTerminal(el)} />
                                                         </Tooltip>,
                                                         <Tooltip title="删除" >
                                                             <Popconfirm
@@ -206,7 +206,7 @@ const UserIndex: React.FC = (props) => {
             <Col span={24} lg={6} xs={0}>
             </Col>
             </Row>
-        </>
+        </div>
     )
 }
 
