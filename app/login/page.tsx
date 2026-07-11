@@ -133,11 +133,11 @@ const Login: React.FC = () => {
 		</div>
 	) : (
 		<ConfigProvider locale={isZh ? Zh : En}>
-			<div className="login-page">
+			<div className="login-page bg-glass-mesh">
 				<Layout className="layout">
 					<Layout.Header className="header">
 						{/* <Image src="https://www.ladishb.com/logo.png" preview={false}></Image> */}
-						<span style={{ fontSize: 36, color: "#3a8ee6", fontFamily: "cursive" }}>百事服</span>
+						<span className="text-brand-gradient" style={{ fontSize: 36, fontFamily: "cursive", fontWeight: 700 }}>百事服</span>
 						<Dropdown
 							menu={{
 								items: [
