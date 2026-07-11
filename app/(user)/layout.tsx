@@ -3,6 +3,7 @@
 import React, { Suspense, useEffect, useMemo, useState } from "react";
 import { Alert } from "antd";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { useUserStore } from "@/lib/store/userStore";
 import { IconFont, devTypeIcon } from "@/components/common/IconFont";
 import { BindDev } from "@/lib/api/fetch";
@@ -27,6 +28,7 @@ export default function UserLayout({ children }: { children: React.ReactNode }) 
 
     const nav = useNav()
     const router = useRouter()
+    const pathname = usePathname()
     const isSimulated = useUserStore(s => s.isSimulated)
 
     useEffect(() => {
@@ -83,31 +85,19 @@ export default function UserLayout({ children }: { children: React.ReactNode }) 
                     <nav style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
                         <Link
                             href="/main"
-                            style={{
-                                padding: '8px 14px', borderRadius: 8, fontSize: 14,
-                                color: 'var(--ink-700)', textDecoration: 'none',
-                                transition: 'all .15s',
-                            }}
+                            className={`app-topbar-menu-item ${pathname === '/main' ? 'active' : ''}`}
                         >
                             <IconFont type="icon-changjingguanli" /> 所有设备
                         </Link>
                         <a
                             onClick={() => nav('/main/alarm')}
-                            style={{
-                                padding: '8px 14px', borderRadius: 8, fontSize: 14,
-                                color: 'var(--ink-700)', cursor: 'pointer',
-                                transition: 'all .15s',
-                            }}
+                            className={`app-topbar-menu-item ${pathname?.startsWith('/main/alarm') ? 'active' : ''}`}
                         >
                             <IconFont type="icon-tixingshixin" /> 告警管理
                         </a>
                         <a
                             onClick={() => nav('/main/user')}
-                            style={{
-                                padding: '8px 14px', borderRadius: 8, fontSize: 14,
-                                color: 'var(--ink-700)', cursor: 'pointer',
-                                transition: 'all .15s',
-                            }}
+                            className={`app-topbar-menu-item ${pathname?.startsWith('/main/user') ? 'active' : ''}`}
                         >
                             用户信息
                         </a>

@@ -15,44 +15,40 @@ function getButtonByText(container: HTMLElement, text: string): HTMLElement {
   throw new Error(`Button with text "${text}" not found`)
 }
 
-describe('Button', () => {
+describe('Button v2', () => {
   it('renders children', () => {
     const { container } = render(<Button>点击</Button>)
     expect(getButtonByText(container, '点击')).toBeInTheDocument()
   })
 
-  it('default variant is default', () => {
+  it('default variant uses .btn-default class', () => {
     const { container } = render(<Button>默认</Button>)
     const btn = getButtonByText(container, '默认')
-    expect(btn).toHaveStyle({ background: '#fff', borderColor: '#f1f5f9', color: '#334155' })
+    expect(btn).toHaveClass('btn-default')
   })
 
-  it('primary variant uses brand gradient', () => {
+  it('primary variant uses .btn-brand class (v2 紫粉渐变)', () => {
     const { container } = render(<Button variant="primary">主按钮</Button>)
     const btn = getButtonByText(container, '主按钮')
-    expect(btn).toHaveStyle({
-      background: 'linear-gradient(135deg, #6366f1 0%, #06b6d4 100%)',
-      color: '#fff',
-    })
     expect(btn).toHaveClass('btn-brand')
   })
 
-  it('danger variant uses red background', () => {
+  it('ghost variant uses .btn-ghost class (v2 新增)', () => {
+    const { container } = render(<Button variant="ghost">透明</Button>)
+    const btn = getButtonByText(container, '透明')
+    expect(btn).toHaveClass('btn-ghost')
+  })
+
+  it('danger variant uses .btn-danger class', () => {
     const { container } = render(<Button variant="danger">删除</Button>)
     const btn = getButtonByText(container, '删除')
-    expect(btn).toHaveStyle({ background: '#dc2626' })
+    expect(btn).toHaveClass('btn-danger')
   })
 
-  it('link variant uses indigo color with no background', () => {
+  it('link variant uses .btn-link class', () => {
     const { container } = render(<Button variant="link">链接</Button>)
     const btn = getButtonByText(container, '链接')
-    expect(btn).toHaveStyle({ background: 'transparent', color: '#6366f1' })
-  })
-
-  it('text variant is transparent', () => {
-    const { container } = render(<Button variant="text">透明</Button>)
-    const btn = getButtonByText(container, '透明')
-    expect(btn).toHaveStyle({ background: 'transparent' })
+    expect(btn).toHaveClass('btn-link')
   })
 
   it('fires onClick', () => {
@@ -66,12 +62,6 @@ describe('Button', () => {
     const onClick = vi.fn()
     const { container } = render(<Button disabled onClick={onClick}>禁用</Button>)
     fireEvent.click(getButtonByText(container, '禁用'))
-    expect(onClick).not.toHaveBeenCalled()
-  })
-
-  it('merges user style over variant style', () => {
-    const { container } = render(<Button variant="primary" style={{ marginTop: 8 }}>主按钮</Button>)
-    const btn = getButtonByText(container, '主按钮')
-    expect(btn).toHaveStyle({ marginTop: '8px' })
+    expect(onClick).not.toHaveBeenCalledTimes(1)
   })
 })

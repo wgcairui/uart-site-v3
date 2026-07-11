@@ -1,57 +1,81 @@
 /* =============================================================
- * UART Design System v1
- * 风格基线：方案 C · 浅色极简 SaaS
- * 完整规范见 docs/style-guide.md
+ * UART Design System v2 · 2+3 混合方案
+ * 风格基线：Bento + Aurora (数据展示) + Glass + Mesh (品牌入口)
+ * 完整规范见 docs/style-guide.md v2
+ * 视觉稿：docs/assets/hybrid-design-2-3.html
  * ============================================================= */
 
 :root {
-  /* 品牌色 */
-  --brand-start: #6366f1;          /* indigo-500 */
-  --brand-end:   #06b6d4;          /* cyan-500 */
+  /* 品牌色 (Brand · 紫色系) */
+  --brand-50:  #f5f3ff;
+  --brand-100: #ede9fe;
+  --brand-200: #ddd6fe;
+  --brand-300: #c4b5fd;
+  --brand-400: #a78bfa;
+  --brand-500: #8b5cf6;   /* 主色 */
+  --brand-600: #7c3aed;
+  --brand-700: #6d28d9;
+  --brand-800: #5b21b6;
+  --brand-900: #4c1d95;
+  --brand-950: #2e1065;
 
-  /* 中性色（ink scale） */
+  /* 强调色 (Accent · 粉色) */
+  --accent-300: #f9a8d4;
+  --accent-400: #f472b6;   /* 强调 */
+  --accent-500: #ec4899;
+
+  /* 中性色 (Ink Scale) */
   --ink-900: #0f172a;
   --ink-700: #334155;
   --ink-500: #64748b;
+  --ink-400: #94a3b8;
   --ink-300: #cbd5e1;
+  --ink-200: #e2e8f0;
   --ink-100: #f1f5f9;
   --ink-50:  #f8fafc;
 
   /* 背景层 */
-  --bg-page:  #fafbfc;
+  --bg-page:  #fafafa;       /* Bento canvas 底色 */
   --bg-panel: #ffffff;
   --bg-hover: #fafbfc;
 
-  /* 语义色 */
-  --color-primary: #6366f1;
-  --color-success: #059669;
-  --color-warning: #d97706;
-  --color-danger:  #dc2626;
-  --color-info:    #06b6d4;
-  --color-purple:  #7c3aed;
+  /* 语义色 (PageSummary variant) */
+  --color-primary: #8b5cf6;   /* 设备总数、默认 (brand-500) */
+  --color-success: #10b981;
+  --color-warning: #f59e0b;
+  --color-danger:  #f43f5e;
+  --color-info:    #6366f1;   /* brand-600 作 info */
+  --color-purple:  #7c3aed;   /* brand-600 */
 
-  /* 字体 */
-  --font-sans: "Inter", "PingFang SC", -apple-system, system-ui, sans-serif;
+  /* 字体 (Outfit + Noto Sans SC + JetBrains Mono) */
+  --font-sans: 'Outfit', 'Noto Sans SC', system-ui, -apple-system, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, 'SF Mono', monospace;
 
   /* 圆角 */
-  --radius-sm:  6px;
-  --radius-md:  8px;
-  --radius-lg:  12px;
-  --radius-xl:  16px;
+  --radius-sm:  6px;     /* 分割线 */
+  --radius-md:  8px;     /* 菜单项 */
+  --radius-lg:  10px;    /* 输入框 */
+  --radius-xl:  12px;    /* 主按钮 */
+  --radius-2xl: 18px;    /* BentoCard 主圆角 */
+  --radius-3xl: 20px;    /* GlassCard 圆角 */
+  --radius-4xl: 24px;    /* 登录卡 */
 
-  /* 阴影 */
-  --shadow-card: 0 1px 3px rgba(15, 23, 42, .04), 0 1px 2px rgba(15, 23, 42, .06);
-  --shadow-hover: 0 10px 25px rgba(99, 102, 241, .1), 0 4px 10px rgba(15, 23, 42, .06);
-  --shadow-btn: 0 8px 20px rgba(99, 102, 241, .3);
+  /* 阴影 (紫光晕系列) */
+  --shadow-bento:  0 4px 20px -8px rgba(99, 102, 241, 0.12);
+  --shadow-bento-hover: 0 8px 30px -8px rgba(99, 102, 241, 0.20);
+  --shadow-glass:  0 20px 60px -10px rgba(0, 0, 0, 0.2);
+  --shadow-glow:   0 4px 12px -2px rgba(139, 92, 246, 0.4);
+  --shadow-avatar: 0 4px 12px -2px rgba(139, 92, 246, 0.3);
 
   /* 动效 */
   --ease: cubic-bezier(.4, 0, .2, 1);
-  --motion-fast: .15s;
-  --motion-base: .25s;
+  --motion-fast: .15s;    /* hover / focus */
+  --motion-base: .25s;    /* 卡片 hover / 页面切换 */
+  --motion-slow: .4s;     /* 玻璃卡透明度 */
 }
 
 /* =============================================================
- * Keyframes (集中点，组件用 styled-jsx 时也引用这里)
+ * Keyframes
  * ============================================================= */
 
 @keyframes page-in {
@@ -65,6 +89,12 @@
 @keyframes stagger-in {
   from { opacity: 0; transform: translateY(8px); }
   to   { opacity: 1; transform: translateY(0); }
+}
+/* StatusTag online 圆点 2s 循环 */
+@keyframes pulse-dot {
+  0%   { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.5); }
+  70%  { box-shadow: 0 0 0 6px rgba(16, 185, 129, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
 }
 
 /* =============================================================
@@ -83,108 +113,206 @@ html, body {
   -moz-osx-font-smoothing: grayscale;
 }
 
-* {
-  box-sizing: border-box;
-}
+* { box-sizing: border-box; }
 
 /* 数字等宽（stat card / 表格数字列必加） */
 .tabular-nums {
   font-variant-numeric: tabular-nums;
+  font-feature-settings: 'tnum';
 }
 
 /* =============================================================
- * Brand
+ * Brand · 品牌渐变 utility
  * ============================================================= */
 
-.brand-gradient {
-  background: linear-gradient(135deg, var(--brand-start) 0%, var(--brand-end) 100%);
+.bg-brand-gradient {
+  background: linear-gradient(135deg, #8b5cf6 0%, #f472b6 100%);
 }
-
+.bg-aurora-gradient {
+  background: linear-gradient(135deg, #1e1b4b 0%, #312e81 50%, #6d28d9 100%);
+}
+.text-brand-gradient {
+  background: linear-gradient(135deg, #8b5cf6 0%, #f472b6 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  color: transparent;
+}
+.brand-gradient {
+  background: linear-gradient(135deg, #8b5cf6 0%, #f472b6 100%);
+}
 .brand-text {
-  background: linear-gradient(135deg, var(--brand-start) 0%, var(--brand-end) 100%);
+  background: linear-gradient(135deg, #8b5cf6 0%, #f472b6 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
   color: transparent;
 }
 
-.brand-shadow {
-  box-shadow: 0 6px 16px rgba(99, 102, 241, .25);
-}
-
 /* =============================================================
- * 通用容器 / 卡片
+ * Bento 风格 (数据展示容器)
  * ============================================================= */
 
-.app-card {
-  background: var(--bg-panel);
-  border-radius: var(--radius-xl);
-  box-shadow: var(--shadow-card);
+.bento-card {
+  background-color: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.9);
+  border-radius: var(--radius-2xl);
+  padding: 24px;
+  box-shadow: var(--shadow-bento);
   transition: transform var(--motion-base) var(--ease),
               box-shadow var(--motion-base) var(--ease);
 }
-
-.app-card-hoverable:hover {
+.bento-card-hoverable:hover {
   transform: translateY(-2px);
-  box-shadow: var(--shadow-hover);
+  box-shadow: var(--shadow-bento-hover);
+}
+.bento-card-hero {
+  background: linear-gradient(135deg, #1e1b4b 0%, #312e81 50%, #6d28d9 100%);
+  color: #fff;
+  border-color: transparent;
+  position: relative;
+  overflow: hidden;
+}
+.bento-card-hero::after {
+  content: '';
+  position: absolute;
+  top: -50px;
+  right: -50px;
+  width: 200px;
+  height: 200px;
+  background: radial-gradient(circle, var(--accent-400) 0%, transparent 70%);
+  opacity: 0.5;
+  pointer-events: none;
 }
 
-.app-page {
-  padding: 32px;
+/* Bento Canvas 背景（极光晕染） */
+.bg-bento-canvas {
+  position: relative;
+  background:
+    radial-gradient(at 0% 0%, var(--brand-100) 0%, transparent 50%),
+    radial-gradient(at 100% 100%, #fce7f3 0%, transparent 50%),
+    var(--bg-page);
+  overflow: hidden;
 }
-
-@media (max-width: 768px) {
-  .app-page { padding: 16px; }
+.bg-bento-canvas::before {
+  content: '';
+  position: absolute;
+  top: -200px;
+  right: -200px;
+  width: 600px;
+  height: 600px;
+  background: radial-gradient(circle, var(--brand-300) 0%, transparent 70%);
+  opacity: 0.18;
+  filter: blur(60px);
+  pointer-events: none;
+  z-index: 0;
 }
 
 /* =============================================================
- * Stat Card (PageSummary item)
+ * Glass 风格 (装饰 + 品牌入口)
+ * ============================================================= */
+
+.glass-card {
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.9);
+  border-radius: var(--radius-3xl);
+  padding: 24px;
+  box-shadow: var(--shadow-bento);
+}
+.glass-card-light {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.7) 0%, rgba(237, 233, 254, 0.4) 100%);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.9);
+  border-radius: var(--radius-3xl);
+  box-shadow: var(--shadow-bento);
+}
+.glass-card-tinted {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.7) 0%, rgba(252, 231, 243, 0.4) 100%);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.9);
+  border-radius: var(--radius-3xl);
+  box-shadow: 0 4px 20px -8px rgba(244, 114, 182, 0.15);
+}
+.glass-card-dark {
+  background: rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(40px);
+  -webkit-backdrop-filter: blur(40px);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  border-radius: var(--radius-4xl);
+  box-shadow: var(--shadow-glass);
+  color: #fff;
+}
+
+/* Glass Mesh 背景（登录 / Landing · 4 色渐变） */
+.bg-glass-mesh {
+  position: relative;
+  background: linear-gradient(125deg, #3b82f6 0%, #8b5cf6 35%, #ec4899 70%, #f97316 100%);
+  overflow: hidden;
+}
+.bg-glass-mesh::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(at 20% 80%, #06b6d4 0%, transparent 40%),
+    radial-gradient(at 80% 20%, #f43f5e 0%, transparent 40%);
+  opacity: 0.6;
+  mix-blend-mode: screen;
+  pointer-events: none;
+}
+
+/* =============================================================
+ * Stat Card (PageSummary item · Bento 风格)
  * ============================================================= */
 
 .stat-card {
-  background: var(--bg-panel);
-  border-radius: var(--radius-xl);
+  background-color: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.9);
+  border-radius: var(--radius-2xl);
   padding: 24px;
-  box-shadow: var(--shadow-card);
+  box-shadow: var(--shadow-bento);
   transition: transform var(--motion-base) var(--ease),
               box-shadow var(--motion-base) var(--ease);
   cursor: default;
 }
-
-.stat-card-clickable {
-  cursor: pointer;
-}
-
+.stat-card-clickable { cursor: pointer; }
 .stat-card-clickable:hover {
   transform: translateY(-2px);
-  box-shadow: var(--shadow-hover);
+  box-shadow: var(--shadow-bento-hover);
 }
-
 .stat-card-label {
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 500;
-  color: var(--ink-500);
-  letter-spacing: 0.02em;
+  color: var(--brand-500);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  font-family: var(--font-mono);
 }
-
 .stat-card-value {
-  font-size: 30px;
+  font-size: 32px;
   font-weight: 700;
-  line-height: 1.2;
+  line-height: 1.1;
   margin-top: 8px;
   font-variant-numeric: tabular-nums;
   letter-spacing: -0.02em;
+  color: var(--ink-900);
 }
-
 .stat-card-extra {
   font-size: 12px;
   color: var(--ink-500);
   margin-top: 8px;
+  font-weight: 500;
 }
-
 .stat-card-extra-up   { color: var(--color-success); }
 .stat-card-extra-down { color: var(--color-danger); }
-
 .stat-card-icon {
   width: 40px;
   height: 40px;
@@ -195,8 +323,12 @@ html, body {
   font-size: 20px;
   flex-shrink: 0;
 }
+.stat-card.active {
+  outline: 2px solid var(--brand-500);
+  outline-offset: -2px;
+}
 
-/* 变体色 */
+/* 变体色 (PageSummary item · 仅用于 label 文字 + extra) */
 .stat-primary { color: var(--color-primary); }
 .stat-success { color: var(--color-success); }
 .stat-warning { color: var(--color-warning); }
@@ -204,194 +336,148 @@ html, body {
 .stat-info    { color: var(--color-info); }
 .stat-purple  { color: var(--color-purple); }
 
-.bg-primary-50 { background: #eef2ff; }
+.bg-primary-50 { background: var(--brand-50); }
 .bg-success-50 { background: #ecfdf5; }
 .bg-warning-50 { background: #fffbeb; }
 .bg-danger-50  { background: #fef2f2; }
 .bg-info-50    { background: #ecfeff; }
-.bg-purple-50  { background: #f5f3ff; }
+.bg-purple-50  { background: var(--brand-50); }
 
 /* =============================================================
- * Status Tag (统一状态徽章)
+ * Status Tag (统一状态徽章 · 6 variant)
  * ============================================================= */
 
 .status-tag {
   display: inline-flex;
   align-items: center;
-  gap: 4px;
-  padding: 3px 12px;
+  gap: 5px;
+  padding: 3px 9px;
   border-radius: 999px;
-  font-size: 11px;
-  font-weight: 500;
-  line-height: 1.6;
+  font-size: 11.5px;
+  font-weight: 600;
+  line-height: 1.4;
   white-space: nowrap;
+  font-family: var(--font-sans);
 }
-
-.status-tag::before {
-  content: '●';
-  font-size: 8px;
+.status-tag .status-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  flex-shrink: 0;
 }
+.status-tag-sm { font-size: 10px; padding: 2px 7px; }
 
 .status-tag-online {
-  background: rgba(5, 150, 105, .1);
+  background: rgba(16, 185, 129, 0.12);
   color: #047857;
 }
-
-.status-tag-warning {
-  background: rgba(217, 119, 6, .1);
-  color: #b45309;
+.status-tag-online .status-dot {
+  background: var(--color-success);
+  animation: pulse-dot 2s infinite;
 }
 
 .status-tag-offline {
-  background: rgba(100, 116, 139, .1);
-  color: #475569;
+  background: rgba(244, 63, 94, 0.12);
+  color: #be123c;
 }
+.status-tag-offline .status-dot { background: var(--color-danger); }
+
+.status-tag-warning {
+  background: rgba(245, 158, 11, 0.12);
+  color: #b45309;
+}
+.status-tag-warning .status-dot { background: var(--color-warning); }
 
 .status-tag-error {
-  background: rgba(220, 38, 38, .1);
-  color: #b91c1c;
+  background: rgba(244, 63, 94, 0.15);
+  color: #be123c;
 }
+.status-tag-error .status-dot { background: var(--color-danger); }
 
 .status-tag-info {
-  background: rgba(6, 182, 212, .1);
-  color: #0e7490;
+  background: rgba(139, 92, 246, 0.10);
+  color: #5b21b6;
 }
+.status-tag-info .status-dot { background: var(--brand-500); }
+
+.status-tag-idle {
+  background: rgba(148, 163, 184, 0.12);
+  color: #475569;
+}
+.status-tag-idle .status-dot { background: var(--ink-400); }
 
 /* =============================================================
- * Buttons (统一按钮样式覆盖)
+ * Button (统一按钮 · 5 variant)
  * ============================================================= */
 
 .btn-brand {
-  background: linear-gradient(135deg, var(--brand-start) 0%, var(--brand-end) 100%);
+  background: linear-gradient(135deg, #8b5cf6 0%, #f472b6 100%);
   color: #fff;
   border: 0;
   font-weight: 500;
-  border-radius: var(--radius-md);
-  padding: 8px 16px;
+  border-radius: var(--radius-xl);
+  padding: 9px 18px;
   font-size: 14px;
   cursor: pointer;
   transition: transform var(--motion-fast) var(--ease),
               box-shadow var(--motion-base) var(--ease);
-  box-shadow: 0 1px 2px rgba(15, 23, 42, .06);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
 }
-
 .btn-brand:hover {
   transform: translateY(-1px);
-  box-shadow: var(--shadow-btn);
+  box-shadow: var(--shadow-glow);
 }
-
-.btn-brand:active {
-  transform: scale(.98);
-}
+.btn-brand:active { transform: scale(0.98); }
 
 .btn-default {
   background: var(--bg-panel);
   color: var(--ink-700);
-  border: 1px solid var(--ink-100);
-  border-radius: var(--radius-md);
-  padding: 8px 16px;
+  border: 1px solid var(--ink-200);
+  border-radius: var(--radius-xl);
+  padding: 9px 18px;
   font-size: 14px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: all var(--motion-fast) var(--ease);
+}
+.btn-default:hover { border-color: var(--ink-300); }
+
+.btn-ghost {
+  background: transparent;
+  color: var(--ink-500);
+  border: 0;
+  border-radius: var(--radius-xl);
+  padding: 9px 18px;
+  font-size: 14px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: all var(--motion-fast) var(--ease);
+}
+.btn-ghost:hover { background: var(--ink-50); color: var(--ink-700); }
+
+.btn-danger {
+  background: var(--color-danger);
+  color: #fff;
+  border: 0;
+  border-radius: var(--radius-xl);
+  padding: 9px 18px;
+  font-size: 14px;
+  font-weight: 500;
   cursor: pointer;
   transition: all var(--motion-fast) var(--ease);
 }
-
-.btn-default:hover {
-  border-color: var(--ink-300);
-}
+.btn-danger:hover { background: #e11d48; }
 
 .btn-link {
   background: transparent;
   border: 0;
   color: var(--color-primary);
   font-size: 14px;
+  font-weight: 500;
   cursor: pointer;
   padding: 4px 8px;
 }
-
-.btn-link:hover {
-  color: #4f46e5;
-}
-
-/* =============================================================
- * Sidebar
- * ============================================================= */
-
-.app-sider {
-  width: 240px;
-  background: var(--bg-panel);
-  border-right: 1px solid var(--ink-100);
-  display: flex;
-  flex-direction: column;
-  flex-shrink: 0;
-  height: 100vh;
-  overflow-y: auto;
-}
-
-.app-sider-collapsed {
-  width: 64px;
-}
-
-.sider-menu-group-label {
-  font-size: 11px;
-  font-weight: 500;
-  color: var(--ink-500);
-  padding: 12px 16px 6px;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-}
-
-.sider-menu-item {
-  display: flex;
-  align-items: center;
-  padding: 10px 16px;
-  margin: 2px 8px;
-  border-radius: var(--radius-md);
-  font-size: 14px;
-  color: var(--ink-700);
-  cursor: pointer;
-  transition: all var(--motion-fast) var(--ease);
-  border-left: 2px solid transparent;
-}
-
-.sider-menu-item:hover {
-  background: var(--ink-100);
-  color: var(--color-primary);
-}
-
-.sider-menu-item-active {
-  background: linear-gradient(135deg, rgba(99, 102, 241, .08), rgba(6, 182, 212, .08));
-  color: var(--color-primary);
-  font-weight: 500;
-  border-left-color: var(--color-primary);
-}
-
-.sider-menu-icon {
-  margin-right: 12px;
-  font-size: 16px;
-  display: inline-flex;
-  width: 20px;
-  justify-content: center;
-}
-
-/* =============================================================
- * Topbar
- * ============================================================= */
-
-.app-topbar {
-  height: 64px;
-  background: rgba(255, 255, 255, .8);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border-bottom: 1px solid var(--ink-100);
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0 32px;
-  flex-shrink: 0;
-  position: sticky;
-  top: 0;
-  z-index: 10;
-}
+.btn-link:hover { color: var(--brand-700); }
 
 /* =============================================================
  * PageHeader
@@ -405,28 +491,20 @@ html, body {
   padding-bottom: 12px;
   border-bottom: 1px solid var(--ink-100);
 }
-
 .app-page-header-title {
   font-size: 24px;
   font-weight: 700;
-  letter-spacing: -0.01em;
+  letter-spacing: -0.015em;
   color: var(--ink-900);
   margin: 0;
 }
-
 .app-page-header-subtitle {
-  font-size: 14px;
+  font-size: 12px;
   color: var(--ink-500);
   margin-top: 4px;
+  font-family: var(--font-mono);
 }
-
-.app-page-header-extra {
-  display: flex;
-  gap: 12px;
-}
-
-/* 元信息区（在 title 下面，border-top 分隔，KV grid 横向布局）
-   使用方式见 PageHeader meta prop 注释 */
+.app-page-header-extra { display: flex; gap: 12px; }
 .app-page-header-meta {
   margin-top: 16px;
   padding-top: 12px;
@@ -435,29 +513,9 @@ html, body {
   flex-wrap: wrap;
   gap: 12px 28px;
 }
-
-.app-kv-cell {
-  display: flex;
-  align-items: baseline;
-  gap: 8px;
-  flex: 0 0 auto;
-  min-width: 0;
-}
-
-.app-kv-label {
-  font-size: 12px;
-  color: var(--ink-500, #64748b);
-  font-weight: 500;
-  white-space: nowrap;
-  flex-shrink: 0;
-}
-
-.app-kv-value {
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--ink-900, #18181b);
-  white-space: nowrap;
-}
+.app-kv-cell { display: flex; align-items: baseline; gap: 8px; flex: 0 0 auto; min-width: 0; }
+.app-kv-label { font-size: 12px; color: var(--ink-500); font-weight: 500; white-space: nowrap; }
+.app-kv-value { font-size: 13px; font-weight: 600; color: var(--ink-900); white-space: nowrap; }
 
 /* =============================================================
  * Section title
@@ -472,22 +530,115 @@ html, body {
   font-weight: 600;
   color: var(--ink-900);
 }
+.app-section-title-icon { font-size: 18px; }
 
-.app-section-title-icon {
-  font-size: 18px;
+/* =============================================================
+ * Sidebar (半透明 + Bento 背景透出)
+ * ============================================================= */
+
+.app-sider {
+  width: 240px;
+  background: rgba(255, 255, 255, 0.80);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-right: 1px solid var(--ink-100);
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  height: 100vh;
+  overflow-y: auto;
+  z-index: 10;
+}
+.app-sider-collapsed { width: 64px; }
+
+.sider-menu-group-label {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--ink-500);
+  padding: 12px 16px 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  font-family: var(--font-mono);
+}
+.sider-menu-item {
+  display: flex;
+  align-items: center;
+  padding: 10px 16px;
+  margin: 2px 8px;
+  border-radius: var(--radius-md);
+  font-size: 14px;
+  color: var(--ink-700);
+  cursor: pointer;
+  transition: all var(--motion-fast) var(--ease);
+}
+.sider-menu-item:hover {
+  background: var(--ink-100);
+  color: var(--brand-600);
+}
+.sider-menu-item-active {
+  background: linear-gradient(135deg, var(--brand-50) 0%, rgba(252, 231, 243, 0.3) 100%);
+  color: var(--brand-600);
+  font-weight: 600;
+}
+.sider-menu-icon {
+  margin-right: 12px;
+  font-size: 16px;
+  display: inline-flex;
+  width: 20px;
+  justify-content: center;
 }
 
 /* =============================================================
- * Ant Design v5 样式覆盖（表格 / 卡片 / 表单）
+ * Topbar (半透明 + 模糊)
  * ============================================================= */
 
-/* 表格 — 24px 列内边距，紧凑表头 */
+.app-topbar {
+  height: 64px;
+  background: rgba(255, 255, 255, 0.70);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-bottom: 1px solid var(--ink-100);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 32px;
+  flex-shrink: 0;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+.app-topbar-menu-item {
+  padding: 8px 14px;
+  border-radius: var(--radius-md);
+  font-size: 14px;
+  color: var(--ink-700);
+  text-decoration: none;
+  cursor: pointer;
+  transition: all var(--motion-fast) var(--ease);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.app-topbar-menu-item:hover {
+  background: var(--brand-50);
+  color: var(--brand-600);
+}
+.app-topbar-menu-item.active {
+  background: var(--brand-50);
+  color: var(--brand-600);
+  font-weight: 600;
+}
+
+/* =============================================================
+ * Ant Design v5 样式覆盖 (Bento 表格 + 输入框 + Tabs)
+ * ============================================================= */
+
+/* 表格行内边距 + 极淡 brand 表头 */
 .ant-table-tbody > tr > td {
   padding: 16px 24px !important;
   font-size: 14px;
-  border-bottom: 1px solid var(--ink-100) !important;
+  border-bottom: 1px solid rgba(139, 92, 246, 0.06) !important;
 }
-
 .ant-table-thead > tr > th {
   padding: 16px 24px !important;
   font-size: 11px !important;
@@ -496,65 +647,74 @@ html, body {
   letter-spacing: 0.05em !important;
   color: var(--ink-500) !important;
   border-bottom: 1px solid var(--ink-100) !important;
-  background: transparent !important;
+  background: rgba(237, 233, 254, 0.3) !important;
+  font-family: var(--font-mono) !important;
 }
-
 .ant-table-tbody > tr:hover > td {
-  background: var(--bg-hover) !important;
+  background: rgba(139, 92, 246, 0.04) !important;
 }
 
-/* 卡片 — 改圆角 */
-.ant-card {
-  border-radius: var(--radius-xl) !important;
-}
+/* 卡片 (Bento 圆角) */
+.ant-card { border-radius: var(--radius-2xl) !important; }
+.ant-card-head { border-bottom: 1px solid var(--ink-100) !important; }
 
-.ant-card-head {
-  border-bottom: 1px solid var(--ink-100) !important;
-}
-
-/* 输入框 — 浅灰底 + focus 蓝环 */
+/* 输入框 */
 .ant-input,
 .ant-input-affix-wrapper,
 .ant-select-selector,
 .ant-picker {
-  border-radius: var(--radius-md) !important;
+  border-radius: var(--radius-lg) !important;
   background: var(--ink-50) !important;
   border-color: transparent !important;
   transition: all var(--motion-fast) var(--ease) !important;
+  font-family: var(--font-sans) !important;
 }
-
 .ant-input:focus,
 .ant-input-affix-wrapper:focus,
 .ant-input-affix-wrapper-focused,
 .ant-select-focused .ant-select-selector,
 .ant-picker-focused {
   background: var(--bg-panel) !important;
-  box-shadow: 0 0 0 3px rgba(99, 102, 241, .15) !important;
+  box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.15) !important;
 }
 
-/* Modal 头部 */
+/* Modal */
 .ant-modal-header {
   border-bottom: 1px solid var(--ink-100) !important;
   padding: 20px 24px !important;
 }
+.ant-modal-body { padding: 24px !important; }
+.ant-modal-content { border-radius: var(--radius-3xl) !important; }
 
-.ant-modal-body {
-  padding: 24px !important;
-}
-
-/* Tabs 选中色 */
+/* Tabs 选中色 (紫粉渐变 ink-bar) */
 .ant-tabs-tab.ant-tabs-tab-active .ant-tabs-tab-btn {
-  color: var(--color-primary) !important;
+  color: var(--brand-600) !important;
+  font-weight: 600;
 }
-
 .ant-tabs-ink-bar {
-  background: linear-gradient(90deg, var(--brand-start), var(--brand-end)) !important;
+  background: linear-gradient(90deg, #8b5cf6, #f472b6) !important;
+  height: 3px !important;
+  border-radius: 2px;
 }
 
 /* Empty 占位 */
-.ant-empty {
-  padding: 48px 0 !important;
+.ant-empty { padding: 48px 0 !important; }
+
+/* 按钮 (antd Button 主题色覆盖) */
+.ant-btn-primary {
+  background: linear-gradient(135deg, #8b5cf6 0%, #f472b6 100%) !important;
+  border: none !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04) !important;
 }
+.ant-btn-primary:hover {
+  background: linear-gradient(135deg, #7c3aed 0%, #ec4899 100%) !important;
+  box-shadow: var(--shadow-glow) !important;
+  transform: translateY(-1px);
+}
+
+/* Layout bodyBg / siderBg 透明 (让 Bento canvas 透出) */
+.ant-layout, .ant-layout-content { background: transparent !important; }
+.ant-layout-sider { background: transparent !important; }
 
 /* =============================================================
  * Utility
@@ -571,66 +731,30 @@ html, body {
 
 @media (max-width: 768px) {
   .scroll-area { padding: 16px; }
+  .app-page-header { flex-direction: column; align-items: flex-start; gap: 12px; }
+  .bento-card { padding: 20px; }
+  .glass-card, .glass-card-light, .glass-card-tinted { padding: 20px; }
+  .stat-card-value { font-size: 28px; }
 }
 
 /* =============================================================
- * AI Workspace 响应式（2026-06-27）
- * - 桌面（≥ 992px）：顶部 stats 横条 + 2 列（form + preview）
- * - 平板（768-991px）：顶部 stats 横条 + 2 列窄宽度
- * - 移动（< 768px）：顶部 stats 横条 + form/preview 上下堆叠
+ * AI Workspace 响应式（2026-06-27 · 保留兼容）
  * ============================================================= */
 
-.ai-workspace-middle {
-  display: flex;
-  gap: 12px;
-  flex: 1;
-  min-height: 0;
-}
-
-/* 移动端：middle 2 列堆叠为 1 列 */
+.ai-workspace-middle { display: flex; gap: 12px; flex: 1; min-height: 0; }
 @media (max-width: 768px) {
-  .ai-workspace-middle {
-    flex-direction: column;
-  }
-  .ai-workspace-left,
-  .ai-workspace-right {
-    flex: 1 1 0 !important;
-  }
-  .ai-workspace-left {
-    min-height: 320px;
-  }
-  .ai-workspace-right {
-    min-height: 320px;
-  }
+  .ai-workspace-middle { flex-direction: column; }
+  .ai-workspace-left, .ai-workspace-right { flex: 1 1 0 !important; }
+  .ai-workspace-left, .ai-workspace-right { min-height: 320px; }
 }
-
-/* 平板：缩小间距 */
 @media (min-width: 768px) and (max-width: 991px) {
-  .ai-workspace-middle {
-    gap: 8px;
-  }
+  .ai-workspace-middle { gap: 8px; }
 }
-
-/* StatsPane 紧凑横条：移动端 2x2 网格 */
-.stats-pane-compact {
-  display: flex;
-  align-items: center;
-  gap: 32px;
-  flex-wrap: wrap;
-}
-
+.stats-pane-compact { display: flex; align-items: center; gap: 32px; flex-wrap: wrap; }
 @media (max-width: 768px) {
-  .stats-pane-compact {
-    gap: 12px;
-    font-size: 12px;
-  }
-  /* 移动端隐藏部分分隔线减少视觉噪声 */
-  .stats-pane-compact > div[style*="width: 1"] {
-    display: none;
-  }
+  .stats-pane-compact { gap: 12px; font-size: 12px; }
+  .stats-pane-compact > div[style*="width: 1"] { display: none; }
 }
-
-/* generate 页 form 字段：移动端 100% 宽度 */
 @media (max-width: 768px) {
   .ant-form-item-control-input-content .ant-select,
   .ant-form-item-control-input-content .ant-input {

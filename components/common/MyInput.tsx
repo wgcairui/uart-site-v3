@@ -52,13 +52,8 @@ export const MyInput: React.FC<myInput> = props => {
                 />
                 {Edit && (
                     <Button
-                        style={{
-                            marginTop: 8,
-                            background: 'linear-gradient(135deg, #6366f1 0%, #06b6d4 100%)',
-                            border: 0,
-                            color: '#fff',
-                            fontWeight: 500,
-                        }}
+                        className="btn-brand"
+                        style={{ marginTop: 8 }}
                         size="small"
                         type="primary"
                         onClick={() => save()}
@@ -83,15 +78,12 @@ export const MyInput: React.FC<myInput> = props => {
                             size="small"
                             shape="round"
                             type="primary"
-                            style={{
-                                background: 'linear-gradient(135deg, #6366f1 0%, #06b6d4 100%)',
-                                border: 0,
-                            }}
+                            className="btn-brand"
                             onClick={() => save()}
                         >
                             {props.okText || '保存'}
                         </Button>
-                        : <EditFilled style={{ color: '#6366f1' }} />
+                        : <EditFilled style={{ color: '#8b5cf6' }} />
                 }
             </Space.Compact>
     )

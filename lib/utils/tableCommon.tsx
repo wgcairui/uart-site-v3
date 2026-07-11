@@ -47,7 +47,7 @@ export function getColumnSearchProp<T,>(dataIndex: keyof T, val: string = ''): P
                 </Space>
             </div>
         ),
-        filterIcon: filtered => <SearchOutlined style={{ color: filtered ? BRAND.start : undefined }} />,
+        filterIcon: filtered => <SearchOutlined style={{ color: filtered ? BRAND[500] : undefined }} />,
         onFilter: (value: any, record: any) =>
             record[dataIndex]
                 ? record[dataIndex]!.toString().toLowerCase().includes((value as string).toLowerCase())
@@ -197,7 +197,7 @@ export function makeServerSearchProp<T>(
             </div>
         ),
         filterIcon: (filtered) => (
-            <SearchOutlined style={{ color: filtered ? BRAND.start : undefined }} />
+            <SearchOutlined style={{ color: filtered ? BRAND[500] : undefined }} />
         ),
     };
 }

@@ -64,7 +64,7 @@ function Empty({ name }: { name: string }) {
       <Text type="secondary">未指定协议名</Text>
       <Text type="secondary" style={{ fontSize: 12 }}>
         从{' '}
-        <Link href="/admin/ai/chat" style={{ color: '#1677ff' }}>
+        <Link href="/admin/ai/chat" style={{ color: '#8b5cf6' }}>
           AI 修改协议列表
         </Link>{' '}
         选一个

@@ -387,7 +387,7 @@ export const ProtocolAiInferred: React.FC<ProtocolAiInferredProps> = ({ protocol
 
 // === QualityBar sub-component (内联, 不抽 component) ===
 const QualityBar: React.FC<{ label: string; score: number }> = ({ label, score }) => {
-  const color = score >= 90 ? '#52c41a' : score >= 70 ? '#faad14' : '#ff4d4f'
+  const color = score >= 90 ? '#10b981' : score >= 70 ? '#faad14' : '#ff4d4f'
   return (
     <div style={{ display: 'grid', gridTemplateColumns: '200px 1fr 60px', gap: 12, alignItems: 'center' }}>
       <Typography.Text style={{ fontSize: 13 }}>{label}</Typography.Text>

@@ -76,14 +76,18 @@ function TerminalDetailPageInner() {
     }));
 
     return (
-        <>
-            <h2>{data.DevMac} / {data.name}</h2>
-            <Tabs
-                activeKey={activeKey}
-                onChange={handleTabChange}
-                items={[...baseTabs, ...mountDevTabs]}
-            />
-        </>
+        <div className="bg-bento-canvas" style={{ position: 'relative', zIndex: 0 }}>
+            <div className="bento-card" style={{ marginBottom: 20 }}>
+                <h2 style={{ fontSize: 22, fontWeight: 600, letterSpacing: '-0.015em', margin: 0 }}>{data.DevMac} / {data.name}</h2>
+            </div>
+            <div className="bento-card">
+                <Tabs
+                    activeKey={activeKey}
+                    onChange={handleTabChange}
+                    items={[...baseTabs, ...mountDevTabs]}
+                />
+            </div>
+        </div>
     );
 }
 

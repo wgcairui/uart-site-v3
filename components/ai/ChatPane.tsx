@@ -61,7 +61,7 @@ const ROLE_PROPS = {
   },
   assistant: {
     placement: 'start' as const,
-    avatar: <RobotOutlined style={{ background: '#1677ff', color: '#fff', borderRadius: '50%', padding: 4 }} />,
+    avatar: <RobotOutlined style={{ background: '#8b5cf6', color: '#fff', borderRadius: '50%', padding: 4 }} />,
     typing: false,
   },
   tool: {
@@ -71,7 +71,7 @@ const ROLE_PROPS = {
   },
   saved: {
     placement: 'start' as const,
-    avatar: <CheckCircleOutlined style={{ background: '#f6ffed', color: '#52c41a', borderRadius: '50%', padding: 4 }} />,
+    avatar: <CheckCircleOutlined style={{ background: '#f6ffed', color: '#10b981', borderRadius: '50%', padding: 4 }} />,
   },
   error: {
     placement: 'start' as const,

@@ -137,10 +137,7 @@ export const AddUserTerminalModal: React.FC<AddUserTerminalModalProps> = ({
                 okButtonProps={{
                     disabled: !ter,
                     danger: needForce,
-                    style: needForce ? undefined : {
-                        background: 'linear-gradient(135deg, #6366f1 0%, #06b6d4 100%)',
-                        border: 0,
-                    },
+                    ...(needForce ? {} : { className: 'btn-brand' }),
                 }}
                 destroyOnHidden
             >
@@ -163,13 +160,10 @@ export const AddUserTerminalModal: React.FC<AddUserTerminalModalProps> = ({
                             />
                             <Button
                                 type="primary"
+                                className="btn-brand"
                                 icon={<SearchOutlined />}
                                 loading={loading}
                                 onClick={handleSearch}
-                                style={{
-                                    background: 'linear-gradient(135deg, #6366f1 0%, #06b6d4 100%)',
-                                    border: 0,
-                                }}
                             >
                                 查找
                             </Button>

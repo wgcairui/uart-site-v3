@@ -392,6 +392,10 @@ declare namespace Uart {
         timeStamp: number;
         msg: string;
         isOk?: boolean;
+        /** v2 alarm severity (server feat/status-enum-v2 @ commit e52e8e8, cairui 21:00 拍 Option A)
+         *  老 doc severity undefined → 前端 fallback 'warning' (跟现有告警语义对齐)
+         *  跟 PagerDuty/Datadog 3 级对齐: critical (红) / warning (黄) / info (蓝) */
+        severity?: AlarmSeverity;
     }
     type UartAlarmType = "透传设备下线提醒" | "透传设备上线提醒" | '透传设备告警';
     interface smsUartAlarm {
@@ -985,5 +989,79 @@ declare namespace Uart {
         /** ISO 字符串 (前端 Date.toISOString()) */
         scheduledAt: string;
         remark?: string;
+    }
+
+    // ─── v2 status enum (server feat/status-enum-v2 @ commit 6bcab2b, cairui 21:00 拍 Option A) ───
+    // 6 variant 跟 designTokens.STATUS 完全对齐, 文档见 docs/components.md §2.5
+    // 旧 terminals.online bool + 新 terminals.status enum 双字段并存
+    // 老 doc status undefined → 前端 fallback 走 online bool 推断 ('online' / 'offline')
+    type DeviceStatus = 'online' | 'offline' | 'warning' | 'error' | 'info' | 'idle';
+
+    // ─── v2 alarm severity enum (server feat/status-enum-v2 @ commit e52e8e8) ───
+    // 跟 PagerDuty / Datadog 3 级对齐, 跟 v2 semantic 色对齐
+    // critical 红 / warning 黄 / info 蓝 (跟 STATUS.warning / STATUS.info 区分)
+    // 老 alarm doc severity undefined → 前端 fallback 'warning' (跟现有告警语义对齐, 90% 告警是 warning 级)
+    type AlarmSeverity = 'critical' | 'warning' | 'info';
+
+    // ─── v2 multi-tile endpoint (server feat/status-enum-v2 @ commit 0bd6cdf + per-device 5th commit) ───
+    // 6 tile 固定 UPS 标准 modbus 寄存器: Ua (电压) / Ia (电流) / P (有功功率) / Q (无功功率) / PF (功率因数) / E (今日能耗)
+    // 设备详情页 v2 visual 用 (跟 docs/components.md §3.4 ctrl-tile 设计稿对齐)
+    type DeviceTileName = 'Ua' | 'Ia' | 'P' | 'Q' | 'PF' | 'E';
+
+    /**
+     * 单 tile 当前值. 老 doc 缺该寄存器 → server 返 { value: null, unit: null } 占位
+     * 前端 fallback 渲染: 灰底 + '—' 数值
+     */
+    interface DeviceTile {
+        value: number | null;
+        unit: string | null;
+    }
+
+    interface DeviceTileSnapshot {
+        Ua: DeviceTile;
+        Ia: DeviceTile;
+        P: DeviceTile;
+        Q: DeviceTile;
+        PF: DeviceTile;
+        E: DeviceTile;
+    }
+
+    /** GET /api/v2/user/devices/:mac/mount/:pid/tiles
+     *  server 返 timeStamp: string (singleModel.time 是 string) */
+    interface DeviceTileSnapshotResp {
+        tiles: DeviceTileSnapshot;
+        timeStamp: string;
+    }
+
+    /** GET /api/v2/user/devices/:mac/mount/:pid/tiles/:name/history?hours=24
+     *  server 端 hour bucket avg 聚合 (3 位小数), 缺数据 bucket 返 value: null
+     *  count 字段是 hour bucket 内采样数 (诊断用) */
+    interface DeviceTileHistoryResp {
+        name: DeviceTileName;
+        granularity: 'hour';
+        hours: number;
+        unit: string | null;
+        buckets: { hour: string; value: number | null; count: number }[];
+    }
+
+    // ─── v2 admin status counts (server feat/status-enum-v2 @ commit 0bd6cdf) ───
+    // admin 仪表盘 6 status 分布 + 24h trend, 跟 designTokens.STATUS 6 variant 对齐
+    /** GET /api/v2/admin/dashboard/tiles */
+    interface AdminStatusCounts {
+        online: number;
+        offline: number;
+        warning: number;
+        error: number;
+        info: number;
+        idle: number;
+    }
+
+    /** GET /api/v2/admin/dashboard/tiles/:name/history?hours=24 */
+    interface AdminStatusHistoryResp {
+        name: DeviceStatus;
+        granularity: 'hour';
+        hours: number;
+        total: number;
+        buckets: { hour: string; count: number }[];
     }
 }

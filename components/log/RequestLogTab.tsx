@@ -68,25 +68,25 @@ const JOURNEY_STATUS_TEXT: Record<Uart.UserJourneyStatus, string> = {
     timeout: '超时',
 }
 // 决策 22 (cairui 13:02 拍): step icon 按 method 区分 (重点标明非 GET 请求)
-// 老 doc 缺 method 字段 → 走 type fallback
+// v2 主题 (决策 23): GET 改用 brand 紫 (#8b5cf6), 跟页面 hero 一致
 const STEP_METHOD_ICON: Record<'GET' | 'POST' | 'PUT' | 'DELETE', React.ReactNode> = {
-    GET: <EyeOutlined style={{ color: '#1677ff' }} />,
+    GET: <EyeOutlined style={{ color: '#8b5cf6' }} />,
     POST: <EditOutlined style={{ color: '#fa8c16' }} />,
     PUT: <EditOutlined style={{ color: '#fa8c16' }} />,
     DELETE: <DeleteOutlined style={{ color: '#f5222d' }} />,
 }
 const STEP_METHOD_COLOR: Record<'GET' | 'POST' | 'PUT' | 'DELETE', string> = {
-    GET: '#1677ff', // 蓝 (antd blue-6)
+    GET: '#8b5cf6', // 紫 (brand-500, v2 主题色)
     POST: '#fa8c16', // 橙 (antd orange-6)
     PUT: '#fa8c16', // 橙
     DELETE: '#f5222d', // 红 (antd red-6)
 }
 // type chip 保留 (login/logout/alarm 这些非 view/operate 类别仍能标识)
 const STEP_TYPE_ICON: Record<Uart.UserJourneyStepType, React.ReactNode> = {
-    view: <EyeOutlined style={{ color: '#1677ff' }} />,
+    view: <EyeOutlined style={{ color: '#8b5cf6' }} />,
     operate: <EditOutlined style={{ color: '#fa8c16' }} />,
     alarm: <WarningOutlined style={{ color: '#f5222d' }} />,
-    login: <LoginOutlined style={{ color: '#52c41a' }} />,
+    login: <LoginOutlined style={{ color: '#10b981' }} />,
     logout: <LogoutOutlined style={{ color: '#999' }} />,
 }
 const STEP_STATUS_COLOR: Record<Uart.UserJourneyStepStatus, string> = {

@@ -77,7 +77,7 @@ export function StatsPane({ stats, instructionCount = 0, toolStepCount = 0 }: St
     >
       {/* 标题 */}
       <Space size={6}>
-        <RocketOutlined style={{ color: 'var(--colorPrimary, #6366f1)' }} />
+        <RocketOutlined style={{ color: 'var(--color-primary, #8b5cf6)' }} />
         <Text strong style={{ fontSize: 13 }}>
           实时仪表
         </Text>

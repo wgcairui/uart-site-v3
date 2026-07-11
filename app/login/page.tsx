@@ -11,9 +11,11 @@ import { useNav } from "@/lib/hooks/useNav";
 import { setToken, getToken } from "@/lib/utils/token";
 import { useUserStore } from "@/lib/store/userStore";
 
-import { ConfigProvider } from "antd";
-import Zh from "antd/es/locale/zh_CN";
-import En from "antd/es/locale/en_US";
+// ⚠️ 移除内层 ConfigProvider (cairui 21:00 拍 Option A hotfix #1):
+// 之前 page 内嵌套 ConfigProvider (locale={isZh ? Zh : En}) 覆盖了外层
+// AntdProvider 的 v2 紫主题 (Theme Token 不继承, fallback 到 antd 默认 #1677ff).
+// 当前表单全中文, locale switcher 仅切 antd 内部消息, 跟表单 label 文案不一致,
+// 先去掉等后续做完整 i18n (state 保留, 不破 UI).
 import "./login.css";
 
 const Login: React.FC = () => {
@@ -132,12 +134,11 @@ const Login: React.FC = () => {
 			<Spin description="loading" size="large" />
 		</div>
 	) : (
-		<ConfigProvider locale={isZh ? Zh : En}>
-			<div className="login-page">
-				<Layout className="layout">
+		<div className="login-page bg-glass-mesh">
+			<Layout className="layout">
 					<Layout.Header className="header">
 						{/* <Image src="https://www.ladishb.com/logo.png" preview={false}></Image> */}
-						<span style={{ fontSize: 36, color: "#3a8ee6", fontFamily: "cursive" }}>百事服</span>
+						<span className="text-brand-gradient" style={{ fontSize: 36, fontFamily: "cursive", fontWeight: 700 }}>百事服</span>
 						<Dropdown
 							menu={{
 								items: [
@@ -190,8 +191,7 @@ const Login: React.FC = () => {
 														</Button>
 														<Button
 															loading={loginLoading}
-															className="login-form-button"
-															style={{ marginTop: 9, backgroundColor: "#E6A23B", color: "#fff" }}
+															className="login-form-button-warning"
 															onClick={() => onFinish({ username: "test", password: "123456" })}
 														>
 															我要试用?
@@ -214,7 +214,6 @@ const Login: React.FC = () => {
 					</Layout.Footer>
 				</Layout>
 			</div>
-		</ConfigProvider>
 	);
 };
 

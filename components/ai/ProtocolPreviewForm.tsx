@@ -190,7 +190,7 @@ export function ProtocolPreviewForm({
                     <Space orientation="vertical" size={4} style={{ width: '100%' }}>
                       {(inst.formResize ?? []).map((f, fi) => (
                         <Space key={fi} size={4} wrap>
-                          <CheckOutlined style={{ color: '#52c41a', fontSize: 11 }} />
+                          <CheckOutlined style={{ color: '#10b981', fontSize: 11 }} />
                           <Text style={{ fontSize: 12 }}>{f.name || '(未命名)'}</Text>
                           <Text type="secondary" style={{ fontSize: 11 }}>
                             [{f.enName ?? f.regx ?? '-'}]

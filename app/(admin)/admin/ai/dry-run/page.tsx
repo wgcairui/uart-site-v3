@@ -167,7 +167,7 @@ export default function AiDryRunPage() {
               <List.Item>
                 <Space>
                   {item.ok ? (
-                    <CheckCircleOutlined style={{ color: '#52c41a' }} />
+                    <CheckCircleOutlined style={{ color: '#10b981' }} />
                   ) : (
                     <CloseCircleOutlined style={{ color: '#ff4d4f' }} />
                   )}

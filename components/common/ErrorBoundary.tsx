@@ -3,7 +3,7 @@
 import { Component, type ReactNode } from 'react'
 import { Button } from 'antd'
 import { ReloadOutlined } from '@ant-design/icons'
-import { BRAND } from '@/lib/utils/designTokens'
+import { BRAND, GRADIENT } from '@/lib/utils/designTokens'
 
 interface Props {
   children: ReactNode
@@ -107,7 +107,7 @@ function DefaultFallback({ error, reset }: { error: Error; reset: () => void }) 
         onClick={reset}
         style={{
           marginTop: 8,
-          background: BRAND.gradient,
+          background: GRADIENT.brand,
           border: 'none',
         }}
       >

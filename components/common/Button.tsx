@@ -4,81 +4,46 @@ import { Button as AntButton } from 'antd'
 import type { ButtonProps } from 'antd'
 import type { FC, ReactNode } from 'react'
 
-export type AppButtonVariant = 'primary' | 'default' | 'link' | 'danger' | 'text'
+/**
+ * v2 统一按钮 · 5 variant
+ *
+ * - `primary` → 品牌渐变 + glow shadow
+ * - `default` → 白底 + 紫边
+ * - `ghost`   → 透明 + hover 浅紫底
+ * - `danger`  → 红色（仅确认删除时）
+ * - `link`    → 纯文字 + 品牌色
+ *
+ * 全部走 globals.css .btn-* class + token, 不再 inline style
+ *
+ * 规范: docs/style-guide.md v2 §4.6
+ */
+
+export type AppButtonVariant = 'primary' | 'default' | 'ghost' | 'danger' | 'link'
 
 interface AppButtonProps extends Omit<ButtonProps, 'type' | 'variant'> {
-  /** 按钮变体 */
   variant?: AppButtonVariant
-  /** 图标（仅 icon 按钮时） */
   icon?: ReactNode
 }
 
-/**
- * 统一按钮组件
- *
- * - `primary` → 品牌渐变 + 阴影
- * - `default` → 白底 + 灰边
- * - `link` → 纯文字 + 品牌色
- * - `danger` → 红底（删除确认）
- * - `text` → 无背景透明按钮
- *
- * 规范见 docs/style-guide.md §3.4
- */
+const VARIANT_CLASS: Record<AppButtonVariant, string> = {
+  primary: 'btn-brand',
+  default: 'btn-default',
+  ghost:   'btn-ghost',
+  danger:  'btn-danger',
+  link:    'btn-link',
+}
+
 export const Button: FC<AppButtonProps> = ({
   variant = 'default',
   children,
   className,
-  style,
   ...rest
 }) => {
-  const isPrimary = variant === 'primary'
-  const isDanger  = variant === 'danger'
-  const isLink    = variant === 'link'
-  const isText    = variant === 'text'
-
-  const mergedClass = [
-    isPrimary ? 'btn-brand' : '',
-    className,
-  ].filter(Boolean).join(' ')
-
-  const mergedStyle: React.CSSProperties = isPrimary
-    ? {
-        background: 'linear-gradient(135deg, #6366f1 0%, #06b6d4 100%)',
-        border: 0,
-        color: '#fff',
-        fontWeight: 500,
-        ...style,
-      }
-    : isDanger
-    ? {
-        background: '#dc2626',
-        borderColor: '#dc2626',
-        color: '#fff',
-        ...style,
-      }
-    : isLink
-    ? {
-        background: 'transparent',
-        border: 0,
-        color: '#6366f1',
-        padding: '4px 8px',
-        ...style,
-      }
-    : isText
-    ? { background: 'transparent', border: 0, ...style }
-    : {
-        background: '#fff',
-        borderColor: '#f1f5f9',
-        color: '#334155',
-        ...style,
-      }
-
   return (
     <AntButton
       {...rest}
-      type={isPrimary || isDanger ? 'primary' : isLink || isText ? 'text' : 'default'}
-      className={mergedClass}
-      style={mergedStyle}
+      type={variant === 'link' ? 'link' : 'default'}
+      className={`${VARIANT_CLASS[variant]} ${className ?? ''}`.trim()}
     >
       {children}
     </AntButton>

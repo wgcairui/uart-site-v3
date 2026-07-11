@@ -96,7 +96,7 @@ export function SourceUploadTab({ onUploaded, disabled }: SourceUploadTabProps) 
         style={{ padding: '12px 0' }}
       >
         <p className="ant-upload-drag-icon" style={{ marginBottom: 4 }}>
-          <CloudUploadOutlined style={{ fontSize: 36, color: '#1677ff' }} />
+          <CloudUploadOutlined style={{ fontSize: 36, color: '#8b5cf6' }} />
         </p>
         <p className="ant-upload-text" style={{ fontSize: 13, marginBottom: 2 }}>
           点击或拖拽 PDF / Excel / Word / TXT / MD
@@ -144,7 +144,7 @@ function UploadStateView({ state, onRetry }: UploadStateViewProps) {
   if (state.status === 'done') {
     return (
       <Space size={6} align="center" wrap>
-        <FileTextOutlined style={{ color: '#52c41a' }} />
+        <FileTextOutlined style={{ color: '#10b981' }} />
         <Text style={{ fontSize: 12 }}>{state.fileName}</Text>
         <Text type="secondary" style={{ fontSize: 12 }}>
           ({formatSize(state.fileSize)})

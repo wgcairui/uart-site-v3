@@ -6,6 +6,9 @@ import { getTerminalStats, addRegisterTerminal } from "@/lib/api/fetchRoot";
 import { usePromise } from "@/lib/hooks/usePromise";
 import { ModalConfirm } from "@/lib/utils/util";
 import { NodesSelects } from "@/components/node/NodesSelects";
+import { PageHeader } from "@/components/common/PageHeader";
+import { PageSummary } from "@/components/common/PageSummary";
+import { StatusTag } from "@/components/common/StatusTag";
 
 const TerminalAddDTU: React.FC = () => {
     const [mac, setMac] = useState<string>("");
@@ -133,9 +136,29 @@ export default function Terminals() {
         }
     ];
 
+    const total = stats
+        ? stats.onlines.reduce((s, x) => s + (x.type === 'onlines' ? x.value : 0), 0)
+        : 0
+    const onlines = stats?.onlines?.find(x => x.type === 'onlines')?.value ?? 0
+    const offlines = stats?.onlines?.find(x => x.type === 'offlines')?.value ?? 0
+    const nodes = stats?.nodes?.reduce((s, x) => s + x.value, 0) ?? 0
+
     return (
-        <>
-            <Tabs items={items} destroyOnHidden />
+        <div className="bg-bento-canvas" style={{ position: 'relative', zIndex: 0 }}>
+            <PageHeader title="终端管理" subtitle="管理所有 DTU 设备、节点、协议、注册" />
+            <div style={{ marginBottom: 24 }}>
+                <PageSummary
+                    items={[
+                        { label: '设备总数', value: total, variant: 'primary' },
+                        { label: '在线', value: onlines, variant: 'success' },
+                        { label: '离线', value: offlines, variant: 'warning' },
+                        { label: '节点数', value: nodes, variant: 'info' },
+                    ]}
+                />
+            </div>
+            <div className="bento-card" style={{ marginBottom: 20 }}>
+                <Tabs items={items} destroyOnHidden />
+            </div>
             <Modal
                 title="批量注册设备"
                 open={registerModalOpen}
@@ -145,6 +168,6 @@ export default function Terminals() {
             >
                 <TerminalAddDTU />
             </Modal>
-        </>
+        </div>
     );
 }
