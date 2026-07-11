@@ -94,7 +94,7 @@ export const logInstructQuery = (_mac: string) => Promise.resolve({ code: 0, dat
  */
 export const loguserjourneys = (query: Uart.UserJourneyListReq) =>
   Post<universalResult<V2ListResponse<Uart.UserJourney>>>(
-    '/api/v2/admin/log/user-journeys/list',
+    '/api/v2/admin/logs/user-journeys/list',
     {
       startTs: query.startTs,
       endTs: query.endTs,
@@ -114,5 +114,5 @@ export const loguserjourneys = (query: Uart.UserJourneyListReq) =>
  */
 export const loguserjourneyById = (journeyId: string) =>
   Get<universalResult<Uart.UserJourney>>(
-    `/api/v2/admin/log/user-journeys/${encodeURIComponent(journeyId)}`,
+    `/api/v2/admin/logs/user-journeys/${encodeURIComponent(journeyId)}`,
   )
