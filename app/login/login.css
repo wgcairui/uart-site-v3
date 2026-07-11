@@ -147,6 +147,26 @@
   box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
 }
 
+/* "我要试用" 按钮 (cairui 21:00 拍 Option A hotfix #2)
+   之前硬编码 v1 #E6A23B (老 warning 警示色), 改用 v2 semantic var(--color-warning) #f59e0b */
+.login-page .login-form-button-warning {
+  width: 100%;
+  height: 40px;
+  font-size: 16px;
+  background: var(--color-warning) !important;
+  color: #fff !important;
+  border: 0 !important;
+  font-weight: 600;
+  border-radius: var(--radius-xl) !important;
+  margin-top: 9px;
+}
+.login-page .login-form-button-warning:hover {
+  background: #d97706 !important;  /* darker warning on hover */
+  color: #fff !important;
+  transform: translateY(-1px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+}
+
 .login-page .hidden-sm-and-down {
   display: flex;
   justify-content: center;
