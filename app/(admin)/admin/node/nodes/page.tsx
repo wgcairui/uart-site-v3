@@ -254,7 +254,7 @@ export const Nodes: React.FC = () => {
     }
 
     return (
-        <>
+        <div className="bg-bento-canvas" style={{ position: 'relative', zIndex: 0, padding: '0 32px 32px' }}>
             <Divider plain>节点信息</Divider>
 
             <div
@@ -433,7 +433,7 @@ export const Nodes: React.FC = () => {
                     )}
                 />
             </Table>
-        </>
+        </div>
     )
 }
 

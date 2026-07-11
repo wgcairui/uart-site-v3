@@ -89,7 +89,7 @@ export const User: React.FC = () => {
     }
 
     return (
-        <>
+        <div className="bg-bento-canvas" style={{ position: 'relative', zIndex: 0, padding: '0 32px 32px' }}>
             <Divider plain>用户信息 / {pagination.total ?? users.length}</Divider>
 
             <Row gutter={36}>
@@ -211,7 +211,7 @@ export const User: React.FC = () => {
                     }
                 ] as ColumnsType<Uart.UserInfo>}
             />
-        </>
+        </div>
     )
 }
 

@@ -131,7 +131,7 @@ export const DevModel: React.FC = () => {
     };
 
     return (
-        <>
+        <div className="bg-bento-canvas" style={{ position: 'relative', zIndex: 0, padding: '0 32px 32px' }}>
             <PageHeader
                 title="设备类型"
                 extra={
@@ -211,7 +211,7 @@ export const DevModel: React.FC = () => {
                     )}
                 />
             </Table>
-        </>
+        </div>
     )
 }
 

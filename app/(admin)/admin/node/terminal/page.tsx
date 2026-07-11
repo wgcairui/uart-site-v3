@@ -156,7 +156,7 @@ export default function Terminals() {
                     ]}
                 />
             </div>
-            <div className="bento-card" style={{ marginBottom: 20 }}>
+            <div className="bento-card" style={{ marginBottom: 20, padding: 24 }}>
                 <Tabs items={items} destroyOnHidden />
             </div>
             <Modal

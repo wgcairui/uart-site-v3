@@ -157,7 +157,7 @@ export const Protocols: React.FC = () => {
     }
 
     return (
-        <>
+        <div className="bg-bento-canvas" style={{ position: 'relative', zIndex: 0, padding: '0 32px 32px' }}>
             <PageHeader
                 title="协议管理"
                 extra={<Button type="primary" onClick={() => setIsAddProtocolVisible(true)}>添加协议</Button>}
@@ -282,7 +282,7 @@ export const Protocols: React.FC = () => {
                 ] as ColumnsType<Uart.protocol>}
             >
             </Table>
-        </>
+        </div>
     )
 }
 
