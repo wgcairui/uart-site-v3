@@ -84,7 +84,7 @@ const Alarm: React.FC = () => {
 
 
     return (
-        <>
+        <div className="bg-bento-canvas" style={{ position: 'relative', zIndex: 0, padding: '0 32px 32px' }}>
             <PageSummary
                 items={[
                     { label: '告警总数', value: alarms.length, variant: 'primary' },
@@ -174,7 +174,7 @@ const Alarm: React.FC = () => {
                 </Row>
             </Card>
 
-        </>
+        </div>
     )
 }
 

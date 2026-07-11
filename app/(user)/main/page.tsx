@@ -84,7 +84,7 @@ const UserIndex: React.FC = (props) => {
     }
 
     return (
-        <div className="bg-bento-canvas" style={{ position: 'relative', zIndex: 0 }}>
+        <div className="bg-bento-canvas" style={{ position: 'relative', zIndex: 0, padding: '0 32px 32px' }}>
             <PageHeader title="我的设备" subtitle="查看所有绑定设备、网关、聚合设备" />
             <Row style={{ paddingBottom: 24 }}>
                 <Col span={24} lg={18}>
