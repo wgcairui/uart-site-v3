@@ -18,6 +18,8 @@ import { AdminScheduledOpTab } from "@/components/terminal/AdminScheduledOpTab";
 import { useTerminalUpdate } from "@/lib/hooks/useTerminalData";
 import { DevRealTimeLog } from "@/components/data/devRealTimeLog";
 import { TerminalCurData, TerminalHistoryData } from "./TerminalDataTab";
+import { LiveControls } from "@/components/common/LiveControls";
+import { DeviceActions } from "@/components/common/DeviceActions";
 
 function TerminalDetailPageInner() {
     const params = useParams();
@@ -121,6 +123,18 @@ function TerminalDetailPageInner() {
                     </div>
                 </div>
             </div>
+            {/* v3 hybrid Page B · 设备详情完整 4 区: device hero + live controls + actions + trend */}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(12, 1fr)', gap: 20, marginBottom: 20 }}>
+                {/* Live Controls 6 tile (8 列) */}
+                <div style={{ gridColumn: 'span 8' }}>
+                    <LiveControls variant="device" mac={data.DevMac} pid={data.PID ?? 0} title="实时数据 · 设备" />
+                </div>
+                {/* Device Actions 玻璃卡 (4 列) */}
+                <div style={{ gridColumn: 'span 4' }}>
+                    <DeviceActions mac={data.DevMac} />
+                </div>
+            </div>
+
             <div className="bento-card" style={{ padding: 24 }}>
                 <Tabs
                     activeKey={activeKey}

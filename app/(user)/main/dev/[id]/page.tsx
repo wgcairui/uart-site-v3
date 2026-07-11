@@ -10,6 +10,8 @@ import { UserScheduledOpTab } from "@/components/terminal/UserScheduledOpTab";
 import { useNav } from "@/lib/hooks/useNav";
 import { PageHeader } from "@/components/common/PageHeader";
 import { PageSummary } from "@/components/common/PageSummary";
+import { LiveControls } from "@/components/common/LiveControls";
+import { DeviceActions } from "@/components/common/DeviceActions";
 
 function DevInner() {
     const nav = useNav()
@@ -126,6 +128,15 @@ function DevInner() {
                         },
                     ]}
                 />
+                {/* v3 hybrid Page B · LiveControls 6 tile + Actions 玻璃卡 */}
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(12, 1fr)', gap: 20, marginBottom: 20 }}>
+                    <div style={{ gridColumn: 'span 8' }}>
+                        <LiveControls variant="device" mac={terminal.DevMac} pid={mountDev.pid} title="实时数据" />
+                    </div>
+                    <div style={{ gridColumn: 'span 4' }}>
+                        <DeviceActions mac={terminal.DevMac} title="设备操作" />
+                    </div>
+                </div>
                 <Tabs
                     activeKey={activeKey}
                     onChange={handleTabChange}

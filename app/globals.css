@@ -780,6 +780,230 @@ html, body {
 }
 
 /* =============================================================
+ * LiveControls v3 · 6 tile Glass (hybrid Page B)
+ * ============================================================= */
+
+.live-controls-v3 {
+  padding: 24px;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.7) 0%, rgba(237, 233, 254, 0.4) 100%);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.9);
+  border-radius: 20px;
+  box-shadow: var(--shadow-bento);
+}
+
+.live-controls-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--ink-900);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 20px;
+}
+
+.live-controls-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px;
+}
+
+.ctrl-tile {
+  padding: 20px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.5);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.7);
+  transition: all var(--motion-base) var(--ease);
+}
+.ctrl-tile:hover {
+  background: rgba(255, 255, 255, 0.7);
+  transform: translateY(-2px);
+}
+
+.ctrl-tile-lbl {
+  font-size: 11px;
+  color: var(--ink-500);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  font-family: var(--font-mono);
+  font-weight: 500;
+}
+
+.ctrl-tile-val {
+  font-size: 28px;
+  font-weight: 600;
+  color: var(--ink-900);
+  letter-spacing: -0.02em;
+  margin-top: 8px;
+  line-height: 1;
+  font-family: var(--font-sans);
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+}
+
+.ctrl-tile-unit {
+  font-size: 13px;
+  color: var(--ink-500);
+  font-weight: 400;
+  margin-left: 2px;
+}
+
+.ctrl-tile-spark {
+  margin-top: 10px;
+  height: 32px;
+  width: 100%;
+  display: block;
+}
+
+.ctrl-tile-foot {
+  margin-top: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 11px;
+  color: var(--ink-500);
+  font-family: var(--font-mono);
+}
+
+@media (max-width: 768px) {
+  .live-controls-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+  .ctrl-tile-val {
+    font-size: 22px;
+  }
+}
+
+/* =============================================================
+ * DeviceActions v3 · 玻璃操作卡 (hybrid Page B)
+ * ============================================================= */
+
+.device-actions-v3 {
+  padding: 24px;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.7) 0%, rgba(252, 231, 243, 0.4) 100%);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.9);
+  border-radius: 20px;
+  box-shadow: 0 4px 20px -8px rgba(244, 114, 182, 0.15);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.device-actions-v3 h3 {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--ink-900);
+  margin: 0 0 4px;
+}
+
+.device-action-btn-v3 {
+  padding: 14px 16px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.7);
+  border: 1px solid rgba(139, 92, 246, 0.15);
+  font-size: 13.5px;
+  font-weight: 500;
+  color: var(--ink-900);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  text-align: left;
+  transition: all var(--motion-base) var(--ease);
+  font-family: inherit;
+  width: 100%;
+}
+.device-action-btn-v3:hover {
+  background: rgba(255, 255, 255, 0.9);
+  transform: translateX(2px);
+  box-shadow: 0 4px 12px -2px rgba(139, 92, 246, 0.15);
+}
+.device-action-btn-v3.primary {
+  background: linear-gradient(135deg, var(--brand-500) 0%, var(--accent-400) 100%);
+  color: #fff;
+  border: none;
+  box-shadow: 0 4px 12px -2px rgba(139, 92, 246, 0.3);
+}
+.device-action-btn-v3.primary:hover {
+  transform: translateX(2px);
+  box-shadow: 0 6px 18px -2px rgba(139, 92, 246, 0.5);
+}
+.device-action-btn-v3.danger {
+  background: rgba(244, 63, 94, 0.1);
+  color: #be123c;
+  border-color: rgba(244, 63, 94, 0.2);
+}
+.device-action-btn-v3.danger:hover {
+  background: rgba(244, 63, 94, 0.15);
+  color: #be123c;
+}
+.device-action-btn-v3 .ico {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  background: rgba(139, 92, 246, 0.1);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--brand-500);
+  flex-shrink: 0;
+  font-size: 16px;
+}
+.device-action-btn-v3.primary .ico {
+  background: rgba(255, 255, 255, 0.2);
+  color: #fff;
+}
+.device-action-btn-v3.danger .ico {
+  background: rgba(244, 63, 94, 0.1);
+  color: #be123c;
+}
+.device-action-btn-v3 .grow {
+  flex: 1;
+}
+.device-action-btn-v3 .arrow {
+  color: var(--ink-500);
+  font-size: 14px;
+}
+.device-action-btn-v3.primary .arrow {
+  color: #fff;
+}
+
+/* =============================================================
+ * TrendChart v3 · 24h area chart (hybrid Page B)
+ * ============================================================= */
+
+.trend-chart-v3 {
+  padding: 24px;
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.9);
+  border-radius: 20px;
+  box-shadow: var(--shadow-bento);
+}
+
+.trend-chart-v3 h3 {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--ink-900);
+  margin: 0 0 4px;
+}
+
+.trend-chart-v3 .sub {
+  font-size: 12px;
+  color: var(--ink-500);
+  margin-bottom: 20px;
+}
+
+.trend-chart-svg {
+  width: 100%;
+  height: 200px;
+  display: block;
+}
+
+/* =============================================================
  * Ant Design v5 样式覆盖 (Bento 表格 + 输入框 + Tabs)
  * ============================================================= */
 
