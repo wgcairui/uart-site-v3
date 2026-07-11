@@ -196,8 +196,7 @@ export const Protocols: React.FC = () => {
                 }}></AddProtocol>
             </Modal>
             <Divider></Divider>
-            <Table
-                loading={loading}
+            <Table className="v3-table"                 loading={loading}
                 dataSource={generateTableKey(data, '_id')}
                 scroll={{ x: 1000 }}
                 pagination={{

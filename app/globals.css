@@ -1004,6 +1004,52 @@ html, body {
 }
 
 /* =============================================================
+ * v3 Table · 紫光表格覆盖 (antd Table 视觉升级)
+ * ============================================================= */
+
+.v3-table .ant-table {
+  background: transparent !important;
+  border-radius: 14px;
+  overflow: hidden;
+}
+.v3-table .ant-table-thead > tr > th {
+  background: rgba(237, 233, 254, 0.4) !important;
+  color: var(--ink-700) !important;
+  font-weight: 600;
+  font-size: 12px;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  border-bottom: 1px solid rgba(139, 92, 246, 0.12) !important;
+  font-family: var(--font-mono);
+  padding: 14px 16px !important;
+}
+.v3-table .ant-table-tbody > tr > td {
+  border-bottom: 1px solid rgba(139, 92, 246, 0.06) !important;
+  padding: 14px 16px !important;
+  font-size: 13.5px;
+  color: var(--ink-900);
+}
+.v3-table .ant-table-tbody > tr:hover > td {
+  background: rgba(139, 92, 246, 0.05) !important;
+}
+.v3-table .ant-table-tbody > tr:last-child > td {
+  border-bottom: none !important;
+}
+.v3-table .ant-pagination .ant-pagination-item-active {
+  background: var(--brand-500) !important;
+  border-color: var(--brand-500) !important;
+}
+.v3-table .ant-pagination .ant-pagination-item-active a {
+  color: #fff !important;
+}
+.v3-table .ant-pagination .ant-pagination-item:hover {
+  border-color: var(--brand-500) !important;
+}
+.v3-table .ant-pagination .ant-pagination-item:hover a {
+  color: var(--brand-500) !important;
+}
+
+/* =============================================================
  * Ant Design v5 样式覆盖 (Bento 表格 + 输入框 + Tabs)
  * ============================================================= */
 

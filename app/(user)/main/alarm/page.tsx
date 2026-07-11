@@ -122,7 +122,7 @@ const Alarm: React.FC = () => {
                         </Card>
                     </Col>
                     <Col span={24} md={16} key="table">
-                        <Table dataSource={generateTableKey(alarms, '_id')} size="small" sticky
+                        <Table className="v3-table" dataSource={generateTableKey(alarms, '_id')} size="small" sticky
                             pagination={{
                                 current: pageReq.page ?? 1,
                                 pageSize: pageReq.pageSize ?? 20,

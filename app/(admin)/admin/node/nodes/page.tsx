@@ -315,8 +315,7 @@ export const Nodes: React.FC = () => {
                 />
             )}
 
-            <Table
-                dataSource={generateTableKey(nodes, '_id')}
+            <Table className="v3-table"                 dataSource={generateTableKey(nodes, '_id')}
                 {...tableConfig}
                 pagination={{
                     current: query.page ?? 1,

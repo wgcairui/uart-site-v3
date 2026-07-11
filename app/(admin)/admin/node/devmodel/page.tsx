@@ -160,8 +160,7 @@ export const DevModel: React.FC = () => {
                 ]}
             />
             <AddDevModel visible={visible} onCancel={() => setVisible(false)} initialValue={editingItem} ok={fecth} />
-            <Table
-                loading={loading}
+            <Table className="v3-table"                 loading={loading}
                 dataSource={generateTableKey(data, "_id")}
                 pagination={{
                     current: query.page || 1,

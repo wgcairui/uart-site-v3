@@ -104,8 +104,7 @@ export const User: React.FC = () => {
                 </Col>
             </Row>
 
-            <Table
-                loading={loading}
+            <Table className="v3-table"                 loading={loading}
                 dataSource={generateTableKey(users, 'user')}
                 scroll={{ x: 1000 }}
                 pagination={{
