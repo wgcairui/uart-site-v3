@@ -14,6 +14,7 @@ import { HealthScoreBento } from './_sections/HealthScoreBento'
 import { DistributionBento } from './_sections/DistributionBento'
 import { AlarmTrendBento } from './_sections/AlarmTrendBento'
 import { QuickStatsBento } from './_sections/QuickStatsBento'
+import { TrafficSparkBento } from './_sections/TrafficSparkBento'
 
 /**
  * admin 首页 — 系统仪表盘 (v3 hybrid v4 大重构 · 决策 C, 2026-07-12)
@@ -146,10 +147,15 @@ export default function AdminDashboardPage() {
 
                 {/* ───────── Row 3: 7-day 趋势 + 健康度评分 ───────── */}
                 <div className="bento-card chart-bento" style={{ gridColumn: 'span 8', padding: 24 }}>
-                    <TrendChartBento />
+                    <TrendChartBento refreshTick={refreshTick} />
                 </div>
                 <div style={{ gridColumn: 'span 4' }}>
                     <HealthScoreBento refreshTick={refreshTick} />
+                </div>
+
+                {/* ───────── Row 3.5: 实时流量 sparkline (PR-A, span 12) ───────── */}
+                <div style={{ gridColumn: 'span 12' }}>
+                    <TrafficSparkBento refreshTick={refreshTick} />
                 </div>
 
                 {/* ───────── Row 4: 分类分布 + 系统总览 ───────── */}

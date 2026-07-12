@@ -28,9 +28,17 @@ export const getDataStats = () => Get<universalResult<any>>('/api/v2/admin/dashb
 /** GET /api/v2/admin/dashboard/tiles */
 export const getAdminTileCounts = () =>
   Get<universalResult<Uart.AdminStatusCounts>>('/api/v2/admin/dashboard/tiles')
-/** GET /api/v2/admin/dashboard/tiles/:name/history?hours=24 */
-export const getAdminTileHistory = (name: Uart.DeviceStatus, hours: number = 24) =>
-  Get<universalResult<Uart.AdminStatusHistoryResp>>(`/api/v2/admin/dashboard/tiles/${name}/history`, { hours: String(hours) })
+/** GET /api/v2/admin/dashboard/tiles/:name/history?hours=24&granularity=hour|day (决策 23 + PR-B 扩展) */
+export const getAdminTileHistory = (name: Uart.DeviceStatus, hours: number = 24, granularity: 'hour' | 'day' = 'hour') =>
+  Get<universalResult<Uart.AdminStatusHistoryResp>>(`/api/v2/admin/dashboard/tiles/${name}/history`, { hours: String(hours), granularity })
+
+/** GET /api/v2/admin/dashboard/traffic/sparkline?minutes=60 (PR-A, sibling d81dbeb 2026-07-12) */
+export const getTrafficSparkline = (minutes: number = 60) =>
+  Get<universalResult<Uart.TrafficSparklineResp>>('/api/v2/admin/dashboard/traffic/sparkline', { minutes: String(minutes) })
+
+/** GET /api/v2/admin/dashboard/devices/health (PR-C, sibling d81dbeb 2026-07-12) */
+export const getDeviceHealth = () =>
+  Get<universalResult<Uart.DeviceHealthResp>>('/api/v2/admin/dashboard/devices/health')
 
 /** 当前数据列表 (mac 搜索 + 分页) */
 export const ClientResultSingle = (query?: PaginationReq) =>

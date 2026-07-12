@@ -1056,12 +1056,33 @@ declare namespace Uart {
         idle: number;
     }
 
-    /** GET /api/v2/admin/dashboard/tiles/:name/history?hours=24 */
+    /** GET /api/v2/admin/dashboard/tiles/:name/history?hours=24&granularity=hour|day (决策 23 + PR-B 30d 扩展) */
     interface AdminStatusHistoryResp {
         name: DeviceStatus;
-        granularity: 'hour';
+        granularity: 'hour' | 'day';
         hours: number;
         total: number;
-        buckets: { hour: string; count: number }[];
+        buckets: ({ hour: string } | { day: string }) & { count: number }[];
+    }
+
+    /** GET /api/v2/admin/dashboard/traffic/sparkline?minutes=60 (PR-A 实时流量, sibling d81dbeb 2026-07-12) */
+    interface TrafficSparklineResp {
+        points: { ts: string; count: number }[];
+        total: number;
+        avg: number;
+        minutes: number;
+    }
+
+    /** GET /api/v2/admin/dashboard/devices/health (PR-C 设备健康度, sibling d81dbeb 2026-07-12) */
+    interface DeviceHealthResp {
+        score: number;
+        total: number;
+        distribution: {
+            excellent: number;
+            good: number;
+            warning: number;
+            danger: number;
+        };
+        topDanger: { mac: string; name: string; score: number }[];
     }
 }

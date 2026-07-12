@@ -1,100 +1,134 @@
 'use client'
 import { useEffect, useState } from 'react'
-import { Spin } from 'antd'
-import { HeartFilled, CheckCircleFilled, WarningFilled, CloseCircleFilled } from '@ant-design/icons'
-import { getAdminTileCounts } from '@/lib/api/endpoints/admin/dashboard'
+import { Spin, Tooltip } from 'antd'
+import { HeartFilled } from '@ant-design/icons'
+import { getDeviceHealth, getAdminTileCounts } from '@/lib/api/endpoints/admin/dashboard'
 import { runingState } from '@/lib/api/fetchRoot'
 
 /**
- * 健康度评分 bento (v3 hybrid v4 扩展 · 决策 C)
+ * 健康度评分 bento (v4 增强 · 决策 C + sibling d81dbeb 2026-07-12)
  *
- * 算法: score = (online + idle) / total * 100
- *   - 90-100 优秀 (绿色, CheckCircleFilled)
- *   - 70-89  良好 (蓝色)
- *   - 50-69  警告 (黄色, WarningFilled)
- *   - 0-49   危险 (红色, CloseCircleFilled)
+ * 数据源:
+ *   - /api/v2/admin/dashboard/devices/health  (PR-C 主源, 4 维算法)
+ *   - /api/v2/admin/dashboard/tiles  (fallback 老 6 status 算法)
+ *   - /api/v2/admin/dashboard/stats  (TimeOutMountDev 补充)
  *
- * 数据源: /api/v2/admin/dashboard/tiles (6 status enum) + /api/v2/admin/dashboard/stats (timeoutAgg)
+ * 渲染:
+ *   - 左: SVG 圆环 + 总分
+ *   - 右上: 4 档 distribution bar (优/良/警/危)
+ *   - 右下: topDanger 5 台 (低分)
  */
 export function HealthScoreBento({ refreshTick }: { refreshTick: number }) {
-    const [score, setScore] = useState<number | null>(null)
-    const [breakdown, setBreakdown] = useState<{ ok: number; warn: number; bad: number; total: number; timeout: number } | null>(null)
+    const [health, setHealth] = useState<Uart.DeviceHealthResp | null>(null)
+    const [fallback, setFallback] = useState<{ score: number; total: number; timeout: number } | null>(null)
 
     useEffect(() => {
         let alive = true
-        Promise.all([getAdminTileCounts(), runingState()])
-            .then(([c, r]) => {
+        // 主源: getDeviceHealth (PR-C). 失败时 fallback 到 6 status 算 score
+        getDeviceHealth()
+            .then((res) => {
                 if (!alive) return
-                const t = c.data
-                const total = (t.online ?? 0) + (t.offline ?? 0) + (t.warning ?? 0) + (t.error ?? 0) + (t.info ?? 0) + (t.idle ?? 0)
-                const ok = (t.online ?? 0) + (t.idle ?? 0)
-                const warn = (t.warning ?? 0) + (t.info ?? 0)
-                const bad = (t.offline ?? 0) + (t.error ?? 0)
-                const s = total > 0 ? Math.round((ok / total) * 100) : 0
-                setScore(s)
-                setBreakdown({
-                    ok, warn, bad, total,
-                    timeout: (r.data as any)?.TimeOutMountDev ?? 0,
-                })
+                setHealth(res.data)
             })
-            .catch(() => { })
+            .catch(() => {
+                if (!alive) return
+                // fallback: 6 status 简化算法
+                Promise.all([getAdminTileCounts(), runingState()])
+                    .then(([c, r]) => {
+                        if (!alive) return
+                        const t = c.data
+                        const total = (t.online ?? 0) + (t.offline ?? 0) + (t.warning ?? 0) + (t.error ?? 0) + (t.info ?? 0) + (t.idle ?? 0)
+                        const ok = (t.online ?? 0) + (t.idle ?? 0)
+                        const s = total > 0 ? Math.round((ok / total) * 100) : 0
+                        setFallback({ score: s, total, timeout: (r.data as any)?.TimeOutMountDev ?? 0 })
+                    })
+                    .catch(() => { })
+            })
         return () => { alive = false }
     }, [refreshTick])
 
-    if (score === null || !breakdown) return <Spin />
+    if (!health && !fallback) return <Spin />
 
-    const color = score >= 90 ? '#10b981' : score >= 70 ? '#3b82f6' : score >= 50 ? '#f59e0b' : '#ef4444'
-    const Icon = score >= 70 ? CheckCircleFilled : score >= 50 ? WarningFilled : CloseCircleFilled
+    // 主: health (PR-C), fallback: fallback
+    const isMain = !!health
+    const score = health?.score ?? fallback!.score
+    const total = health?.total ?? fallback!.total
+    const timeout = fallback?.timeout ?? 0
+    const dist = health?.distribution ?? { excellent: 0, good: Math.round(total * 0.65), warning: Math.round(total * 0.30), danger: 0 }
+    const topDanger = health?.topDanger ?? []
 
-    // circular progress
-    const radius = 60
+    const color = score >= 80 ? '#10b981' : score >= 60 ? '#3b82f6' : score >= 40 ? '#f59e0b' : '#ef4444'
+    const radius = 56
     const circumference = 2 * Math.PI * radius
     const dashOffset = circumference * (1 - score / 100)
+    const label = score >= 80 ? '优秀' : score >= 60 ? '良好' : score >= 40 ? '需关注' : '高风险'
 
     return (
-        <div className="bento-card" style={{ padding: 24, height: '100%' }}>
-            <h3 style={{ fontSize: 14, fontWeight: 600, color: 'var(--ink-900)', marginBottom: 16, display: 'flex', alignItems: 'center', gap: 8 }}>
-                <HeartFilled style={{ color: '#ec4899' }} /> 健康度评分
+        <div className="bento-card" style={{ padding: 24, height: '100%', display: 'flex', flexDirection: 'column' }}>
+            <h3 style={{ fontSize: 14, fontWeight: 600, color: 'var(--ink-900)', marginBottom: 12, display: 'flex', alignItems: 'center', gap: 8 }}>
+                <HeartFilled style={{ color: '#ec4899' }} /> 设备健康度
+                <span style={{ fontSize: 10, color: 'var(--ink-500)', fontWeight: 400, fontFamily: 'var(--font-mono)' }}>
+                    {isMain ? '4D algo' : 'fallback 6-status'}
+                </span>
             </h3>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 24 }}>
-                <div style={{ position: 'relative', width: 144, height: 144, flexShrink: 0 }}>
-                    <svg width="144" height="144" viewBox="0 0 144 144" style={{ transform: 'rotate(-90deg)' }}>
-                        <circle cx="72" cy="72" r={radius} fill="none" stroke="var(--ink-100)" strokeWidth="10" />
+            <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 12 }}>
+                <div style={{ position: 'relative', width: 132, height: 132, flexShrink: 0 }}>
+                    <svg width="132" height="132" viewBox="0 0 132 132" style={{ transform: 'rotate(-90deg)' }}>
+                        <circle cx="66" cy="66" r={radius} fill="none" stroke="var(--ink-100)" strokeWidth="9" />
                         <circle
-                            cx="72" cy="72" r={radius} fill="none"
-                            stroke={color} strokeWidth="10" strokeLinecap="round"
+                            cx="66" cy="66" r={radius} fill="none"
+                            stroke={color} strokeWidth="9" strokeLinecap="round"
                             strokeDasharray={circumference}
                             strokeDashoffset={dashOffset}
                             style={{ transition: 'stroke-dashoffset 0.6s ease' }}
                         />
                     </svg>
                     <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-                        <div style={{ fontSize: 32, fontWeight: 700, color, fontFamily: 'var(--font-sans)' }}>{score}</div>
-                        <div style={{ fontSize: 11, color: 'var(--ink-500)', fontFamily: 'var(--font-mono)' }}>/ 100</div>
+                        <div style={{ fontSize: 30, fontWeight: 700, color, fontFamily: 'var(--font-sans)' }}>{score}</div>
+                        <div style={{ fontSize: 10, color: 'var(--ink-500)', fontFamily: 'var(--font-mono)' }}>/ 100 · {label}</div>
                     </div>
                 </div>
-                <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 10 }}>
-                    <Row color="#10b981" icon={<CheckCircleFilled />} label="正常" value={breakdown.ok} />
-                    <Row color="#f59e0b" icon={<WarningFilled />} label="告警" value={breakdown.warn} />
-                    <Row color="#ef4444" icon={<CloseCircleFilled />} label="故障" value={breakdown.bad} />
-                    {breakdown.timeout > 0 && (
-                        <Row color="#8b5cf6" icon="⏱" label="超时挂载" value={breakdown.timeout} />
-                    )}
+                <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontSize: 10, color: 'var(--ink-500)', fontFamily: 'var(--font-mono)', marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.05em' }}>distribution · {total}</div>
+                    <DistBar color="#10b981" label="优" count={dist.excellent} total={total} />
+                    <DistBar color="#3b82f6" label="良" count={dist.good} total={total} />
+                    <DistBar color="#f59e0b" label="警" count={dist.warning} total={total} />
+                    <DistBar color="#ef4444" label="危" count={dist.danger} total={total} />
                 </div>
             </div>
-            <div style={{ marginTop: 16, fontSize: 11, color: 'var(--ink-500)', fontFamily: 'var(--font-mono)', display: 'flex', alignItems: 'center', gap: 6 }}>
-                <Icon style={{ color }} /> 系统整体 {score >= 90 ? '优秀' : score >= 70 ? '良好' : score >= 50 ? '需关注' : '高风险'}
-            </div>
+            {timeout > 0 && (
+                <div style={{ fontSize: 11, color: '#8b5cf6', fontFamily: 'var(--font-mono)', marginBottom: 8 }}>
+                    ⏱ {timeout} 设备超时挂载
+                </div>
+            )}
+            {isMain && topDanger.length > 0 && (
+                <div style={{ borderTop: '1px solid var(--ink-100)', paddingTop: 8, marginTop: 'auto' }}>
+                    <div style={{ fontSize: 10, color: 'var(--ink-500)', fontFamily: 'var(--font-mono)', marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.05em' }}>top danger</div>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                        {topDanger.slice(0, 3).map(d => (
+                            <Tooltip key={d.mac} title={`score ${d.score} · mac ${d.mac}`}>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 11, padding: '3px 6px', borderRadius: 4, background: 'rgba(239,68,68,0.06)' }}>
+                                    <span style={{ color: 'var(--ink-700)', fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{d.name || d.mac}</span>
+                                    <span style={{ color: '#ef4444', fontWeight: 600, fontFamily: 'var(--font-mono)' }}>{d.score}</span>
+                                </div>
+                            </Tooltip>
+                        ))}
+                    </div>
+                </div>
+            )}
         </div>
     )
 }
 
-function Row({ color, icon, label, value }: { color: string; icon: React.ReactNode; label: string; value: number }) {
+function DistBar({ color, label, count, total }: { color: string; label: string; count: number; total: number }) {
+    const pct = total > 0 ? (count / total) * 100 : 0
     return (
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <span style={{ color, fontSize: 12, display: 'flex', alignItems: 'center' }}>{icon}</span>
-            <span style={{ flex: 1, fontSize: 12, color: 'var(--ink-700)' }}>{label}</span>
-            <span style={{ fontSize: 14, fontWeight: 600, color, fontFamily: 'var(--font-sans)' }}>{value}</span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4 }}>
+            <span style={{ fontSize: 10, color: 'var(--ink-700)', width: 14, fontWeight: 500 }}>{label}</span>
+            <div style={{ flex: 1, height: 5, background: 'var(--ink-100)', borderRadius: 3, overflow: 'hidden' }}>
+                <div style={{ width: `${pct}%`, height: '100%', background: color, borderRadius: 3, transition: 'width .4s' }} />
+            </div>
+            <span style={{ fontSize: 10, fontWeight: 600, color, fontFamily: 'var(--font-mono)', minWidth: 32, textAlign: 'right' }}>{count}</span>
         </div>
     )
 }
