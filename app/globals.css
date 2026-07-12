@@ -857,10 +857,7 @@ html, body {
   [style*="font-size: 48"] {
     font-size: 36px !important;
   }
-  /* 4-列 stat 在 phone 屏 (small) 也只 1 列 (太窄 2 列也挤) */
-  [style*="grid-template-columns: repeat(4"] {
-    grid-template-columns: 1fr !important;
-  }
+  /* 4-列 stat 在 phone 屏 (small) 仍 2 列 (1 列太空) */
 }
 
 /* Hamburger (mobile 才有) */
