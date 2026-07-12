@@ -135,7 +135,7 @@ export default function AdminDashboardPage() {
 
                 <KpiCard gridColumn="span 3" icon={<ApiOutlined />} label="在线" value={counts.online} trend={`${hero.total > 0 ? Math.round((counts.online / hero.total) * 100) : 0}% 在线率`} trendColor="var(--color-success)" />
                 <KpiCard gridColumn="span 2" icon={null} label="离线" value={counts.offline} trend={`${hero.total > 0 ? Math.round((counts.offline / hero.total) * 100) : 0}%`} trendColor="var(--color-danger)" />
-                <KpiCard gridColumn="span 2" icon={<AlertOutlined />} label="告警" value={(counts.warning ?? 0) + (counts.error ?? 0)} trend={`${counts.warning ?? 0} 告警 · ${counts.error ?? 0} 故障`} trendColor="var(--color-warning)" />
+                <KpiCard gridColumn="span 2" icon={<AlertOutlined />} label="告警" value={(counts.warning ?? 0) + (counts.error ?? 0)} trend={`${counts.warning ?? 0} 告警 · ${counts.error ?? 0} 故障 · 24h trend`} trendColor="var(--color-warning)" />
 
                 {/* ───────── Row 2: LiveControls + 节点状态 ───────── */}
                 <div style={{ gridColumn: 'span 8' }}>

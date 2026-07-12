@@ -91,34 +91,39 @@ export function LiveControls({
 
   // admin 模式: 6 status 计数大数字
   if (variant === 'admin' && counts) {
-    const items: Array<{ key: keyof Uart.AdminStatusCounts; label: string; color: string }> = [
+    const items: Array<{ key: keyof Uart.AdminStatusCounts; label: string; color: string; muted?: boolean }> = [
       { key: 'online', label: '在线', color: 'var(--color-success)' },
       { key: 'offline', label: '离线', color: 'var(--color-danger)' },
-      { key: 'warning', label: '告警', color: 'var(--color-warning)' },
-      { key: 'error', label: '故障', color: '#dc2626' },
-      { key: 'info', label: '提示', color: 'var(--color-info)' },
-      { key: 'idle', label: '空闲', color: 'var(--ink-400)' },
+      { key: 'warning', label: '告警', color: 'var(--color-warning)', muted: true },
+      { key: 'error', label: '故障', color: '#dc2626', muted: true },
+      { key: 'info', label: '提示', color: 'var(--color-info)', muted: true },
+      { key: 'idle', label: '空闲', color: 'var(--ink-400)', muted: true },
     ]
     return (
       <div className="live-controls-v3">
         <h3 className="live-controls-title">
           <ThunderboltOutlined /> {title}
           <span style={{ marginLeft: 'auto', fontSize: 12, color: 'var(--ink-500)', fontWeight: 400 }}>
-            3 秒前更新
+            3 秒前更新 · terminal.status live
           </span>
         </h3>
         <div className="live-controls-grid">
-          {items.map((it) => (
-            <div key={it.key} className="ctrl-tile">
-              <div className="ctrl-tile-lbl">{it.label}</div>
-              <div className="ctrl-tile-val" style={{ color: it.color }}>
-                {counts[it.key] ?? 0}
+          {items.map((it) => {
+            const v = counts[it.key] ?? 0
+            const isZero = v === 0
+            const dim = it.muted && isZero
+            return (
+              <div key={it.key} className="ctrl-tile" style={{ opacity: dim ? 0.5 : 1 }}>
+                <div className="ctrl-tile-lbl">{it.label}</div>
+                <div className="ctrl-tile-val" style={{ color: dim ? 'var(--ink-400)' : it.color }}>
+                  {v}
+                </div>
+                <div className="ctrl-tile-foot">
+                  <span style={{ fontSize: 11, color: 'var(--ink-500)' }}>{refreshMs / 1000}s refresh</span>
+                </div>
               </div>
-              <div className="ctrl-tile-foot">
-                <span style={{ fontSize: 11, color: 'var(--ink-500)' }}>{refreshMs / 1000}s refresh</span>
-              </div>
-            </div>
-          ))}
+            )
+          })}
         </div>
       </div>
     )
