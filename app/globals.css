@@ -723,19 +723,19 @@ html, body {
     padding: 0 16px 16px !important;
   }
 
-  /* 12 列 Bento 改为 1 列堆叠 — React 渲染 inline style 用 kebab-case (grid-column: span N;), 用属性包含匹配 */
-  [style*="grid-template-columns: repeat(12"] {
+  /* 12 列 Bento 改为 1 列堆叠 — React 渲染 inline style 格式: `grid-column:span N;` (冒号后无空格) */
+  [style*="grid-template-columns:repeat(12"] {
     grid-template-columns: 1fr !important;
   }
-  [style*="grid-column: span "] {
-    grid-column: span 1 !important;
+  [style*="grid-column:span"] {
+    grid-column: span 1 / -1 !important;
   }
 
-  /* KPI 数字缩小 — 同样 React 渲染 font-size: 64px (无引号) */
-  [style*="font-size: 64"] {
+  /* KPI 数字缩小 — React 渲染 font-size:64px (冒号后无空格) */
+  [style*="font-size:64"] {
     font-size: 36px !important;
   }
-  [style*="font-size: 36"] {
+  [style*="font-size:36"] {
     font-size: 24px !important;
   }
 
@@ -768,8 +768,8 @@ html, body {
 }
 
 @media (max-width: 480px) {
-  /* phone 屏: hero 数字更小, layout 更紧凑 */
-  [style*="font-size: 48px"] {
+  /* phone 屏: hero 数字更小, layout 更紧凑 — React 渲染 font-size:48px (无空格) */
+  [style*="font-size:48"] {
     font-size: 36px !important;
   }
 }
