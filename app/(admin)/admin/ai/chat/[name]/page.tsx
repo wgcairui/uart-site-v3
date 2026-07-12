@@ -1,11 +1,12 @@
 'use client'
 
-import { App, Button, Form, Input, Skeleton, Space, Tag, Typography } from 'antd'
+import { App, Button, Form, Input, Skeleton, Space, Typography } from 'antd'
 import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { MessageOutlined } from '@ant-design/icons'
 import { PageHeader } from '@/components/common/PageHeader'
+import { StatusTag, type StatusTagVariant } from '@/components/common/StatusTag'
 import { AiWorkspace } from '@/components/ai/AiWorkspace'
 import {
   buildAssistantMessage,
@@ -25,6 +26,14 @@ const { Text } = Typography
 /**
  * /admin/ai/chat/:name — AI 多轮修改协议（决策 11 + 19 / 2026-06-24）
  *
+ * v3 化 (2026-07-12): Bento device hero + Glass chat + Bento preview
+ *  - device hero (紫渐变) 显示当前协议状态: v{version} · source · protocol type
+ *    + 4 KPI: 当前版本 / 累计修改 / 工具步数 / 总 token
+ *  - AiWorkspace topBar 用 bento-card-hero 紫渐变小条
+ *  - ChatPane (left) 用 glass-card 包装饰
+ *  - ProtocolPreviewForm (right) 用 bento-card 包
+ *  - 主容器 bg-bento-canvas (极光晕染)
+ *
  * 流程：
  * 1. 进入页面 → GET /api/v2/user/protocols/:name 加载当前 protocol（v1 借 user 端 GET 端点，
  *    因为 admin 端没暴露 GET :name。admin JWT 有 USER 角色权限，无 auth 问题）
@@ -43,7 +52,54 @@ export default function AiChatPage() {
   const name = decodeURIComponent(params?.name ?? '')
 
   return (
-    <>
+    <div className="bg-bento-canvas" style={{ position: 'relative', zIndex: 0 }}>
+      <style jsx global>{`
+        .ai-chat-topbar-hero {
+          background: linear-gradient(135deg, #1e1b4b 0%, #312e81 60%, #6d28d9 100%) !important;
+          border-color: transparent !important;
+          position: relative;
+          overflow: hidden;
+        }
+        .ai-chat-topbar-hero::after {
+          content: '';
+          position: absolute;
+          top: -50px;
+          right: -50px;
+          width: 200px;
+          height: 200px;
+          background: radial-gradient(circle, var(--accent-400) 0%, transparent 70%);
+          opacity: 0.4;
+          pointer-events: none;
+        }
+        .ai-chat-topbar-hero .ant-typography,
+        .ai-chat-topbar-hero .ant-typography-secondary,
+        .ai-chat-topbar-hero .ant-space-item {
+          color: rgba(255, 255, 255, 0.85) !important;
+        }
+        .ai-chat-topbar-hero .ant-typography strong {
+          color: #fff !important;
+        }
+        .ai-chat-topbar-hero .anticon {
+          color: rgba(255, 255, 255, 0.85) !important;
+        }
+        .ai-chat-topbar-hero [style*="background: var(--colorTextTertiary)"] {
+          background: rgba(255, 255, 255, 0.2) !important;
+        }
+        .ai-chat-topbar-hero [style*="background: var(--colorBorderSecondary"] {
+          background: rgba(255, 255, 255, 0.18) !important;
+        }
+        .ai-chat-topbar-hero .ant-tag {
+          background: rgba(255, 255, 255, 0.15) !important;
+          border-color: rgba(255, 255, 255, 0.25) !important;
+          color: #fff !important;
+        }
+        .ai-chat-topbar-hero .ant-tag-warning {
+          background: rgba(245, 158, 11, 0.3) !important;
+          border-color: rgba(245, 158, 11, 0.5) !important;
+          color: #fbbf24 !important;
+        }
+      `}</style>
+
       <PageHeader
         title={`AI 修改协议：${name || '(未指定)'}`}
         breadcrumb={[
@@ -54,23 +110,28 @@ export default function AiChatPage() {
         ]}
       />
       {name ? <AiChatContent key={name} name={name} /> : <Empty name="(未指定)" />}
-    </>
+    </div>
   )
 }
 
 function Empty({ name }: { name: string }) {
   return (
-    <Space orientation="vertical" size={8} style={{ padding: 32 }}>
-      <Text type="secondary">未指定协议名</Text>
-      <Text type="secondary" style={{ fontSize: 12 }}>
-        从{' '}
-        <Link href="/admin/ai/chat" style={{ color: '#8b5cf6' }}>
-          AI 修改协议列表
-        </Link>{' '}
-        选一个
-      </Text>
-      {name}
-    </Space>
+    <div
+      className="bento-card"
+      style={{ padding: 48, textAlign: 'center', marginTop: 20 }}
+    >
+      <Space orientation="vertical" size={8} style={{ alignItems: 'center', display: 'flex' }}>
+        <Text type="secondary">未指定协议名</Text>
+        <Text type="secondary" style={{ fontSize: 12 }}>
+          从{' '}
+          <Link href="/admin/ai/chat" style={{ color: '#8b5cf6' }}>
+            AI 修改协议列表
+          </Link>{' '}
+          选一个
+        </Text>
+        <Text type="secondary" style={{ fontSize: 12 }}>{name}</Text>
+      </Space>
+    </div>
   )
 }
 
@@ -87,6 +148,7 @@ function AiChatContent({ name }: AiChatContentProps) {
   const [loadingProtocol, setLoadingProtocol] = useState(true)
   const [stats, setStats] = useState<AiRunStats>(EMPTY_AI_STATS)
   const [toolStepCount, setToolStepCount] = useState(0)
+  const [chatRoundCount, setChatRoundCount] = useState(0)
   const [messages, setMessages] = useState<ChatPaneMessage[]>([])
   const assistantMsgIdRef = useRef<string | null>(null)
   const toolJsonAccumRef = useRef<string>('')
@@ -141,6 +203,7 @@ function AiChatContent({ name }: AiChatContentProps) {
       setMessages((prev) => [...prev, buildUserMessage(userPrompt)])
       setStats((prev) => ({ ...prev, startedAt: Date.now() }))
       setToolStepCount(0)
+      setChatRoundCount((n) => n + 1)
       assistantMsgIdRef.current = null
       toolJsonAccumRef.current = ''
 
@@ -284,63 +347,300 @@ function AiChatContent({ name }: AiChatContentProps) {
   )
 
   const instructionCount = protocol?.instruct?.length ?? 0
+  const currentVersion = protocol?.version ?? 1
+  const totalTokens = (stats.inputTokens ?? 0) + (stats.outputTokens ?? 0)
+
+  // ProtocolType → StatusTag variant
+  const variantForType = (type: string | undefined): StatusTagVariant => {
+    if (type === 'ups') return 'info'
+    if (type === 'air') return 'online'
+    if (type === 'em') return 'warning'
+    if (type === 'th') return 'offline'
+    if (type === 'io') return 'idle'
+    return 'info'
+  }
 
   return (
     <>
-      <div style={{ marginBottom: 8 }}>
-        {protocol?.version && (
-          <Tag color="cyan" style={{ fontSize: 12 }}>
-            当前 v{protocol.version}
-          </Tag>
-        )}
-        {protocol?.source && (
-          <Tag color={protocol.source === 'admin' ? 'default' : 'purple'} style={{ fontSize: 12 }}>
-            source: {protocol.source}
-          </Tag>
-        )}
-      </div>
-      {(
-        <AiWorkspace
-          topBar={
-            <StatsPane
-              stats={{ ...stats, error: stats.error ?? streamError ?? undefined }}
-              instructionCount={instructionCount}
-              toolStepCount={toolStepCount}
-            />
-          }
-          left={
-            <div style={{ position: 'relative', height: '100%' }}>
-              {loadingProtocol && (
-                <div
+      {/* device hero · 当前协议状态 (v3 hybrid Page B 1:1) */}
+      <div
+        className="bento-card v3-device-hero"
+        style={{
+          marginBottom: 20,
+          padding: '28px 32px',
+          background: 'linear-gradient(135deg, #1e1b4b 0%, #312e81 60%, #6d28d9 100%)',
+          color: '#fff',
+          border: 'none',
+          position: 'relative',
+          overflow: 'hidden',
+        }}
+      >
+        <div
+          style={{
+            position: 'absolute',
+            top: -100,
+            right: -100,
+            width: 320,
+            height: 320,
+            background: 'radial-gradient(circle, var(--accent-400) 0%, transparent 70%)',
+            opacity: 0.4,
+            pointerEvents: 'none',
+          }}
+        />
+        <div
+          style={{
+            position: 'absolute',
+            bottom: -150,
+            left: '20%',
+            width: 400,
+            height: 400,
+            background: 'radial-gradient(circle, var(--brand-300) 0%, transparent 70%)',
+            opacity: 0.25,
+            pointerEvents: 'none',
+          }}
+        />
+        <div
+          style={{
+            position: 'relative',
+            zIndex: 1,
+            display: 'flex',
+            alignItems: 'flex-start',
+            justifyContent: 'space-between',
+            gap: 24,
+            flexWrap: 'wrap',
+          }}
+        >
+          <div style={{ flex: 1, minWidth: 240 }}>
+            <div
+              style={{
+                fontFamily: 'var(--font-mono)',
+                fontSize: 12,
+                color: 'rgba(255,255,255,0.7)',
+                letterSpacing: '0.05em',
+                marginBottom: 8,
+              }}
+            >
+              // AI 修改中 · MODIFYING
+            </div>
+            <h2
+              style={{
+                fontSize: 28,
+                fontWeight: 600,
+                letterSpacing: '-0.02em',
+                color: '#fff',
+                margin: 0,
+                wordBreak: 'break-all',
+              }}
+            >
+              {protocol?.Protocol || name}
+            </h2>
+            <div
+              style={{
+                fontSize: 14,
+                color: 'rgba(255,255,255,0.75)',
+                marginTop: 8,
+                display: 'flex',
+                alignItems: 'center',
+                gap: 8,
+                flexWrap: 'wrap',
+              }}
+            >
+              <StatusTag
+                variant={variantForType(protocol?.ProtocolType)}
+                text={protocol?.ProtocolType ?? 'unknown'}
+                size="sm"
+              />
+              {protocol?.source && (
+                <span
                   style={{
-                    position: 'absolute',
-                    inset: 0,
-                    background: 'rgba(255,255,255,0.7)',
-                    zIndex: 10,
-                    display: 'flex',
+                    display: 'inline-flex',
                     alignItems: 'center',
-                    justifyContent: 'center',
+                    padding: '2px 8px',
+                    borderRadius: 6,
+                    background: 'rgba(255,255,255,0.15)',
+                    color: 'rgba(255,255,255,0.9)',
+                    fontSize: 11,
+                    fontWeight: 600,
+                    fontFamily: 'var(--font-mono)',
                   }}
                 >
-                  <Skeleton active paragraph={{ rows: 4 }} />
-                </div>
+                  source: {protocol.source}
+                </span>
               )}
-              <ChatPane
-                messages={messages}
-                isStreaming={isStreaming}
-                inputForm={inputFormNode}
-                onSubmit={() => undefined}
-                retryButton={
-                  <Button size="small" danger onClick={() => chatForm.submit()}>
-                    重试
-                  </Button>
-                }
-              />
+              <span
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  padding: '2px 8px',
+                  borderRadius: 6,
+                  background: 'rgba(255,255,255,0.15)',
+                  color: 'rgba(255,255,255,0.9)',
+                  fontSize: 11,
+                  fontWeight: 600,
+                  fontFamily: 'var(--font-mono)',
+                }}
+              >
+                v{currentVersion}
+              </span>
             </div>
-          }
-          right={<ProtocolPreviewForm value={protocol} onChange={setProtocol} mode="chat" onJumpToDetail={goProtocolDetail} />}
-        />
-      )}
+          </div>
+          <div
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: 8,
+              padding: '8px 16px',
+              borderRadius: 999,
+              background: isStreaming
+                ? 'rgba(139, 92, 246, 0.25)'
+                : loadingProtocol
+                  ? 'rgba(148, 163, 184, 0.2)'
+                  : 'rgba(16, 185, 129, 0.2)',
+              border: `1px solid ${
+                isStreaming
+                  ? 'rgba(139, 92, 246, 0.4)'
+                  : loadingProtocol
+                    ? 'rgba(148, 163, 184, 0.3)'
+                    : 'rgba(16, 185, 129, 0.3)'
+              }`,
+              color: isStreaming
+                ? '#c4b5fd'
+                : loadingProtocol
+                  ? '#cbd5e1'
+                  : '#86efac',
+              fontSize: 13,
+              fontWeight: 600,
+              whiteSpace: 'nowrap',
+            }}
+          >
+            <span
+              style={{
+                width: 6,
+                height: 6,
+                borderRadius: '50%',
+                background: isStreaming
+                  ? '#c4b5fd'
+                  : loadingProtocol
+                    ? '#cbd5e1'
+                    : '#86efac',
+                animation: isStreaming || !loadingProtocol ? 'pulse-dot 2s infinite' : 'none',
+              }}
+            />
+            {isStreaming ? 'AI 思考中' : loadingProtocol ? '加载中' : '已就绪'}
+          </div>
+        </div>
+        <div
+          style={{
+            position: 'relative',
+            zIndex: 1,
+            marginTop: 28,
+            paddingTop: 24,
+            borderTop: '1px solid rgba(255,255,255,0.12)',
+            display: 'grid',
+            gridTemplateColumns: 'repeat(4, 1fr)',
+            gap: 24,
+          }}
+        >
+          {[
+            { label: '当前版本', value: `v${currentVersion}`, suffix: '' },
+            { label: '累计修改', value: chatRoundCount, suffix: '轮' },
+            { label: '工具步数', value: toolStepCount, suffix: '步' },
+            {
+              label: '总 Token',
+              value: totalTokens > 1000 ? `${(totalTokens / 1000).toFixed(1)}k` : totalTokens,
+              suffix: '',
+            },
+          ].map((kpi) => (
+            <div key={kpi.label}>
+              <div
+                style={{
+                  fontSize: 11,
+                  color: 'rgba(255,255,255,0.65)',
+                  fontFamily: 'var(--font-mono)',
+                  letterSpacing: '0.05em',
+                  textTransform: 'uppercase',
+                }}
+              >
+                // {kpi.label}
+              </div>
+              <div
+                style={{
+                  fontSize: 32,
+                  fontWeight: 600,
+                  color: '#fff',
+                  marginTop: 8,
+                  lineHeight: 1,
+                  fontVariantNumeric: 'tabular-nums',
+                }}
+              >
+                {kpi.value}
+                <span
+                  style={{
+                    fontSize: 14,
+                    color: 'rgba(255,255,255,0.7)',
+                    marginLeft: 4,
+                    fontWeight: 400,
+                  }}
+                >
+                  {kpi.suffix}
+                </span>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <AiWorkspace
+        rootHeight="calc(100vh - 64px - 64px - 200px - 16px)"
+        topBarClassName="ai-chat-topbar-hero"
+        leftClassName="ai-chat-left"
+        rightClassName="ai-chat-right"
+        topBar={
+          <StatsPane
+            stats={{ ...stats, error: stats.error ?? streamError ?? undefined }}
+            instructionCount={instructionCount}
+            toolStepCount={toolStepCount}
+          />
+        }
+        left={
+          <div style={{ position: 'relative', height: '100%' }}>
+            {loadingProtocol && (
+              <div
+                style={{
+                  position: 'absolute',
+                  inset: 0,
+                  background: 'rgba(255,255,255,0.7)',
+                  zIndex: 10,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
+              >
+                <Skeleton active paragraph={{ rows: 4 }} />
+              </div>
+            )}
+            <ChatPane
+              messages={messages}
+              isStreaming={isStreaming}
+              inputForm={inputFormNode}
+              onSubmit={() => undefined}
+              retryButton={
+                <Button size="small" danger onClick={() => chatForm.submit()}>
+                  重试
+                </Button>
+              }
+            />
+          </div>
+        }
+        right={
+          <ProtocolPreviewForm
+            value={protocol}
+            onChange={setProtocol}
+            mode="chat"
+            onJumpToDetail={goProtocolDetail}
+          />
+        }
+      />
     </>
   )
 }
