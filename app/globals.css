@@ -1389,6 +1389,7 @@ html, body {
 .scroll-area {
   flex: 1;
   overflow-y: auto;
+  min-height: 0;       /* 关键: 让 flex item 允许收缩, 否则内容撑出 100vh, 滚动失效 */
   padding: 32px;
 }
 
