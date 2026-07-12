@@ -1,6 +1,6 @@
 'use client'
 import { DeleteFilled, WarningFilled } from "@ant-design/icons";
-import { Button, Form, Input, message, Modal, Table } from 'antd'
+import { Button, Form, Input, message, Modal, Space, Table } from 'antd'
 import React, { useEffect, useState } from "react";
 import { addDevType, deleteDevModel, DevTypes, getDevModelStats } from "@/lib/api/fetchRoot";
 import {
@@ -84,6 +84,7 @@ export const DevModel: React.FC = () => {
 
     const [query, setQuery] = useState<PaginationReq>({ page: 1, pageSize: 20, needTotal: true });
     const [searchFields, setSearchFields] = useState<Record<string, string>>({});
+    const [topSearch, setTopSearch] = useState('');
     /** 设备类型 stat 筛选：多选叠加 */
     const [statFilter, setStatFilter] = useState<string[]>([]);
     const [visible, setVisible] = useState(false);
@@ -130,14 +131,35 @@ export const DevModel: React.FC = () => {
         setQuery(prev => ({ ...prev, page: 1 }));
     };
 
+    const handleTopSearch = (val: string) => {
+        // 同时清空列头 filter + 设 top search (搜索 "DevModel" 字段)
+        if (val) {
+            setSearchFields({ DevModel: val });
+        } else {
+            setSearchFields({});
+        }
+        setQuery(prev => ({ ...prev, page: 1 }));
+    };
+
     return (
         <div className="bg-bento-canvas" style={{ position: 'relative', zIndex: 0, padding: '0 32px 32px' }}>
             <PageHeader
                 title="设备类型"
                 extra={
-                    <Button type="primary" onClick={() => { setEditingItem(null); setVisible(true); }}>
-                        添加设备
-                    </Button>
+                    <Space>
+                        <Input.Search
+                            placeholder="搜索设备型号 (DevModel)"
+                            value={topSearch}
+                            onChange={e => setTopSearch(e.target.value)}
+                            onSearch={handleTopSearch}
+                            enterButton
+                            style={{ width: 280 }}
+                            allowClear
+                        />
+                        <Button type="primary" onClick={() => { setEditingItem(null); setVisible(true); }}>
+                            添加设备
+                        </Button>
+                    </Space>
                 }
             />
             <PageSummary
