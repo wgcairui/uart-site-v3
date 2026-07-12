@@ -190,6 +190,7 @@ html, body {
 /* Bento Canvas 背景（极光晕染） */
 .bg-bento-canvas {
   position: relative;
+  padding: 0 32px 32px;     /* canvas 内容留白 — hybrid 基准；mobile @media 单独覆盖 */
   background:
     radial-gradient(at 0% 0%, var(--brand-100) 0%, transparent 50%),
     radial-gradient(at 100% 100%, #fce7f3 0%, transparent 50%),

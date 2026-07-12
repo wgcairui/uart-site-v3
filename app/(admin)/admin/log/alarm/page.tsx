@@ -5,7 +5,7 @@ import { getColumnSearchProp } from '@/lib/utils/tableCommon'
 
 export const LogAlarm: React.FC = () => {
   return (
-    <div className="bg-bento-canvas" style={{ position: 'relative', zIndex: 0, padding: '0 32px 32px' }}>
+    <div className="bg-bento-canvas" style={{ position: 'relative', zIndex: 0 }}>
       <Log
         lastDay={30}
         dataFun={loguartterminaldatatransfinites}
