@@ -1332,6 +1332,108 @@ html, body {
   }
 }
 
+/* =============================================================
+ * admin nodes 移动端卡片视图（P0-3 · 2026-07-12）
+ * 解决 9 列表格在 < 768px 视口列挤压、列头重叠、Token 鉴权 chip
+ * 盖离线 badge、操作列竖排问题
+ * ============================================================= */
+.nodes-mobile-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 4px 0 16px;
+}
+.node-mobile-card {
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(139, 92, 246, 0.1);
+  border-radius: 16px;
+  padding: 16px;
+  box-shadow: 0 2px 8px -4px rgba(99, 102, 241, 0.1);
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+.node-mobile-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid rgba(139, 92, 246, 0.08);
+}
+.node-mobile-card-header .node-name {
+  font-weight: 600;
+  font-size: 15px;
+  color: var(--ink-900, #1e293b);
+  word-break: break-all;
+  flex: 1;
+  min-width: 0;
+}
+.node-mobile-card-body {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 13px;
+}
+.node-mobile-card-body .kv {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  min-height: 22px;
+}
+.node-mobile-card-body .kv > span:first-child {
+  color: var(--ink-500, #94a3b8);
+  font-size: 12px;
+  flex-shrink: 0;
+}
+.node-mobile-card-body .kv > span:last-child {
+  color: var(--ink-900, #1e293b);
+  font-weight: 500;
+  font-family: var(--font-mono, ui-monospace, monospace);
+  text-align: right;
+  word-break: break-all;
+  min-width: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  justify-content: flex-end;
+}
+.node-mobile-card-actions {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin-top: 12px;
+  padding-top: 10px;
+  border-top: 1px solid rgba(139, 92, 246, 0.08);
+}
+.node-mobile-card-actions .ant-btn {
+  width: 100%;
+  min-width: 0;
+  padding: 4px 6px;
+  font-size: 12px;
+}
+.node-mobile-card-actions .ant-btn .anticon {
+  font-size: 12px;
+}
+.node-mobile-empty {
+  text-align: center;
+  padding: 40px 16px;
+  color: var(--ink-500, #94a3b8);
+  font-size: 13px;
+  background: rgba(255, 255, 255, 0.4);
+  border-radius: 16px;
+  border: 1px dashed rgba(139, 92, 246, 0.15);
+}
+@media (max-width: 360px) {
+  .node-mobile-card-actions {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
 /* 已废弃 class（保留兼容） */
 .chat-pane-input-form-container {
   /* 旧版 ChatPane inputForm 容器（2026-06-27 改为 form 独立 section） */
