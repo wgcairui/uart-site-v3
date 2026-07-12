@@ -54,8 +54,10 @@ export function HealthScoreBento({ refreshTick }: { refreshTick: number }) {
     const score = health?.score ?? fallback!.score
     const total = health?.total ?? fallback!.total
     const timeout = fallback?.timeout ?? 0
+    // fallback 6-status 时 distribution 用 count 数 (snapshot 永远 0/0/0/0 因为 G1 没修, 这里 e2e 看着像 0 实际是 fallback 简化的)
     const dist = health?.distribution ?? { excellent: 0, good: Math.round(total * 0.65), warning: Math.round(total * 0.30), danger: 0 }
     const topDanger = health?.topDanger ?? []
+    const source = isMain ? '4D algo · getDeviceHealth' : 'fallback 6-status (snapshot)'
 
     const color = score >= 80 ? '#10b981' : score >= 60 ? '#3b82f6' : score >= 40 ? '#f59e0b' : '#ef4444'
     const radius = 56
@@ -67,9 +69,11 @@ export function HealthScoreBento({ refreshTick }: { refreshTick: number }) {
         <div className="bento-card" style={{ padding: 24, height: '100%', display: 'flex', flexDirection: 'column' }}>
             <h3 style={{ fontSize: 14, fontWeight: 600, color: 'var(--ink-900)', marginBottom: 12, display: 'flex', alignItems: 'center', gap: 8 }}>
                 <HeartFilled style={{ color: '#ec4899' }} /> 设备健康度
-                <span style={{ fontSize: 10, color: 'var(--ink-500)', fontWeight: 400, fontFamily: 'var(--font-mono)' }}>
-                    {isMain ? '4D algo' : 'fallback 6-status'}
-                </span>
+                <Tooltip title={source}>
+                    <span style={{ fontSize: 10, color: isMain ? 'var(--color-success)' : 'var(--ink-500)', fontWeight: 400, fontFamily: 'var(--font-mono)', cursor: 'help', borderBottom: '1px dotted var(--ink-300)' }}>
+                        {isMain ? '4D algo' : 'fallback 6-status'}
+                    </span>
+                </Tooltip>
             </h3>
             <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 12 }}>
                 <div style={{ position: 'relative', width: 132, height: 132, flexShrink: 0 }}>
