@@ -793,6 +793,19 @@ html, body {
     display: block !important;
   }
 
+  /* Topbar 菜单: admin 端 (Sider 已隐藏) 显示 hamburger (admin 端没有 nav, 走 drawer) */
+  .admin-topbar-hamburger {
+    display: flex !important;
+  }
+  .admin-mobile-drawer-mask {
+    display: block !important;
+  }
+  /* admin 端: topbar 内容 (breadcrumb) 给 hamburger 留 56px 左侧 padding,
+     避免 40px 宽的按钮盖在面包屑上 */
+  .app-topbar {
+    padding-left: 60px !important;
+  }
+
   /* device hero 缩 */
   [class*="v3-device-hero"] {
     padding: 20px !important;
@@ -895,6 +908,86 @@ html, body {
   flex-direction: column;
   gap: 8px;
   box-shadow: -8px 0 24px -8px rgba(0, 0, 0, 0.15);
+}
+
+/* =============================================================
+ * Admin mobile hamburger + drawer (跟 user 端 1:1 对称)
+ * - hamburger 默认 hidden, mobile @media 才显示
+ * - drawer 从左侧滑出 (跟 desktop Sider 同侧, 用户直觉一致)
+ * - 16 个 admin 菜单项 (5 分组) 都在 drawer 内
+ * ============================================================= */
+
+.admin-topbar-hamburger {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(139, 92, 246, 0.18);
+  cursor: pointer;
+  color: var(--brand-600, #8b5cf6);
+  position: fixed;
+  top: 12px;
+  left: 12px;
+  z-index: 1001;
+  box-shadow: 0 4px 14px -4px rgba(139, 92, 246, 0.28);
+  font-size: 18px;
+  padding: 0;
+}
+
+.admin-mobile-drawer-mask {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.4);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  z-index: 1100;
+}
+
+.admin-mobile-drawer {
+  position: fixed;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  width: min(320px, 82vw);
+  background: var(--bg-panel);
+  z-index: 1101;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  box-shadow: 8px 0 24px -8px rgba(0, 0, 0, 0.18);
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.admin-mobile-drawer-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  border-radius: 8px;
+  font-size: 14px;
+  color: var(--ink-700);
+  text-decoration: none;
+  cursor: pointer;
+  transition: all var(--motion-fast) var(--ease);
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+.admin-mobile-drawer-item:hover {
+  background: var(--brand-50, rgba(139, 92, 246, 0.06));
+  color: var(--brand-600, #8b5cf6);
+}
+.admin-mobile-drawer-item.active {
+  background: linear-gradient(135deg, rgba(139, 92, 246, 0.14) 0%, rgba(244, 114, 182, 0.10) 100%);
+  color: var(--brand-600, #8b5cf6);
+  font-weight: 600;
 }
 
 /* =============================================================
