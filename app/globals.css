@@ -705,6 +705,11 @@ html, body {
  * ============================================================= */
 
 @media (max-width: 768px) {
+  /* 全局兜底: 禁止任何元素引起横向滚动 */
+  html, body {
+    overflow-x: hidden !important;
+  }
+
   /* Sider 折叠成抽屉 (默认隐藏) */
   .app-sider-v3 {
     position: fixed !important;
