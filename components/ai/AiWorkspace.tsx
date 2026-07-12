@@ -39,25 +39,45 @@ export interface AiWorkspaceProps {
   right: ReactNode
   /** 底部面板：协议预览，默认隐藏（生成后才传入） */
   bottomPanel?: ReactNode
+  /** v3 化 (2026-07-12): 可选 className 透传到各 section,
+   *  让 page 端能套 bento-card / glass-card / v3-device-hero 等 design system class */
+  className?: string
+  topBarClassName?: string
+  leftClassName?: string
+  rightClassName?: string
+  /** v3 化 (2026-07-12): 自定义 root height (默认 calc(100vh - 128px)),
+   *  当 page 端加了 device hero 后需要让 AiWorkspace 高度变小 */
+  rootHeight?: string
 }
 
-export function AiWorkspace({ topBar, left, right, bottomPanel }: AiWorkspaceProps) {
+export function AiWorkspace({
+  topBar,
+  left,
+  right,
+  bottomPanel,
+  className,
+  topBarClassName,
+  leftClassName,
+  rightClassName,
+  rootHeight,
+}: AiWorkspaceProps) {
   return (
     <div
-      className="ai-workspace"
+      className={`ai-workspace ${className ?? ''}`.trim()}
       style={{
         display: 'flex',
         flexDirection: 'column',
         gap: 12,
         // 减去 AdminHeader 64 + scroll-area 上下 padding 64 = 128
-        height: 'calc(100vh - 128px)',
+        // v3 化 (2026-07-12): page 端加了 device hero 后用 rootHeight 覆盖
+        height: rootHeight ?? 'calc(100vh - 128px)',
         minHeight: 600,
         padding: '0 0 16px 0',
       }}
     >
       {/* 顶部紧凑横条（实时仪表） */}
       <section
-        className="ai-workspace-topbar"
+        className={`ai-workspace-topbar ${topBarClassName ?? ''}`.trim()}
         style={{
           flexShrink: 0,
           background: 'var(--colorBgContainer, #fff)',
@@ -81,7 +101,7 @@ export function AiWorkspace({ topBar, left, right, bottomPanel }: AiWorkspacePro
         }}
       >
         <section
-          className="ai-workspace-left"
+          className={`ai-workspace-left ${leftClassName ?? ''}`.trim()}
           style={{
             flex: '1 1 0',
             minWidth: 0,
@@ -96,7 +116,7 @@ export function AiWorkspace({ topBar, left, right, bottomPanel }: AiWorkspacePro
           {left}
         </section>
         <section
-          className="ai-workspace-right"
+          className={`ai-workspace-right ${rightClassName ?? ''}`.trim()}
           style={{
             flex: '1.4 1 0',
             minWidth: 0,
