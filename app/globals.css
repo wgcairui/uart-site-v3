@@ -737,12 +737,12 @@ html, body {
     grid-column: span 1 / -1 !important;
   }
 
-  /* 4-列 PageSummary 改 2 列 (mobile): 实测 DOM 是 `grid-template-columns: repeat(4, minmax(0, 1fr))` */
-  [style*="grid-template-columns: repeat(4"] {
+  /* 4-列 PageSummary 改 2 列 (mobile): 实测 React 序列化输出无空格 `grid-template-columns:repeat(4` */
+  [style*="grid-template-columns:repeat(4"] {
     grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
   }
-  /* 3-列 PageSummary 也改 1 列: `grid-template-columns: repeat(3, ...)` */
-  [style*="grid-template-columns: repeat(3"] {
+  /* 3-列 PageSummary 也改 1 列: `grid-template-columns:repeat(3` (无空格) */
+  [style*="grid-template-columns:repeat(3"] {
     grid-template-columns: 1fr !important;
   }
 
