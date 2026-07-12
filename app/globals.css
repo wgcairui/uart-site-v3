@@ -723,25 +723,20 @@ html, body {
     padding: 0 16px 16px !important;
   }
 
-  /* 12 列 Bento 改为 1 列堆叠 */
-  [style*="grid-template-columns: repeat(12, 1fr)"] {
+  /* 12 列 Bento 改为 1 列堆叠 — React 渲染 inline style 用 kebab-case (grid-column: span N;), 用属性包含匹配 */
+  [style*="grid-template-columns: repeat(12"] {
     grid-template-columns: 1fr !important;
   }
-  [style*="gridColumn: 'span 5'"],
-  [style*="gridColumn: 'span 3'"],
-  [style*="gridColumn: 'span 2'"],
-  [style*="gridColumn: 'span 8'"],
-  [style*="gridColumn: 'span 4'"],
-  [style*="gridColumn: 'span 12'"] {
+  [style*="grid-column: span "] {
     grid-column: span 1 !important;
   }
 
-  /* KPI 数字缩小 */
-  [style*="font-size: 64px"] {
-    font-size: 48px !important;
+  /* KPI 数字缩小 — 同样 React 渲染 font-size: 64px (无引号) */
+  [style*="font-size: 64"] {
+    font-size: 36px !important;
   }
-  [style*="font-size: 36px"] {
-    font-size: 28px !important;
+  [style*="font-size: 36"] {
+    font-size: 24px !important;
   }
 
   /* 顶部 header padding 缩 */
