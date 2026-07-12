@@ -5,7 +5,7 @@ import { universalResult, PaginationReq, V2ListResponse } from '@/types'
 export interface runInfo {
     Node: { online: number, all: number }; Protocol: number
     SysInfo: { freemem: string; hostname: string; loadavg: number[]; totalmem: string; type: string; uptime: string; usecpu: number; usemen: number; version: string }
-    Terminal: { online: number, all: number }; TimeOutMonutDev: number; User: { online: number, all: number }; events: number
+    Terminal: { online: number; all: number }; TimeOutMountDev: number; User: { online: number; all: number }; events: number
 }
 
 export interface queryResultSave extends Uart.queryResultSave { _id: string, parentId: string, content?: any }

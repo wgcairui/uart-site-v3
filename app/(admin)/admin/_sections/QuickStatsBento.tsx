@@ -42,7 +42,7 @@ export function QuickStatsBento({ refreshTick }: { refreshTick: number }) {
     const user = info.User || {}
     const protocol = info.Protocol ?? 0
     const node = info.Node || {}
-    const timeout = info.TimeOutMonutDev ?? 0
+    const timeout = info.TimeOutMountDev ?? 0
 
     return (
         <div className="bento-card" style={{ padding: 24, height: '100%' }}>

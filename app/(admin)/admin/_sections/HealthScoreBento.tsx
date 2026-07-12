@@ -34,7 +34,7 @@ export function HealthScoreBento({ refreshTick }: { refreshTick: number }) {
                 setScore(s)
                 setBreakdown({
                     ok, warn, bad, total,
-                    timeout: (r.data as any)?.TimeOutMonutDev ?? 0,
+                    timeout: (r.data as any)?.TimeOutMountDev ?? 0,
                 })
             })
             .catch(() => { })
