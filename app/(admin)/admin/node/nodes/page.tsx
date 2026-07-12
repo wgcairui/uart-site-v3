@@ -410,12 +410,14 @@ export const Nodes: React.FC = () => {
                                 <div className="kv">
                                     <span>鉴权状态</span>
                                     <span>
-                                        {renderAuthBadge(n)}
-                                        {n.hasToken && n.lastSeenAt && (
-                                            <span style={{ fontSize: 11, color: '#7c8aa0', marginLeft: 6 }}>
-                                                {renderLastSeen(n)}
-                                            </span>
-                                        )}
+                                        <div className="chip-stack">
+                                            {renderAuthBadge(n)}
+                                            {n.hasToken && n.lastSeenAt && (
+                                                <span style={{ fontSize: 11, color: '#7c8aa0' }}>
+                                                    {renderLastSeen(n)}
+                                                </span>
+                                            )}
+                                        </div>
                                     </span>
                                 </div>
                                 <div className="kv">

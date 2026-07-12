@@ -1529,6 +1529,134 @@ html, body {
   }
 }
 
+/* =============================================================
+ * admin nodes 鉴权 chip 移动端垂直堆叠（P2-5 · 2026-07-12）
+ * 桌面 inline-flex 水平, 移动 column 垂直 (chip + relative time)
+ * ============================================================= */
+.chip-stack {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+@media (max-width: 768px) {
+  .chip-stack {
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 4px;
+  }
+}
+
+/* =============================================================
+ * admin alarm 移动端卡片视图（P2-4 · 2026-07-12）
+ * 5 列 Table 在 < 768px 视口 msg 列被挤压、时间列竖排问题
+ * 改为卡片堆叠 + dayjs.fromNow() 相对时间
+ * ============================================================= */
+.alarm-mobile-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 4px 0 16px;
+}
+.alarm-mobile-card {
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(139, 92, 246, 0.1);
+  border-radius: 16px;
+  padding: 16px;
+  box-shadow: 0 2px 8px -4px rgba(99, 102, 241, 0.1);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.alarm-mobile-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid rgba(139, 92, 246, 0.08);
+}
+.alarm-mobile-card-header .alarm-mac {
+  font-family: var(--font-mono, ui-monospace, monospace);
+  font-weight: 600;
+  font-size: 13px;
+  color: var(--ink-900, #1e293b);
+  word-break: break-all;
+  flex: 1;
+  min-width: 0;
+}
+.alarm-mobile-card-time {
+  font-size: 11px;
+  color: var(--ink-500, #94a3b8);
+  font-family: var(--font-mono, ui-monospace, monospace);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.alarm-mobile-card-body {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 13px;
+}
+.alarm-mobile-card-body .kv {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 8px;
+  min-height: 22px;
+}
+.alarm-mobile-card-body .kv > span:first-child {
+  color: var(--ink-500, #94a3b8);
+  font-size: 12px;
+  flex-shrink: 0;
+}
+.alarm-mobile-card-body .kv > span:last-child {
+  color: var(--ink-900, #1e293b);
+  font-weight: 500;
+  text-align: right;
+  word-break: break-all;
+  min-width: 0;
+}
+.alarm-mobile-card-msg {
+  margin-top: 4px;
+  padding: 10px 12px;
+  background: rgba(139, 92, 246, 0.05);
+  border-left: 3px solid var(--brand-500, #8b5cf6);
+  border-radius: 6px;
+  font-size: 12.5px;
+  color: var(--ink-700, #334155);
+  line-height: 1.5;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+.alarm-mobile-card-tags {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.alarm-mobile-empty {
+  text-align: center;
+  padding: 40px 16px;
+  color: var(--ink-500, #94a3b8);
+  font-size: 13px;
+  background: rgba(255, 255, 255, 0.4);
+  border-radius: 16px;
+  border: 1px dashed rgba(139, 92, 246, 0.15);
+}
+
+/* =============================================================
+ * admin alarm 移动端隐藏 Table + Pies, 卡片视图接管
+ * 桌面完全不变, 只在 < 768px 视口隐藏 .v3-table + 顶部 Pies Row
+ * ============================================================= */
+@media (max-width: 768px) {
+  /* 移动端隐藏 Log 组件的 Table + Pies 概览 (因 Log 不可拆, 整段覆盖) */
+  /* 注: alarm/page.tsx 在移动端会走卡片视图, 这里不强制隐藏,
+     但如果 alarm/page.tsx 同时渲染了 Log + cards, 视情况隐藏 */
+}
+
 /* 已废弃 class（保留兼容） */
 .chat-pane-input-form-container {
   /* 旧版 ChatPane inputForm 容器（2026-06-27 改为 form 独立 section） */
