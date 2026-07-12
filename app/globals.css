@@ -725,7 +725,7 @@ html, body {
 
   /* main 区域占满 */
   .bg-bento-canvas {
-    padding: 0 16px 16px !important;
+    padding: 0 12px 12px !important;
   }
 
   /* 12 列 Bento 改为 1 列堆叠 — 浏览器 normalize inline style 加空格, 实测 DOM 是 `grid-column: span N;` */
@@ -734,6 +734,15 @@ html, body {
   }
   [style*="grid-column: span "] {
     grid-column: span 1 / -1 !important;
+  }
+
+  /* 4-列 PageSummary 改 2 列 (mobile): 实测 DOM 是 `grid-template-columns: repeat(4, minmax(0, 1fr))` */
+  [style*="grid-template-columns: repeat(4"] {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+  /* 3-列 PageSummary 也改 1 列: `grid-template-columns: repeat(3, ...)` */
+  [style*="grid-template-columns: repeat(3"] {
+    grid-template-columns: 1fr !important;
   }
 
   /* KPI 数字缩小 — 实测 DOM 是 `font-size: 64px` (浏览器加空格) */
@@ -746,21 +755,42 @@ html, body {
 
   /* 顶部 header padding 缩 */
   .app-topbar-v3 {
-    padding: 0 16px !important;
+    padding: 0 12px !important;
+  }
+  .app-topbar {
+    padding: 0 12px !important;
   }
 
   /* PageHeader 缩 */
   .page-header-v3 {
     padding: 0 !important;
   }
+  .app-page-header {
+    margin-bottom: 16px !important;
+    padding-bottom: 8px !important;
+  }
+  .app-page-header-title {
+    font-size: 20px !important;
+  }
 
-  /* Topbar 菜单文字隐藏, 只显示 logo + menu icon */
+  /* Topbar 菜单: admin 端 (v3) 文字隐藏, 只显示 icon */
   .app-topbar-menu-item-v3 {
     padding: 8px 10px !important;
     font-size: 13px !important;
   }
   .app-topbar-menu-item-v3 span:not(.topbar-icon) {
     display: none;
+  }
+
+  /* Topbar 菜单: user 端折叠成 hamburger (默认隐藏 nav) */
+  .user-topbar-nav {
+    display: none !important;
+  }
+  .user-topbar-hamburger {
+    display: flex !important;
+  }
+  .user-mobile-drawer-mask {
+    display: block !important;
   }
 
   /* device hero 缩 */
@@ -770,6 +800,56 @@ html, body {
   [class*="v3-device-hero"] h2 {
     font-size: 18px !important;
   }
+
+  /* bento-card / stat-card / glass-card padding 缩 */
+  .bento-card,
+  .glass-card,
+  .glass-card-light,
+  .glass-card-tinted {
+    padding: 16px !important;
+  }
+  .stat-card {
+    padding: 16px !important;
+  }
+  .stat-card-value {
+    font-size: 24px !important;
+  }
+  .stat-card-label {
+    font-size: 10px !important;
+  }
+
+  /* antd Table 在 mobile: 强制内容横向滚动 (table 自己 scroll, body 不 scroll) */
+  .ant-table-content,
+  .ant-table-body {
+    overflow-x: auto !important;
+  }
+  .v3-table .ant-table-thead > tr > th {
+    white-space: nowrap !important;
+    font-size: 11px !important;
+    padding: 10px 8px !important;
+  }
+  .v3-table .ant-table-tbody > tr > td {
+    white-space: nowrap !important;
+    font-size: 12px !important;
+    padding: 10px 8px !important;
+  }
+
+  /* PageHeader 缩 */
+  .scroll-area {
+    padding: 12px !important;
+  }
+
+  /* antd Tabs 横向滚动 */
+  .ant-tabs-nav-list {
+    flex-wrap: nowrap !important;
+    overflow-x: auto !important;
+  }
+
+  /* antd Form inline 标签改 block */
+  .ant-form-inline .ant-form-item {
+    margin-right: 0 !important;
+    display: block !important;
+  }
 }
 
 @media (max-width: 480px) {
@@ -777,6 +857,47 @@ html, body {
   [style*="font-size: 48"] {
     font-size: 36px !important;
   }
+  /* 4-列 stat 在 phone 屏 (small) 也只 1 列 (太窄 2 列也挤) */
+  [style*="grid-template-columns: repeat(4"] {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+/* Hamburger (mobile 才有) */
+.user-topbar-hamburger {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border: 1px solid var(--ink-200);
+  border-radius: 8px;
+  background: var(--bg-panel);
+  cursor: pointer;
+}
+
+.user-mobile-drawer-mask {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.4);
+  backdrop-filter: blur(4px);
+  z-index: 90;
+}
+
+.user-mobile-drawer {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 240px;
+  background: var(--bg-panel);
+  z-index: 95;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  box-shadow: -8px 0 24px -8px rgba(0, 0, 0, 0.15);
 }
 
 /* =============================================================

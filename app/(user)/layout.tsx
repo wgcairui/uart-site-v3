@@ -30,6 +30,7 @@ export default function UserLayout({ children }: { children: React.ReactNode }) 
     const router = useRouter()
     const pathname = usePathname()
     const isSimulated = useUserStore(s => s.isSimulated)
+    const [mobileNavOpen, setMobileNavOpen] = React.useState(false)
 
     useEffect(() => {
         if (sessionStorage.getItem('simulated') === 'true') {
@@ -82,7 +83,7 @@ export default function UserLayout({ children }: { children: React.ReactNode }) 
             <header className="app-topbar">
                 <div style={{ display: 'flex', alignItems: 'center', gap: 32 }}>
                     <BrandLogo href="/main" />
-                    <nav style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                    <nav className="user-topbar-nav" style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
                         <Link
                             href="/main"
                             className={`app-topbar-menu-item ${pathname === '/main' ? 'active' : ''}`}
@@ -104,9 +105,57 @@ export default function UserLayout({ children }: { children: React.ReactNode }) 
                     </nav>
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                    <button
+                        className="user-topbar-hamburger"
+                        onClick={() => setMobileNavOpen(true)}
+                        aria-label="menu"
+                    >
+                        <IconFont type="icon-changjingguanli" />
+                    </button>
                     <UserDropDown userPage="/main/user" />
                 </div>
             </header>
+
+            {/* 移动端菜单抽屉 */}
+            {mobileNavOpen && (
+                <>
+                    <div
+                        className="user-mobile-drawer-mask"
+                        onClick={() => setMobileNavOpen(false)}
+                    />
+                    <div className="user-mobile-drawer">
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+                            <span style={{ fontSize: 14, fontWeight: 600 }}>菜单</span>
+                            <button
+                                onClick={() => setMobileNavOpen(false)}
+                                style={{ background: 'none', border: 'none', fontSize: 18, cursor: 'pointer', color: 'var(--ink-700)' }}
+                            >×</button>
+                        </div>
+                        <Link
+                            href="/main"
+                            onClick={() => setMobileNavOpen(false)}
+                            className={`app-topbar-menu-item ${pathname === '/main' ? 'active' : ''}`}
+                            style={{ padding: '12px 14px' }}
+                        >
+                            <IconFont type="icon-changjingguanli" /> 所有设备
+                        </Link>
+                        <a
+                            onClick={() => { setMobileNavOpen(false); nav('/main/alarm') }}
+                            className={`app-topbar-menu-item ${pathname?.startsWith('/main/alarm') ? 'active' : ''}`}
+                            style={{ padding: '12px 14px' }}
+                        >
+                            <IconFont type="icon-tixingshixin" /> 告警管理
+                        </a>
+                        <a
+                            onClick={() => { setMobileNavOpen(false); nav('/main/user') }}
+                            className={`app-topbar-menu-item ${pathname?.startsWith('/main/user') ? 'active' : ''}`}
+                            style={{ padding: '12px 14px' }}
+                        >
+                            用户信息
+                        </a>
+                    </div>
+                </>
+            )}
 
             {/* 模拟登录提示 */}
             {isSimulated && (
