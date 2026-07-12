@@ -52,7 +52,7 @@ function DevInner() {
     return (
         (!terminal || !mountDev) ? <Empty />
             :
-            <div className="bg-bento-canvas" style={{ position: 'relative', zIndex: 0, padding: '0 32px 32px' }}>
+            <div className="bg-bento-canvas" style={{ position: 'relative', zIndex: 0 }}>
                 <div
                     className="bento-card v3-device-hero"
                     style={{

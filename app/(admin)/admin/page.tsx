@@ -67,7 +67,7 @@ export default function AdminDashboardPage() {
   return (
     <div
       className="bg-bento-canvas"
-      style={{ position: 'relative', zIndex: 0, padding: '0 32px 32px' }}
+      style={{ position: 'relative', zIndex: 0 }}
     >
       <PageHeader
         title="系统仪表盘"

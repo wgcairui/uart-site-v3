@@ -31,7 +31,7 @@ export default function Terminal() {
     return (
         !terminal ? <Empty />
             :
-            <div className="bg-bento-canvas" style={{ position: 'relative', zIndex: 0, padding: '0 32px 32px' }}>
+            <div className="bg-bento-canvas" style={{ position: 'relative', zIndex: 0 }}>
                 <PageHeader
                     title={terminal.name || id}
                     breadcrumb={[{ title: '首页', href: '/main' }]}
