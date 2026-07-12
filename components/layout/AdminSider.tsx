@@ -174,8 +174,8 @@ export function AdminSider() {
                   title={collapsed ? item.text : undefined}
                   style={
                     collapsed
-                      ? { justifyContent: 'center', padding: '10px 0' }
-                      : { padding: '10px 20px' }
+                      ? { justifyContent: 'center', padding: '8px 0' }
+                      : { padding: '8px 14px' }
                   }
                 >
                   {active && (

@@ -650,6 +650,8 @@ html, body {
 .app-sider-v3 .sider-menu-item-v3:hover {
   background: rgba(255, 255, 255, 0.08);
   color: #fff;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px -4px rgba(139, 92, 246, 0.35);
 }
 .app-sider-v3 .sider-menu-item-v3-active {
   background: linear-gradient(135deg, rgba(139, 92, 246, 0.25) 0%, rgba(244, 114, 182, 0.18) 100%);
