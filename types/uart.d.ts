@@ -1085,4 +1085,68 @@ declare namespace Uart {
         };
         topDanger: { mac: string; name: string; score: number }[];
     }
+
+    // ─── v2 admin user 资源迁移 (server PR #70 / commit 3aacaf1b, 2026-07-13) ───
+    // 离职 user 资源迁移到在职 user, 含 dryRun 预览 + 4 类资源选迁
+    /** POST /api/v2/admin/users/migrate-resources */
+    interface MigrateUserResourcesResp {
+        dryRun: boolean;
+        fromUser: string;
+        toUser: string;
+        fromUserInfo: {
+            user: string;
+            name?: string;
+            tel?: number;
+            userGroup?: string;
+        };
+        toUserInfo: {
+            user: string;
+            name?: string;
+            tel?: number;
+            userGroup?: string;
+        };
+        resources: {
+            devices: {
+                userBindDeviceDocs: number;
+                totalMacs: number;
+                macs: string[];
+                sample: {
+                    user: string;
+                    UTs?: string[];
+                    ECs?: string[];
+                    UTsShare?: string[];
+                    ECsShare?: string[];
+                }[];
+            };
+            alarmSetups: {
+                fromSetupExists: boolean;
+                fromTels: string[];
+                fromMails: string[];
+                fromWxs: string[];
+                fromProtocolSetup_count: number;
+                toSetupExists: boolean;
+                toTels: string[];
+                toMails: string[];
+                toProtocolSetup_count: number;
+            };
+            shareOwner: {
+                terminalsCount: number;
+                terminals: {
+                    DevMac: string;
+                    ownerId: string;
+                    share: boolean;
+                }[];
+            };
+        };
+        migrated: {
+            devices: string;
+            alarmSetups: string;
+            scheduledOps: string;
+            shareOwner: string;
+        };
+        _migrationLogId?: string;
+        reason: string;
+        by: string;
+        at: string;
+    }
 }

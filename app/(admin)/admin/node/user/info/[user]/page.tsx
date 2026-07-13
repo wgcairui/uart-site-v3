@@ -3,8 +3,8 @@ import React, { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { usePromise } from "@/lib/hooks/usePromise";
 import { BindDev, getUser, simulateLogin } from "@/lib/api/fetchRoot"
-import { Spin, Tabs, Button, message } from "antd";
-import { LoginOutlined, PlusOutlined } from "@ant-design/icons";
+import { Spin, Tabs, Button, message, Space } from "antd";
+import { LoginOutlined, PlusOutlined, SwapOutlined } from "@ant-design/icons";
 import { UserAlarmPage } from "@/components/data/UserAlarmPage";
 import { UserDes } from "@/components/data/UserDes";
 import { UserLog } from "@/components/log/UserLog";
@@ -12,6 +12,7 @@ import { TerminalsTable } from "@/components/terminal/TerminalsTable";
 import { TerminalInfo } from "@/components/terminal/TerminalInfo";
 import { TerminalMountDevs } from "@/components/terminal/TerminalMountDevs";
 import { AddUserTerminalModal } from "@/components/common/AddUserTerminalModal";
+import { MigrateUserResourcesModal } from "@/components/admin/MigrateUserResourcesModal";
 import { getTerminal } from "@/lib/api/fetch";
 import { TerminalAT } from "@/components/terminal/TerminalAT";
 import { TerminalOprate } from "@/components/terminal/TerminalOprate";
@@ -78,6 +79,7 @@ export const UserInfo: React.FC = () => {
 
     const [activeKey, setActiveKey] = useState<string>('info');
     const [addModalOpen, setAddModalOpen] = useState(false);
+    const [migrateOpen, setMigrateOpen] = useState(false);
 
     useEffect(() => {
         const handleHashChange = () => {
@@ -121,21 +123,31 @@ export const UserInfo: React.FC = () => {
             <>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
                     <h2 style={{ margin: 0 }}>{data.user}/{data.name}</h2>
-                    <Button
-                        type="primary"
-                        icon={<LoginOutlined />}
-                        onClick={async () => {
-                            const { code, data: tokenData, message: msg } = await simulateLogin(user)
-                            if (code === 200) {
-                                // 跳转到中间页面，由中间页面设置 token 后再跳转
-                                window.open(`/simulate-login?token=${encodeURIComponent(tokenData.token)}`, '_blank')
-                            } else {
-                                message.error(msg || '模拟登录失败')
-                            }
-                        }}
-                    >
-                        模拟登录
-                    </Button>
+                    <Space>
+                        {data.userGroup !== 'root' && (
+                            <Button
+                                icon={<SwapOutlined />}
+                                onClick={() => setMigrateOpen(true)}
+                            >
+                                资源迁移
+                            </Button>
+                        )}
+                        <Button
+                            type="primary"
+                            icon={<LoginOutlined />}
+                            onClick={async () => {
+                                const { code, data: tokenData, message: msg } = await simulateLogin(user)
+                                if (code === 200) {
+                                    // 跳转到中间页面，由中间页面设置 token 后再跳转
+                                    window.open(`/simulate-login?token=${encodeURIComponent(tokenData.token)}`, '_blank')
+                                } else {
+                                    message.error(msg || '模拟登录失败')
+                                }
+                            }}
+                        >
+                            模拟登录
+                        </Button>
+                    </Space>
                 </div>
                 <Tabs activeKey={activeKey} onChange={onTabChange} items={[
                     { key: 'info', label: '详细信息', children: <UserDes user={data}></UserDes> },
@@ -176,6 +188,15 @@ export const UserInfo: React.FC = () => {
                         children: <TerminalInfos mac={ter.DevMac} />,
                     })),
                 ]} />
+                <MigrateUserResourcesModal
+                    visible={migrateOpen}
+                    fromUser={data.user}
+                    onCancel={() => setMigrateOpen(false)}
+                    onSuccess={() => {
+                        // 迁移成功后刷新详情 (因为 toUser 也可能改了)
+                        fecth()
+                    }}
+                />
             </>
     )
 }
