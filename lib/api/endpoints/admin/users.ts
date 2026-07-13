@@ -75,3 +75,24 @@ export const delUserTerminal = (user: string, mac: string) => Del<universalResul
 // force=true: 设备已被其他用户绑定时强行接管（解绑原用户并转给新用户）
 export const bindUserDevice = (user: string, mac: string, force = false) =>
   Post<universalResult<any>>(`/api/v2/admin/users/${encodeURIComponent(user)}/devices`, { mac, force })
+
+// Admin: migrateUserResources — 离职 user 资源迁移 UI 入口 (sibling PR #70 / commit 3aacaf1b)
+// v2: POST /api/v2/admin/users/migrate-resources
+//   - dryRun=true  时只扫描不写, 返回 resources 预览
+//   - dryRun=false 时真正迁移, 返回 migrated 结果
+//   - migrate.XXX = false 跳过对应资源
+// 4 类错误: 400 (validation) / 403 (no perm) / 404 (fromUser/toUser 不存在) / 409 (lock 30s)
+export interface MigrateUserResourcesReq {
+  fromUser: string
+  toUser: string
+  dryRun?: boolean
+  migrate?: {
+    devices?: boolean
+    alarmSetups?: boolean
+    scheduledOps?: boolean
+    shareOwner?: boolean
+  }
+  reason?: string
+}
+export const migrateUserResources = (req: MigrateUserResourcesReq) =>
+  Post<universalResult<Uart.MigrateUserResourcesResp>>('/api/v2/admin/users/migrate-resources', req)

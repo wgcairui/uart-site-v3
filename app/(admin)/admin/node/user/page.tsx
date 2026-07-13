@@ -1,7 +1,9 @@
 'use client'
 import React, { useState } from "react";
 import { deleteUser, getUser, sendUserSocketInfo, users as getUsers, getUserStats } from "@/lib/api/fetchRoot"
-import { Avatar, Button, Col, Divider, message, Modal, Row, Table, Tag, Descriptions } from "antd";
+import { Avatar, Button, Col, Divider, message, Modal, Row, Table, Tag, Descriptions, Space } from "antd";
+import { SwapOutlined } from "@ant-design/icons";
+import { MigrateUserResourcesModal } from "@/components/admin/MigrateUserResourcesModal";
 import {
 	generateTableKey,
 	makeServerSearchProp,
@@ -26,6 +28,8 @@ export const User: React.FC = () => {
     });
 
     const [searchFields, setSearchFields] = useState<Record<string, string>>({});
+    const [migrateOpen, setMigrateOpen] = useState(false);
+    const [migrateFrom, setMigrateFrom] = useState<string | undefined>(undefined);
 
     // Merged query for API: page/sort params + search keywords
     const apiQuery: PaginationReq = { ...query, search: searchFields };
@@ -200,15 +204,32 @@ export const User: React.FC = () => {
                     {
                         title: '操作',
                         key: 'oprate',
-                        width: 120,
-                        render: (_, user) => <>
+                        width: 140,
+                        render: (_, user) => <Space size={4} wrap>
                             <Button type="link" onClick={() => nav(`/admin/node/user/info/${encodeURIComponent(user.user)}`)}>查看</Button>
                             <Button type="link" onClick={() => updateUser(user.user)}>更新</Button>
-                            {user.userGroup !== 'root' && <Button type="link" onClick={() => deletUser(user)}>删除</Button>}
+                            {user.userGroup !== 'root' && <>
+                                <Button type="link" icon={<SwapOutlined />} onClick={() => {
+                                    setMigrateFrom(user.user)
+                                    setMigrateOpen(true)
+                                }}>迁移</Button>
+                                <Button type="link" onClick={() => deletUser(user)}>删除</Button>
+                            </>}
                             <Button type="link" onClick={() => sendUserInfo(user.user)}>发送实时消息</Button>
-                        </>
+                        </Space>
                     }
                 ] as ColumnsType<Uart.UserInfo>}
+            />
+            <MigrateUserResourcesModal
+                visible={migrateOpen}
+                {...(migrateFrom ? { fromUser: migrateFrom } : {})}
+                onCancel={() => {
+                    setMigrateOpen(false)
+                    setMigrateFrom(undefined)
+                }}
+                onSuccess={() => {
+                    fecth()
+                }}
             />
         </div>
     )
