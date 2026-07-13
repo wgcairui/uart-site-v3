@@ -1,14 +1,20 @@
 'use client'
 import { useEffect, useState } from 'react'
 import { Spin } from 'antd'
-import { getAdminTileHistory } from '@/lib/api/endpoints/admin/dashboard'
+import { getAdminTileHistory, getAdminTileCounts } from '@/lib/api/endpoints/admin/dashboard'
 
 /**
  * 趋势 bento (v4 增强 · 决策 C + sibling d81dbeb 2026-07-12)
  *
- * 数据源: /api/v2/admin/dashboard/tiles/:name/history
- *   - 7d  (默认, hours=168, granularity=hour)
- *   - 30d (hours=720, granularity=day)  ← sibling PR-B 扩展
+ * 数据源:
+ *   - 历史: /api/v2/admin/dashboard/tiles/offline/history?hours=168|720&granularity=hour|day
+ *     ← sibling PR-B 端点: log.terminalEvents kind=TERMINAL_OFFLINE 桶聚合
+ *   - 当前快照: /api/v2/admin/dashboard/tiles
+ *     ← fallback: 当 history 端点返全 0 (server 端没 emit TERMINAL_OFFLINE 事件) 时,
+ *        拿当前 online/offline 数字显示快照, 等 sibling emit 实现后自动显示真趋势
+ *
+ * ⚠️ 已知 sibling P0: server 端从未 emit TERMINAL_OFFLINE 事件 (terminalEvents collection 0 docs)
+ *    在 sibling 修之前, 7d/30d trend 会全 0, 这里用 tileCounts 兜底显示当前 snapshot
  *
  * 切换: 7天 / 30天 按钮
  */
@@ -20,22 +26,31 @@ const MODE_CONFIG: Record<Mode, { hours: number; granularity: 'hour' | 'day'; la
 
 export function TrendChartBento({ refreshTick }: { refreshTick?: number }) {
     const [mode, setMode] = useState<Mode>('7d')
-    const [onlineBuckets, setOnlineBuckets] = useState<any[]>([])
     const [offlineBuckets, setOfflineBuckets] = useState<any[]>([])
+    const [snapshot, setSnapshot] = useState<{ online: number; offline: number; total: number } | null>(null)
     const [loading, setLoading] = useState(true)
+    const [dataEmpty, setDataEmpty] = useState(false)
 
     useEffect(() => {
         let alive = true
         setLoading(true)
         const cfg = MODE_CONFIG[mode]
         Promise.all([
-            getAdminTileHistory('online', cfg.hours, cfg.granularity),
             getAdminTileHistory('offline', cfg.hours, cfg.granularity),
+            getAdminTileCounts(),
         ])
-            .then(([on, off]) => {
+            .then(([off, counts]) => {
                 if (!alive) return
-                setOnlineBuckets(on.data.buckets || [])
-                setOfflineBuckets(off.data.buckets || [])
+                const buckets = off.data.buckets || []
+                setOfflineBuckets(buckets)
+                const totalCount = buckets.reduce((s: number, b: any) => s + (b.count || 0), 0)
+                setDataEmpty(totalCount === 0)
+                const c = counts.data || {}
+                setSnapshot({
+                    online: c.online ?? 0,
+                    offline: c.offline ?? 0,
+                    total: (c.online ?? 0) + (c.offline ?? 0),
+                })
             })
             .catch(() => { })
             .finally(() => alive && setLoading(false))
@@ -47,11 +62,10 @@ export function TrendChartBento({ refreshTick }: { refreshTick?: number }) {
     const cfg = MODE_CONFIG[mode]
     const max = Math.max(
         1,
-        ...onlineBuckets.map((b: any) => b.count || 0),
         ...offlineBuckets.map((b: any) => b.count || 0),
     )
-    const todayDay = new Date().toISOString().split('T')[0]?.slice(5) // MM-DD
-    const todayHour = new Date().toISOString().slice(5, 13) // MM-DDTHH
+    const todayDay = new Date().toISOString().split('T')[0]?.slice(5)
+    const todayHour = new Date().toISOString().slice(5, 13)
 
     const isToday = (b: any) => cfg.granularity === 'day'
         ? b.day?.slice(5) === todayDay
@@ -65,7 +79,12 @@ export function TrendChartBento({ refreshTick }: { refreshTick?: number }) {
                         趋势 · online / offline
                     </h3>
                     <div style={{ color: 'var(--ink-500)', fontSize: 11, marginTop: 4, fontFamily: 'var(--font-mono)' }}>
-                        {cfg.label} · {cfg.granularity} granularity · {onlineBuckets.length} buckets
+                        {cfg.label} · {cfg.granularity} granularity · {offlineBuckets.length} buckets
+                        {dataEmpty && snapshot && (
+                            <span style={{ marginLeft: 8, color: 'var(--accent-500, #f59e0b)' }}>
+                                · 历史 0 (server emit 待实现) → 当前快照
+                            </span>
+                        )}
                     </div>
                 </div>
                 <div style={{ display: 'flex', gap: 4, background: 'var(--ink-50)', borderRadius: 8, padding: 3 }}>
@@ -87,31 +106,65 @@ export function TrendChartBento({ refreshTick }: { refreshTick?: number }) {
                     ))}
                 </div>
             </div>
-            <div style={{ marginTop: 20, display: 'flex', alignItems: 'flex-end', gap: cfg.granularity === 'day' ? 6 : 4, height: 140, paddingTop: 8 }}>
-                {onlineBuckets.map((b: any, i: number) => {
-                    const height = `${((b.count || 0) / max) * 100}%`
-                    const today = isToday(b)
-                    return (
-                        <div
-                            key={cfg.granularity === 'day' ? b.day : b.hour}
-                            style={{
-                                flex: 1, height, borderRadius: '6px 6px 0 0',
-                                background: today
-                                    ? 'linear-gradient(180deg, var(--accent-400), #ec4899)'
-                                    : 'linear-gradient(180deg, var(--brand-300), var(--brand-500))',
-                                position: 'relative', transition: 'all .3s', minHeight: 4,
-                            }}
-                            title={`${cfg.granularity === 'day' ? b.day : b.hour} · ${b.count}`}
-                        >
-                            {(b.count || 0) > 0 && cfg.granularity === 'day' && (
-                                <span style={{ position: 'absolute', top: -18, left: '50%', transform: 'translateX(-50%)', fontSize: 10, fontFamily: 'var(--font-mono)', fontWeight: 600, color: 'var(--ink-900)' }}>
-                                    {b.count}
-                                </span>
-                            )}
+
+            {dataEmpty && snapshot ? (
+                // 历史端点全 0 (sibling 未 emit TERMINAL_OFFLINE) → 显示当前快照 fallback
+                <div style={{ marginTop: 24, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 32, height: 140 }}>
+                    <div style={{ textAlign: 'center' }}>
+                        <div style={{ fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.1em', color: 'var(--ink-500)', fontFamily: 'var(--font-mono)' }}>
+                            当前 online
                         </div>
-                    )
-                })}
-            </div>
+                        <div style={{ fontSize: 36, fontWeight: 600, color: 'var(--brand-600, #7c3aed)', fontFamily: 'var(--font-sans)', marginTop: 4 }}>
+                            {snapshot.online}
+                        </div>
+                    </div>
+                    <div style={{ width: 1, height: 64, background: 'var(--ink-200, #e5e7eb)' }} />
+                    <div style={{ textAlign: 'center' }}>
+                        <div style={{ fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.1em', color: 'var(--ink-500)', fontFamily: 'var(--font-mono)' }}>
+                            当前 offline
+                        </div>
+                        <div style={{ fontSize: 36, fontWeight: 600, color: 'var(--ink-500, #6b7280)', fontFamily: 'var(--font-sans)', marginTop: 4 }}>
+                            {snapshot.offline}
+                        </div>
+                    </div>
+                    <div style={{ width: 1, height: 64, background: 'var(--ink-200, #e5e7eb)' }} />
+                    <div style={{ textAlign: 'center' }}>
+                        <div style={{ fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.1em', color: 'var(--ink-500)', fontFamily: 'var(--font-mono)' }}>
+                            总数
+                        </div>
+                        <div style={{ fontSize: 36, fontWeight: 600, color: 'var(--ink-900)', fontFamily: 'var(--font-sans)', marginTop: 4 }}>
+                            {snapshot.total}
+                        </div>
+                    </div>
+                </div>
+            ) : (
+                <div style={{ marginTop: 20, display: 'flex', alignItems: 'flex-end', gap: cfg.granularity === 'day' ? 6 : 4, height: 140, paddingTop: 8 }}>
+                    {offlineBuckets.map((b: any, i: number) => {
+                        const height = `${((b.count || 0) / max) * 100}%`
+                        const today = isToday(b)
+                        return (
+                            <div
+                                key={cfg.granularity === 'day' ? b.day : b.hour}
+                                style={{
+                                    flex: 1, height, borderRadius: '6px 6px 0 0',
+                                    background: today
+                                        ? 'linear-gradient(180deg, var(--accent-400), #ec4899)'
+                                        : 'linear-gradient(180deg, var(--brand-300), var(--brand-500))',
+                                    position: 'relative', transition: 'all .3s', minHeight: 4,
+                                }}
+                                title={`${cfg.granularity === 'day' ? b.day : b.hour} · offline 翻转 ${b.count}`}
+                            >
+                                {(b.count || 0) > 0 && cfg.granularity === 'day' && (
+                                    <span style={{ position: 'absolute', top: -18, left: '50%', transform: 'translateX(-50%)', fontSize: 10, fontFamily: 'var(--font-mono)', fontWeight: 600, color: 'var(--ink-900)' }}>
+                                        {b.count}
+                                    </span>
+                                )}
+                            </div>
+                        )
+                    })}
+                </div>
+            )}
+
             <div style={{ marginTop: cfg.granularity === 'day' ? 8 : 32, display: 'flex', gap: 18, fontSize: 12, color: 'var(--ink-500)' }}>
                 <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
                     <span style={{ width: 9, height: 9, borderRadius: 2, background: 'var(--brand-400)' }} />
@@ -121,9 +174,9 @@ export function TrendChartBento({ refreshTick }: { refreshTick?: number }) {
                     <span style={{ width: 9, height: 9, borderRadius: 2, background: 'var(--ink-300)' }} />
                     offline
                 </span>
-                {cfg.granularity === 'day' && onlineBuckets.length > 0 && (
+                {!dataEmpty && cfg.granularity === 'day' && offlineBuckets.length > 0 && (
                     <span style={{ marginLeft: 'auto', fontSize: 11, fontFamily: 'var(--font-mono)' }}>
-                        {onlineBuckets[0].day} → {onlineBuckets[onlineBuckets.length - 1].day}
+                        {offlineBuckets[0].day} → {offlineBuckets[offlineBuckets.length - 1].day}
                     </span>
                 )}
             </div>

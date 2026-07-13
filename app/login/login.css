@@ -199,6 +199,23 @@
   box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
 }
 
+/* dev 登录按钮 (NEXT_PUBLIC_HAS_DEV_CREDS=1 才显示, 紫色 dev 标识) */
+.login-page .login-form-button-dev {
+  width: 100%;
+  height: 44px;
+  font-size: 14px;
+  background: transparent !important;
+  color: var(--color-brand-600, #7c3aed) !important;
+  border: 1px dashed var(--color-brand-500, #8b5cf6) !important;
+  font-weight: 500;
+  border-radius: var(--radius-xl) !important;
+  margin-top: 9px;
+}
+.login-page .login-form-button-dev:hover {
+  background: rgba(124, 58, 237, 0.06) !important;
+  border-style: solid !important;
+}
+
 .login-page .hidden-sm-and-down {
   display: flex;
   justify-content: center;
