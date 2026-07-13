@@ -136,11 +136,11 @@ export default function Terminals() {
         }
     ];
 
-    const total = stats
-        ? stats.onlines.reduce((s, x) => s + (x.type === 'onlines' ? x.value : 0), 0)
-        : 0
-    const onlines = stats?.onlines?.find(x => x.type === 'onlines')?.value ?? 0
-    const offlines = stats?.onlines?.find(x => x.type === 'offlines')?.value ?? 0
+    // server `admin-dashboard.controller.ts getTerminalStats()` 用 $group by online 字段,
+    // 返回 onlines: [{type: 'true', value: N}, {type: 'false', value: M}] —— type 是 online 字段值字符串
+    const total = stats?.onlines?.reduce((s, x) => s + x.value, 0) ?? 0
+    const onlines = stats?.onlines?.find(x => x.type === 'true')?.value ?? 0
+    const offlines = stats?.onlines?.find(x => x.type === 'false')?.value ?? 0
     const nodes = stats?.nodes?.reduce((s, x) => s + x.value, 0) ?? 0
 
     return (
@@ -156,7 +156,7 @@ export default function Terminals() {
                     ]}
                 />
             </div>
-            <div className="bento-card" style={{ marginBottom: 20 }}>
+            <div className="bento-card" style={{ marginBottom: 20, padding: 24 }}>
                 <Tabs items={items} destroyOnHidden />
             </div>
             <Modal

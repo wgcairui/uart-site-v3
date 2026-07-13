@@ -190,6 +190,7 @@ html, body {
 /* Bento Canvas 背景（极光晕染） */
 .bg-bento-canvas {
   position: relative;
+  padding: 0 32px 32px;     /* canvas 内容留白 — hybrid 基准；mobile @media 单独覆盖 */
   background:
     radial-gradient(at 0% 0%, var(--brand-100) 0%, transparent 50%),
     radial-gradient(at 100% 100%, #fce7f3 0%, transparent 50%),
@@ -630,6 +631,670 @@ html, body {
 }
 
 /* =============================================================
+ * Sider v3 (深色玻璃风) — hybrid Page A
+ * ============================================================= */
+
+.app-sider-v3 .sider-menu-item-v3 {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 2px 12px;
+  border-radius: var(--radius-lg);
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.85);
+  cursor: pointer;
+  text-decoration: none;
+  position: relative;
+  transition: all var(--motion-fast) var(--ease);
+}
+.app-sider-v3 .sider-menu-item-v3:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: #fff;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px -4px rgba(139, 92, 246, 0.35);
+}
+.app-sider-v3 .sider-menu-item-v3-active {
+  background: linear-gradient(135deg, rgba(139, 92, 246, 0.25) 0%, rgba(244, 114, 182, 0.18) 100%);
+  color: #fff;
+  font-weight: 600;
+  box-shadow: 0 4px 12px -4px rgba(139, 92, 246, 0.4);
+}
+
+/* =============================================================
+ * Topbar v3 (深色玻璃 + 紫粉) — hybrid Page A
+ * ============================================================= */
+
+.app-topbar-v3 {
+  height: 64px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.95) 0%, rgba(255, 255, 255, 0.85) 100%);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-bottom: 1px solid var(--ink-100);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 32px;
+  flex-shrink: 0;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+.app-topbar-v3 .app-topbar-menu-item-v3 {
+  padding: 8px 14px;
+  border-radius: var(--radius-md);
+  font-size: 14px;
+  color: var(--ink-700);
+  text-decoration: none;
+  cursor: pointer;
+  transition: all var(--motion-fast) var(--ease);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  position: relative;
+}
+.app-topbar-v3 .app-topbar-menu-item-v3:hover {
+  background: var(--brand-50);
+  color: var(--brand-600);
+}
+.app-topbar-v3 .app-topbar-menu-item-v3.active {
+  background: var(--brand-50);
+  color: var(--brand-600);
+  font-weight: 600;
+}
+
+/* =============================================================
+ * 移动端响应式 (v3 hybrid Page D)
+ * 跟 hybrid.html mobile preview 3 屏风格: 2 列 Bento + 1 大 hero + tab bar
+ * ============================================================= */
+
+@media (max-width: 768px) {
+  /* 全局兜底: 禁止任何元素引起横向滚动 */
+  html, body {
+    overflow-x: hidden !important;
+  }
+
+  /* Sider 折叠成抽屉 (默认隐藏) */
+  .app-sider-v3 {
+    position: fixed !important;
+    left: -240px;
+    top: 0;
+    height: 100vh;
+    z-index: 100;
+    transition: left .25s cubic-bezier(.4, 0, .2, 1);
+  }
+  .app-sider-v3.sider-mobile-open {
+    left: 0;
+  }
+
+  /* main 区域占满 */
+  .bg-bento-canvas {
+    padding: 0 12px 12px !important;
+  }
+
+  /* 12 列 Bento 改为 1 列堆叠 — 浏览器 normalize inline style 加空格, 实测 DOM 是 `grid-column: span N;` */
+  [style*="grid-template-columns: repeat(12"] {
+    grid-template-columns: 1fr !important;
+  }
+  [style*="grid-column: span "] {
+    grid-column: span 1 / -1 !important;
+  }
+
+  /* 4-列 PageSummary 改 2 列 (mobile): 实测 React 序列化输出无空格 `grid-template-columns:repeat(4` */
+  [style*="grid-template-columns:repeat(4"] {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+  /* 3-列 PageSummary 也改 1 列: `grid-template-columns:repeat(3` (无空格) */
+  [style*="grid-template-columns:repeat(3"] {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* KPI 数字缩小 — 实测 DOM 是 `font-size: 64px` (浏览器加空格) */
+  [style*="font-size: 64"] {
+    font-size: 36px !important;
+  }
+  [style*="font-size: 36"] {
+    font-size: 24px !important;
+  }
+
+  /* 顶部 header padding 缩 */
+  .app-topbar-v3 {
+    padding: 0 12px !important;
+  }
+  .app-topbar {
+    padding: 0 12px !important;
+  }
+
+  /* PageHeader 缩 */
+  .page-header-v3 {
+    padding: 0 !important;
+  }
+  .app-page-header {
+    margin-bottom: 16px !important;
+    padding-bottom: 8px !important;
+  }
+  .app-page-header-title {
+    font-size: 20px !important;
+  }
+
+  /* Topbar 菜单: admin 端 (v3) 文字隐藏, 只显示 icon */
+  .app-topbar-menu-item-v3 {
+    padding: 8px 10px !important;
+    font-size: 13px !important;
+  }
+  .app-topbar-menu-item-v3 span:not(.topbar-icon) {
+    display: none;
+  }
+
+  /* Topbar 菜单: user 端折叠成 hamburger (默认隐藏 nav) */
+  .user-topbar-nav {
+    display: none !important;
+  }
+  .user-topbar-hamburger {
+    display: flex !important;
+  }
+  .user-mobile-drawer-mask {
+    display: block !important;
+  }
+
+  /* Topbar 菜单: admin 端 (Sider 已隐藏) 显示 hamburger (admin 端没有 nav, 走 drawer) */
+  .admin-topbar-hamburger {
+    display: flex !important;
+  }
+  .admin-mobile-drawer-mask {
+    display: block !important;
+  }
+  /* admin 端: topbar 内容 (breadcrumb) 给 hamburger 留 56px 左侧 padding,
+     避免 40px 宽的按钮盖在面包屑上 */
+  .app-topbar {
+    padding-left: 60px !important;
+  }
+
+  /* device hero 缩 */
+  [class*="v3-device-hero"] {
+    padding: 20px !important;
+  }
+  [class*="v3-device-hero"] h2 {
+    font-size: 18px !important;
+  }
+
+  /* bento-card / stat-card / glass-card padding 缩 */
+  .bento-card,
+  .glass-card,
+  .glass-card-light,
+  .glass-card-tinted {
+    padding: 16px !important;
+  }
+  .stat-card {
+    padding: 16px !important;
+  }
+  .stat-card-value {
+    font-size: 24px !important;
+  }
+  .stat-card-label {
+    font-size: 10px !important;
+  }
+
+  /* antd Table 在 mobile: 强制内容横向滚动 (table 自己 scroll, body 不 scroll) */
+  .ant-table-content,
+  .ant-table-body {
+    overflow-x: auto !important;
+  }
+  .v3-table .ant-table-thead > tr > th {
+    white-space: nowrap !important;
+    font-size: 11px !important;
+    padding: 10px 8px !important;
+  }
+  .v3-table .ant-table-tbody > tr > td {
+    white-space: nowrap !important;
+    font-size: 12px !important;
+    padding: 10px 8px !important;
+  }
+
+  /* PageHeader 缩 */
+  .scroll-area {
+    padding: 12px !important;
+  }
+
+  /* antd Tabs 横向滚动 */
+  .ant-tabs-nav-list {
+    flex-wrap: nowrap !important;
+    overflow-x: auto !important;
+  }
+
+  /* antd Form inline 标签改 block */
+  .ant-form-inline .ant-form-item {
+    margin-right: 0 !important;
+    display: block !important;
+  }
+}
+
+@media (max-width: 480px) {
+  /* phone 屏: hero 数字更小, layout 更紧凑 — 实测 DOM 是 `font-size: 48px` (浏览器加空格) */
+  [style*="font-size: 48"] {
+    font-size: 36px !important;
+  }
+  /* 4-列 stat 在 phone 屏 (small) 仍 2 列 (1 列太空) */
+}
+
+/* Hamburger (mobile 才有) */
+.user-topbar-hamburger {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border: 1px solid var(--ink-200);
+  border-radius: 8px;
+  background: var(--bg-panel);
+  cursor: pointer;
+}
+
+.user-mobile-drawer-mask {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.4);
+  backdrop-filter: blur(4px);
+  z-index: 90;
+}
+
+.user-mobile-drawer {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 240px;
+  background: var(--bg-panel);
+  z-index: 95;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  box-shadow: -8px 0 24px -8px rgba(0, 0, 0, 0.15);
+}
+
+/* =============================================================
+ * Admin mobile hamburger + drawer (跟 user 端 1:1 对称)
+ * - hamburger 默认 hidden, mobile @media 才显示
+ * - drawer 从左侧滑出 (跟 desktop Sider 同侧, 用户直觉一致)
+ * - 16 个 admin 菜单项 (5 分组) 都在 drawer 内
+ * ============================================================= */
+
+.admin-topbar-hamburger {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(139, 92, 246, 0.18);
+  cursor: pointer;
+  color: var(--brand-600, #8b5cf6);
+  position: fixed;
+  top: 12px;
+  left: 12px;
+  z-index: 1001;
+  box-shadow: 0 4px 14px -4px rgba(139, 92, 246, 0.28);
+  font-size: 18px;
+  padding: 0;
+}
+
+.admin-mobile-drawer-mask {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.4);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  z-index: 1100;
+}
+
+.admin-mobile-drawer {
+  position: fixed;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  width: min(320px, 82vw);
+  background: var(--bg-panel);
+  z-index: 1101;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  box-shadow: 8px 0 24px -8px rgba(0, 0, 0, 0.18);
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.admin-mobile-drawer-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  border-radius: 8px;
+  font-size: 14px;
+  color: var(--ink-700);
+  text-decoration: none;
+  cursor: pointer;
+  transition: all var(--motion-fast) var(--ease);
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+.admin-mobile-drawer-item:hover {
+  background: var(--brand-50, rgba(139, 92, 246, 0.06));
+  color: var(--brand-600, #8b5cf6);
+}
+.admin-mobile-drawer-item.active {
+  background: linear-gradient(135deg, rgba(139, 92, 246, 0.14) 0%, rgba(244, 114, 182, 0.10) 100%);
+  color: var(--brand-600, #8b5cf6);
+  font-weight: 600;
+}
+
+/* =============================================================
+ * LiveControls v3 · 6 tile Glass (hybrid Page B)
+ * ============================================================= */
+
+.live-controls-v3 {
+  padding: 24px;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.7) 0%, rgba(237, 233, 254, 0.4) 100%);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.9);
+  border-radius: 20px;
+  box-shadow: var(--shadow-bento);
+}
+
+.live-controls-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--ink-900);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 20px;
+}
+
+.live-controls-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px;
+}
+
+.ctrl-tile {
+  padding: 20px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.5);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.7);
+  transition: all var(--motion-base) var(--ease);
+}
+.ctrl-tile:hover {
+  background: rgba(255, 255, 255, 0.7);
+  transform: translateY(-2px);
+}
+
+.ctrl-tile-lbl {
+  font-size: 11px;
+  color: var(--ink-500);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  font-family: var(--font-mono);
+  font-weight: 500;
+}
+
+.ctrl-tile-val {
+  font-size: 28px;
+  font-weight: 600;
+  color: var(--ink-900);
+  letter-spacing: -0.02em;
+  margin-top: 8px;
+  line-height: 1;
+  font-family: var(--font-sans);
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+}
+
+.ctrl-tile-unit {
+  font-size: 13px;
+  color: var(--ink-500);
+  font-weight: 400;
+  margin-left: 2px;
+}
+
+.ctrl-tile-spark {
+  margin-top: 10px;
+  height: 32px;
+  width: 100%;
+  display: block;
+}
+
+.ctrl-tile-foot {
+  margin-top: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 11px;
+  color: var(--ink-500);
+  font-family: var(--font-mono);
+}
+
+@media (max-width: 768px) {
+  .live-controls-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+  .ctrl-tile-val {
+    font-size: 22px;
+  }
+}
+
+/* =============================================================
+ * DeviceActions v3 · 玻璃操作卡 (hybrid Page B)
+ * ============================================================= */
+
+.device-actions-v3 {
+  padding: 24px;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.7) 0%, rgba(252, 231, 243, 0.4) 100%);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.9);
+  border-radius: 20px;
+  box-shadow: 0 4px 20px -8px rgba(244, 114, 182, 0.15);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.device-actions-v3 h3 {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--ink-900);
+  margin: 0 0 4px;
+}
+
+.device-action-btn-v3 {
+  padding: 14px 16px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.7);
+  border: 1px solid rgba(139, 92, 246, 0.15);
+  font-size: 13.5px;
+  font-weight: 500;
+  color: var(--ink-900);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  text-align: left;
+  transition: all var(--motion-base) var(--ease);
+  font-family: inherit;
+  width: 100%;
+}
+.device-action-btn-v3:hover {
+  background: rgba(255, 255, 255, 0.9);
+  transform: translateX(2px);
+  box-shadow: 0 4px 12px -2px rgba(139, 92, 246, 0.15);
+}
+.device-action-btn-v3.primary {
+  background: linear-gradient(135deg, var(--brand-500) 0%, var(--accent-400) 100%);
+  color: #fff;
+  border: none;
+  box-shadow: 0 4px 12px -2px rgba(139, 92, 246, 0.3);
+}
+.device-action-btn-v3.primary:hover {
+  transform: translateX(2px);
+  box-shadow: 0 6px 18px -2px rgba(139, 92, 246, 0.5);
+}
+.device-action-btn-v3.danger {
+  background: rgba(244, 63, 94, 0.1);
+  color: #be123c;
+  border-color: rgba(244, 63, 94, 0.2);
+}
+.device-action-btn-v3.danger:hover {
+  background: rgba(244, 63, 94, 0.15);
+  color: #be123c;
+}
+.device-action-btn-v3 .ico {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  background: rgba(139, 92, 246, 0.1);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--brand-500);
+  flex-shrink: 0;
+  font-size: 16px;
+}
+.device-action-btn-v3.primary .ico {
+  background: rgba(255, 255, 255, 0.2);
+  color: #fff;
+}
+.device-action-btn-v3.danger .ico {
+  background: rgba(244, 63, 94, 0.1);
+  color: #be123c;
+}
+.device-action-btn-v3 .grow {
+  flex: 1;
+}
+.device-action-btn-v3 .arrow {
+  color: var(--ink-500);
+  font-size: 14px;
+}
+.device-action-btn-v3.primary .arrow {
+  color: #fff;
+}
+
+/* =============================================================
+ * TrendChart v3 · 24h area chart (hybrid Page B)
+ * ============================================================= */
+
+.trend-chart-v3 {
+  padding: 24px;
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.9);
+  border-radius: 20px;
+  box-shadow: var(--shadow-bento);
+}
+
+.trend-chart-v3 h3 {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--ink-900);
+  margin: 0 0 4px;
+}
+
+.trend-chart-v3 .sub {
+  font-size: 12px;
+  color: var(--ink-500);
+  margin-bottom: 20px;
+}
+
+.trend-chart-svg {
+  width: 100%;
+  height: 200px;
+  display: block;
+}
+
+/* =============================================================
+ * v3 Table · 紫光表格覆盖 (antd Table 视觉升级)
+ * ============================================================= */
+
+.v3-table .ant-table {
+  background: transparent !important;
+  border-radius: 14px;
+  overflow: hidden;
+}
+.v3-table .ant-table-thead > tr > th {
+  background: rgba(237, 233, 254, 0.4) !important;
+  color: var(--ink-700) !important;
+  font-weight: 600;
+  font-size: 12px;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  border-bottom: 1px solid rgba(139, 92, 246, 0.12) !important;
+  font-family: var(--font-mono);
+  padding: 14px 16px !important;
+}
+.v3-table .ant-table-tbody > tr > td {
+  border-bottom: 1px solid rgba(139, 92, 246, 0.06) !important;
+  padding: 14px 16px !important;
+  font-size: 13.5px;
+  color: var(--ink-900);
+}
+.v3-table .ant-table-tbody > tr:hover > td {
+  background: rgba(139, 92, 246, 0.05) !important;
+}
+.v3-table .ant-table-tbody > tr:last-child > td {
+  border-bottom: none !important;
+}
+.v3-table .ant-pagination .ant-pagination-item-active {
+  background: var(--brand-500) !important;
+  border-color: var(--brand-500) !important;
+}
+.v3-table .ant-pagination .ant-pagination-item-active a {
+  color: #fff !important;
+}
+.v3-table .ant-pagination .ant-pagination-item:hover {
+  border-color: var(--brand-500) !important;
+}
+.v3-table .ant-pagination .ant-pagination-item:hover a {
+  color: var(--brand-500) !important;
+}
+
+/* =============================================================
+ * v3 DevCard (user 端设备卡 · hybrid Page D 2 列网格)
+ * ============================================================= */
+
+.v3-dev-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 30px -8px rgba(139, 92, 246, 0.25) !important;
+  background: rgba(255, 255, 255, 0.85) !important;
+}
+.v3-dev-card .ant-card-cover {
+  border-radius: 18px 18px 0 0;
+  overflow: hidden;
+  background: linear-gradient(135deg, rgba(237, 233, 254, 0.5) 0%, rgba(252, 231, 243, 0.3) 100%);
+}
+.v3-dev-card .ant-card-meta-title {
+  color: var(--ink-900) !important;
+  font-weight: 600;
+  font-size: 15px;
+}
+.v3-dev-card .ant-card-meta-description {
+  color: var(--ink-500) !important;
+  font-size: 13px;
+}
+.v3-dev-card .ant-card-actions {
+  background: rgba(255, 255, 255, 0.5) !important;
+  border-top: 1px solid rgba(139, 92, 246, 0.08) !important;
+}
+.v3-dev-card .ant-card-actions > li {
+  color: var(--ink-500) !important;
+}
+
+/* =============================================================
  * Ant Design v5 样式覆盖 (Bento 表格 + 输入框 + Tabs)
  * ============================================================= */
 
@@ -726,6 +1391,7 @@ html, body {
 .scroll-area {
   flex: 1;
   overflow-y: auto;
+  min-height: 0;       /* 关键: 让 flex item 允许收缩, 否则内容撑出 100vh, 滚动失效 */
   padding: 32px;
 }
 
@@ -761,6 +1427,236 @@ html, body {
     min-width: 0 !important;
     width: 100% !important;
   }
+}
+
+/* =============================================================
+ * admin nodes 移动端卡片视图（P0-3 · 2026-07-12）
+ * 解决 9 列表格在 < 768px 视口列挤压、列头重叠、Token 鉴权 chip
+ * 盖离线 badge、操作列竖排问题
+ * ============================================================= */
+.nodes-mobile-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 4px 0 16px;
+}
+.node-mobile-card {
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(139, 92, 246, 0.1);
+  border-radius: 16px;
+  padding: 16px;
+  box-shadow: 0 2px 8px -4px rgba(99, 102, 241, 0.1);
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+.node-mobile-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid rgba(139, 92, 246, 0.08);
+}
+.node-mobile-card-header .node-name {
+  font-weight: 600;
+  font-size: 15px;
+  color: var(--ink-900, #1e293b);
+  word-break: break-all;
+  flex: 1;
+  min-width: 0;
+}
+.node-mobile-card-body {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 13px;
+}
+.node-mobile-card-body .kv {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  min-height: 22px;
+}
+.node-mobile-card-body .kv > span:first-child {
+  color: var(--ink-500, #94a3b8);
+  font-size: 12px;
+  flex-shrink: 0;
+}
+.node-mobile-card-body .kv > span:last-child {
+  color: var(--ink-900, #1e293b);
+  font-weight: 500;
+  font-family: var(--font-mono, ui-monospace, monospace);
+  text-align: right;
+  word-break: break-all;
+  min-width: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  justify-content: flex-end;
+}
+.node-mobile-card-actions {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin-top: 12px;
+  padding-top: 10px;
+  border-top: 1px solid rgba(139, 92, 246, 0.08);
+}
+.node-mobile-card-actions .ant-btn {
+  width: 100%;
+  min-width: 0;
+  padding: 4px 6px;
+  font-size: 12px;
+}
+.node-mobile-card-actions .ant-btn .anticon {
+  font-size: 12px;
+}
+.node-mobile-empty {
+  text-align: center;
+  padding: 40px 16px;
+  color: var(--ink-500, #94a3b8);
+  font-size: 13px;
+  background: rgba(255, 255, 255, 0.4);
+  border-radius: 16px;
+  border: 1px dashed rgba(139, 92, 246, 0.15);
+}
+@media (max-width: 360px) {
+  .node-mobile-card-actions {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* =============================================================
+ * admin nodes 鉴权 chip 移动端垂直堆叠（P2-5 · 2026-07-12）
+ * 桌面 inline-flex 水平, 移动 column 垂直 (chip + relative time)
+ * ============================================================= */
+.chip-stack {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+@media (max-width: 768px) {
+  .chip-stack {
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 4px;
+  }
+}
+
+/* =============================================================
+ * admin alarm 移动端卡片视图（P2-4 · 2026-07-12）
+ * 5 列 Table 在 < 768px 视口 msg 列被挤压、时间列竖排问题
+ * 改为卡片堆叠 + dayjs.fromNow() 相对时间
+ * ============================================================= */
+.alarm-mobile-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 4px 0 16px;
+}
+.alarm-mobile-card {
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(139, 92, 246, 0.1);
+  border-radius: 16px;
+  padding: 16px;
+  box-shadow: 0 2px 8px -4px rgba(99, 102, 241, 0.1);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.alarm-mobile-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid rgba(139, 92, 246, 0.08);
+}
+.alarm-mobile-card-header .alarm-mac {
+  font-family: var(--font-mono, ui-monospace, monospace);
+  font-weight: 600;
+  font-size: 13px;
+  color: var(--ink-900, #1e293b);
+  word-break: break-all;
+  flex: 1;
+  min-width: 0;
+}
+.alarm-mobile-card-time {
+  font-size: 11px;
+  color: var(--ink-500, #94a3b8);
+  font-family: var(--font-mono, ui-monospace, monospace);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.alarm-mobile-card-body {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 13px;
+}
+.alarm-mobile-card-body .kv {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 8px;
+  min-height: 22px;
+}
+.alarm-mobile-card-body .kv > span:first-child {
+  color: var(--ink-500, #94a3b8);
+  font-size: 12px;
+  flex-shrink: 0;
+}
+.alarm-mobile-card-body .kv > span:last-child {
+  color: var(--ink-900, #1e293b);
+  font-weight: 500;
+  text-align: right;
+  word-break: break-all;
+  min-width: 0;
+}
+.alarm-mobile-card-msg {
+  margin-top: 4px;
+  padding: 10px 12px;
+  background: rgba(139, 92, 246, 0.05);
+  border-left: 3px solid var(--brand-500, #8b5cf6);
+  border-radius: 6px;
+  font-size: 12.5px;
+  color: var(--ink-700, #334155);
+  line-height: 1.5;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+.alarm-mobile-card-tags {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.alarm-mobile-empty {
+  text-align: center;
+  padding: 40px 16px;
+  color: var(--ink-500, #94a3b8);
+  font-size: 13px;
+  background: rgba(255, 255, 255, 0.4);
+  border-radius: 16px;
+  border: 1px dashed rgba(139, 92, 246, 0.15);
+}
+
+/* =============================================================
+ * admin alarm 移动端隐藏 Table + Pies, 卡片视图接管
+ * 桌面完全不变, 只在 < 768px 视口隐藏 .v3-table + 顶部 Pies Row
+ * ============================================================= */
+@media (max-width: 768px) {
+  /* 移动端隐藏 Log 组件的 Table + Pies 概览 (因 Log 不可拆, 整段覆盖) */
+  /* 注: alarm/page.tsx 在移动端会走卡片视图, 这里不强制隐藏,
+     但如果 alarm/page.tsx 同时渲染了 Log + cards, 视情况隐藏 */
 }
 
 /* 已废弃 class（保留兼容） */

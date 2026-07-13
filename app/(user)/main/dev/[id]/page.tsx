@@ -10,6 +10,8 @@ import { UserScheduledOpTab } from "@/components/terminal/UserScheduledOpTab";
 import { useNav } from "@/lib/hooks/useNav";
 import { PageHeader } from "@/components/common/PageHeader";
 import { PageSummary } from "@/components/common/PageSummary";
+import { LiveControls } from "@/components/common/LiveControls";
+import { DeviceActions } from "@/components/common/DeviceActions";
 
 function DevInner() {
     const nav = useNav()
@@ -51,6 +53,50 @@ function DevInner() {
         (!terminal || !mountDev) ? <Empty />
             :
             <div className="bg-bento-canvas" style={{ position: 'relative', zIndex: 0 }}>
+                <div
+                    className="bento-card v3-device-hero"
+                    style={{
+                        marginBottom: 20,
+                        padding: '24px 32px',
+                        background: 'linear-gradient(135deg, #1e1b4b 0%, #312e81 60%, #6d28d9 100%)',
+                        color: '#fff',
+                        border: 'none',
+                        position: 'relative',
+                        overflow: 'hidden',
+                    }}
+                >
+                    <div
+                        style={{
+                            position: 'absolute', top: -80, right: -80,
+                            width: 280, height: 280,
+                            background: 'radial-gradient(circle, var(--accent-400) 0%, transparent 70%)',
+                            opacity: 0.4, pointerEvents: 'none',
+                        }}
+                    />
+                    <div style={{ position: 'relative', zIndex: 1, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                        <div>
+                            <h2 style={{ fontSize: 24, fontWeight: 600, letterSpacing: '-0.02em', color: '#fff', margin: 0 }}>{mountDev.mountDev}</h2>
+                            <div style={{ fontFamily: 'var(--font-mono)', fontSize: 13, color: 'rgba(255,255,255,0.7)', marginTop: 6 }}>
+                                {terminal.DevMac} · 协议: {mountDev.protocol} · PID: {mountDev.pid}
+                            </div>
+                        </div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                            <span
+                                style={{
+                                    display: 'inline-flex', alignItems: 'center', gap: 6,
+                                    padding: '6px 14px', borderRadius: 999,
+                                    background: terminal.online ? 'rgba(16, 185, 129, 0.2)' : 'rgba(244, 63, 94, 0.2)',
+                                    border: `1px solid ${terminal.online ? 'rgba(16, 185, 129, 0.3)' : 'rgba(244, 63, 94, 0.3)'}`,
+                                    color: terminal.online ? '#86efac' : '#fda4af',
+                                    fontSize: 13, fontWeight: 600,
+                                }}
+                            >
+                                <span style={{ width: 6, height: 6, borderRadius: '50%', background: terminal.online ? '#86efac' : '#fda4af', animation: 'pulse-dot 2s infinite' }} />
+                                {terminal.online ? '实时连接' : '离线'}
+                            </span>
+                        </div>
+                    </div>
+                </div>
                 <PageHeader
                     title={mountDev.mountDev}
                     extra={
@@ -82,6 +128,15 @@ function DevInner() {
                         },
                     ]}
                 />
+                {/* v3 hybrid Page B · LiveControls 6 tile + Actions 玻璃卡 */}
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(12, 1fr)', gap: 20, marginBottom: 20 }}>
+                    <div style={{ gridColumn: 'span 8' }}>
+                        <LiveControls variant="device" mac={terminal.DevMac} pid={mountDev.pid} title="实时数据" />
+                    </div>
+                    <div style={{ gridColumn: 'span 4' }}>
+                        <DeviceActions mac={terminal.DevMac} title="设备操作" />
+                    </div>
+                </div>
                 <Tabs
                     activeKey={activeKey}
                     onChange={handleTabChange}

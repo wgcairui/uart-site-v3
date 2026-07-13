@@ -1056,12 +1056,97 @@ declare namespace Uart {
         idle: number;
     }
 
-    /** GET /api/v2/admin/dashboard/tiles/:name/history?hours=24 */
+    /** GET /api/v2/admin/dashboard/tiles/:name/history?hours=24&granularity=hour|day (决策 23 + PR-B 30d 扩展) */
     interface AdminStatusHistoryResp {
         name: DeviceStatus;
-        granularity: 'hour';
+        granularity: 'hour' | 'day';
         hours: number;
         total: number;
-        buckets: { hour: string; count: number }[];
+        buckets: ({ hour: string } | { day: string }) & { count: number }[];
+    }
+
+    /** GET /api/v2/admin/dashboard/traffic/sparkline?minutes=60 (PR-A 实时流量, sibling d81dbeb 2026-07-12) */
+    interface TrafficSparklineResp {
+        points: { ts: string; count: number }[];
+        total: number;
+        avg: number;
+        minutes: number;
+    }
+
+    /** GET /api/v2/admin/dashboard/devices/health (PR-C 设备健康度, sibling d81dbeb 2026-07-12) */
+    interface DeviceHealthResp {
+        score: number;
+        total: number;
+        distribution: {
+            excellent: number;
+            good: number;
+            warning: number;
+            danger: number;
+        };
+        topDanger: { mac: string; name: string; score: number }[];
+    }
+
+    // ─── v2 admin user 资源迁移 (server PR #70 / commit 3aacaf1b, 2026-07-13) ───
+    // 离职 user 资源迁移到在职 user, 含 dryRun 预览 + 4 类资源选迁
+    /** POST /api/v2/admin/users/migrate-resources */
+    interface MigrateUserResourcesResp {
+        dryRun: boolean;
+        fromUser: string;
+        toUser: string;
+        fromUserInfo: {
+            user: string;
+            name?: string;
+            tel?: number;
+            userGroup?: string;
+        };
+        toUserInfo: {
+            user: string;
+            name?: string;
+            tel?: number;
+            userGroup?: string;
+        };
+        resources: {
+            devices: {
+                userBindDeviceDocs: number;
+                totalMacs: number;
+                macs: string[];
+                sample: {
+                    user: string;
+                    UTs?: string[];
+                    ECs?: string[];
+                    UTsShare?: string[];
+                    ECsShare?: string[];
+                }[];
+            };
+            alarmSetups: {
+                fromSetupExists: boolean;
+                fromTels: string[];
+                fromMails: string[];
+                fromWxs: string[];
+                fromProtocolSetup_count: number;
+                toSetupExists: boolean;
+                toTels: string[];
+                toMails: string[];
+                toProtocolSetup_count: number;
+            };
+            shareOwner: {
+                terminalsCount: number;
+                terminals: {
+                    DevMac: string;
+                    ownerId: string;
+                    share: boolean;
+                }[];
+            };
+        };
+        migrated: {
+            devices: string;
+            alarmSetups: string;
+            scheduledOps: string;
+            shareOwner: string;
+        };
+        _migrationLogId?: string;
+        reason: string;
+        by: string;
+        at: string;
     }
 }

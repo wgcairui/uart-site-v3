@@ -85,7 +85,7 @@ const UserInfo: React.FC = props => {
 
 
     return (
-        <>
+        <div className="bg-bento-canvas" style={{ position: 'relative', zIndex: 0 }}>
             <PageHeader
                 title={user.name || user.user}
                 breadcrumb={[{ title: '首页', href: '/main' }]}
@@ -146,7 +146,7 @@ const UserInfo: React.FC = props => {
                     </Space>
                 </Col>
             </Row>
-        </>
+        </div>
     )
 }
 

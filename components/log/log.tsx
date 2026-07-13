@@ -139,6 +139,7 @@ export const Log: React.FC<log> = (props) => {
             </Row>
             <Table
                 {...restProps}
+                className={`v3-table ${restProps.className || ''}`}
                 loading={list.loading}
                 dataSource={generateTableKey(list.data, '_id')}
                 columns={columns}

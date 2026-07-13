@@ -1,10 +1,18 @@
 'use client'
 
 import { App, Button, Col, Form, Input, Row, Select, Space, Spin, Switch, Tabs, Tag, Typography } from 'antd'
-import { RobotOutlined, ThunderboltOutlined } from '@ant-design/icons'
+import {
+  ApiOutlined,
+  ClockCircleOutlined,
+  FieldNumberOutlined,
+  RobotOutlined,
+  ThunderboltOutlined,
+} from '@ant-design/icons'
 import { useRouter } from 'next/navigation'
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { PageHeader } from '@/components/common/PageHeader'
+import { PageSummary } from '@/components/common/PageSummary'
+import { StatusTag } from '@/components/common/StatusTag'
 import { AiWorkspace } from '@/components/ai/AiWorkspace'
 import { SourceUploadTab } from '@/components/ai/SourceUploadTab'
 import { SourceUrlTab } from '@/components/ai/SourceUrlTab'
@@ -138,6 +146,24 @@ export default function AiGeneratePage() {
   }, [])
 
   const instructionCount = protocol?.instruct?.length ?? 0
+
+  // ============ 4 KPI 实时统计（v3 化 PageSummary，给 device hero 用）============
+  // 实时从 stats 派生，避免重复 state。语义色按运行状态切换。
+  const liveError = stats.error ?? streamError ?? undefined
+  const isRunning = !!stats.startedAt && !stats.finishedAt
+  const isDone = !!stats.finishedAt && !liveError
+  const liveStats = useMemo(() => {
+    const totalTokens = (stats.inputTokens ?? 0) + (stats.outputTokens ?? 0)
+    return {
+      totalTokens,
+      latency: stats.latencyMs || 0,
+      toolStepCount,
+      instructionCount,
+      provider: stats.provider ?? 'minimax',
+      // 状态: error > running > done > idle
+      status: liveError ? ('error' as const) : isRunning ? ('running' as const) : isDone ? ('done' as const) : ('idle' as const),
+    }
+  }, [stats.inputTokens, stats.outputTokens, stats.latencyMs, stats.provider, toolStepCount, instructionCount, isRunning, isDone, liveError])
 
   // ============ Pre-analyze trigger（决策 21）============
   // 统一触发入口。text 模式 debounce 触发；file/url 模式在 tab onUploaded/onFetched 同步触发
@@ -773,49 +799,197 @@ export default function AiGeneratePage() {
           { title: '生成新协议' },
         ]}
       />
-      <AiWorkspace
-        topBar={
-          <StatsPane
-            stats={{ ...stats, error: stats.error ?? streamError ?? undefined }}
-            instructionCount={instructionCount}
-            toolStepCount={toolStepCount}
-          />
-        }
-        left={
-          // 左列：表单（设备类型/型号/协议名/Source tabs/生成按钮）
-          // 2026-06-27 重构：form 从 ChatPane inputForm 拆出来，独立 section
-          // 2026-06-28：Row/Col 网格对齐 + 容器 padding 收紧
-          <div style={{ padding: '20px 24px' }}>
-            {inputFormNode}
-          </div>
-        }
-        right={
-          <ChatPane
-            messages={messages}
-            isStreaming={isStreaming}
-            onSubmit={() => {
-              // generate 页面的 Sender 由 inputForm 顶部的「生成协议」按钮触发，
-              // 此处 Sender 仅供后续 chat 流使用（v2 接入），目前禁用
+      <div
+        className="bg-bento-canvas"
+        style={{ position: 'relative', zIndex: 0, paddingLeft: 0, paddingRight: 0 }}
+      >
+        {/* ============ Device Hero · 紫渐变 + AI 模型 + 实时状态 ============ */}
+        <div
+          className="bento-card v3-device-hero"
+          style={{
+            marginBottom: 20,
+            padding: '24px 32px',
+            background: 'linear-gradient(135deg, #1e1b4b 0%, #312e81 60%, #6d28d9 100%)',
+            color: '#fff',
+            border: 'none',
+            position: 'relative',
+            overflow: 'hidden',
+          }}
+        >
+          <div
+            style={{
+              position: 'absolute', top: -80, right: -80,
+              width: 280, height: 280,
+              background: 'radial-gradient(circle, var(--accent-400) 0%, transparent 70%)',
+              opacity: 0.4, pointerEvents: 'none',
             }}
-            retryButton={
-              <Button size="small" danger onClick={handleRetry}>
-                重试
-              </Button>
-            }
           />
-        }
-        // 底部面板：协议预览（默认隐藏，生成后才出现）
-        bottomPanel={
-          protocol ? (
-            <ProtocolPreviewForm
-              value={protocol}
-              onChange={setProtocol}
-              mode="generate"
-              onJumpToDetail={goProtocolDetail}
+          <div
+            style={{
+              position: 'relative', zIndex: 1,
+              display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+              gap: 16, flexWrap: 'wrap',
+            }}
+          >
+            <div style={{ minWidth: 0 }}>
+              <h2 style={{
+                fontSize: 22, fontWeight: 600, letterSpacing: '-0.02em',
+                color: '#fff', margin: 0, display: 'flex', alignItems: 'center', gap: 10,
+              }}>
+                <RobotOutlined style={{ fontSize: 20 }} />
+                AI 协议生成
+              </h2>
+              <div
+                style={{
+                  fontFamily: 'var(--font-mono)', fontSize: 12,
+                  color: 'rgba(255,255,255,0.7)', marginTop: 6,
+                }}
+              >
+                Provider · {liveStats.provider}
+                {stats.usedFallback ? ' (fallback)' : ''}
+                {' · '}
+                {sourceMode === 'text' ? 'Text 源' : sourceMode === 'upload' ? 'File 上传' : 'URL 抓取'}
+              </div>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+              {liveStats.status === 'error' ? (
+                <span
+                  style={{
+                    display: 'inline-flex', alignItems: 'center', gap: 6,
+                    padding: '6px 14px', borderRadius: 999,
+                    background: 'rgba(244, 63, 94, 0.2)',
+                    border: '1px solid rgba(244, 63, 94, 0.3)',
+                    color: '#fda4af', fontSize: 13, fontWeight: 600,
+                  }}
+                >
+                  <span style={{
+                    width: 6, height: 6, borderRadius: '50%',
+                    background: '#fda4af',
+                  }} />
+                  流式错误
+                </span>
+              ) : (
+                <span
+                  style={{
+                    display: 'inline-flex', alignItems: 'center', gap: 6,
+                    padding: '6px 14px', borderRadius: 999,
+                    background: liveStats.status === 'running' ? 'rgba(139, 92, 246, 0.25)' : 'rgba(16, 185, 129, 0.2)',
+                    border: `1px solid ${liveStats.status === 'running' ? 'rgba(139, 92, 246, 0.4)' : 'rgba(16, 185, 129, 0.3)'}`,
+                    color: liveStats.status === 'running' ? '#c4b5fd' : '#86efac',
+                    fontSize: 13, fontWeight: 600,
+                  }}
+                >
+                  <span style={{
+                    width: 6, height: 6, borderRadius: '50%',
+                    background: liveStats.status === 'running' ? '#c4b5fd' : '#86efac',
+                    animation: liveStats.status === 'running' ? 'pulse-dot 2s infinite' : undefined,
+                  }} />
+                  {liveStats.status === 'running' ? '实时推理中…'
+                    : liveStats.status === 'done' ? '已完成'
+                    : '空闲就绪'}
+                </span>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* ============ 4 KPI mini PageSummary ============ */}
+        <div style={{ marginBottom: 20 }}>
+          <PageSummary
+            items={[
+              {
+                label: '累计 Token',
+                value: liveStats.totalTokens,
+                variant: 'primary',
+                icon: <ApiOutlined />,
+                extra: stats.inputTokens != null
+                  ? `in ${stats.inputTokens} / out ${stats.outputTokens ?? 0}`
+                  : '—',
+              },
+              {
+                label: '延迟',
+                value: liveStats.latency ? `${liveStats.latency}ms` : '—',
+                variant: liveStats.latency > 15000 ? 'danger' : liveStats.latency > 5000 ? 'warning' : 'success',
+                icon: <ClockCircleOutlined />,
+                extra: liveStats.status === 'running' ? '推理中…' : '已完成',
+              },
+              {
+                label: '工具步数',
+                value: liveStats.toolStepCount,
+                variant: 'info',
+                icon: <FieldNumberOutlined />,
+                extra: `指令 ${liveStats.instructionCount} 条`,
+              },
+              {
+                label: 'Provider',
+                value: (
+                  <span style={{ fontSize: 18, fontWeight: 700, fontFamily: 'var(--font-mono)' }}>
+                    {liveStats.provider}
+                  </span>
+                ),
+                variant: 'purple',
+                icon: <RobotOutlined />,
+                extra: stats.usedFallback
+                  ? <Tag color="warning" style={{ margin: 0, fontSize: 11 }}>已 fallback</Tag>
+                  : liveStats.status === 'running'
+                    ? <Tag color="processing" style={{ margin: 0, fontSize: 11 }}>推理中</Tag>
+                    : <Tag style={{ margin: 0, fontSize: 11 }}>就绪</Tag>,
+              },
+            ]}
+          />
+        </div>
+
+        <AiWorkspace
+          topBar={
+            <StatsPane
+              stats={{ ...stats, error: stats.error ?? streamError ?? undefined }}
+              instructionCount={instructionCount}
+              toolStepCount={toolStepCount}
             />
-          ) : undefined
-        }
-      />
+          }
+          left={
+            // 左列：表单（设备类型/型号/协议名/Source tabs/生成按钮）
+            // 2026-06-27 重构：form 从 ChatPane inputForm 拆出来，独立 section
+            // 2026-06-28：Row/Col 网格对齐 + 容器 padding 收紧
+            // 2026-07-12 v3 化：包 bento-card，bg-bento-canvas 已在外层
+            <div className="bento-card" style={{ padding: '20px 24px', height: '100%' }}>
+              {inputFormNode}
+            </div>
+          }
+          right={
+            // 右列：ChatPane，2026-07-12 v3 化：包 glass-card
+            <div className="glass-card" style={{ padding: 20, height: '100%', display: 'flex', flexDirection: 'column' }}>
+              <ChatPane
+                messages={messages}
+                isStreaming={isStreaming}
+                onSubmit={() => {
+                  // generate 页面的 Sender 由 inputForm 顶部的「生成协议」按钮触发，
+                  // 此处 Sender 仅供后续 chat 流使用（v2 接入），目前禁用
+                }}
+                retryButton={
+                  <Button size="small" danger onClick={handleRetry}>
+                    重试
+                  </Button>
+                }
+              />
+            </div>
+          }
+          // 底部面板：协议预览（默认隐藏，生成后才出现）
+          // 2026-07-12 v3 化：包 bento-card
+          bottomPanel={
+            protocol ? (
+              <div className="bento-card" style={{ padding: 20, height: '100%' }}>
+                <ProtocolPreviewForm
+                  value={protocol}
+                  onChange={setProtocol}
+                  mode="generate"
+                  onJumpToDetail={goProtocolDetail}
+                />
+              </div>
+            ) : undefined
+          }
+        />
+      </div>
     </>
   )
 }

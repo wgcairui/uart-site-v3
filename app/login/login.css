@@ -1,12 +1,41 @@
 /* =============================================================
- * Login Page v2 · Glass + Mesh 风格
- * 配合 globals.css .bg-glass-mesh / .glass-card-dark
+ * Login Page v3 · Glass + Mesh 4 色渐变
+ * 配合 hybrid.html Page C 风格:
+ * - 4 色渐变背景 (蓝紫粉橙)
+ * - 品牌 hero (左) + 玻璃登录卡 (右)
+ * - 圆角 24px
  * ============================================================= */
 
 .login-page {
   height: 100vh;
   overflow: hidden;
   position: relative;
+  background: linear-gradient(125deg, #3b82f6 0%, #8b5cf6 35%, #ec4899 70%, #f97316 100%);
+}
+
+.login-page::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(at 20% 80%, #06b6d4 0%, transparent 40%),
+              radial-gradient(at 80% 20%, #f43f5e 0%, transparent 40%);
+  opacity: 0.6;
+  mix-blend-mode: screen;
+  pointer-events: none;
+}
+
+.login-page::after {
+  content: "";
+  position: absolute;
+  top: 10%;
+  left: 8%;
+  width: 200px;
+  height: 200px;
+  background: rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(40px);
+  border-radius: 50%;
+  filter: blur(40px);
+  pointer-events: none;
 }
 
 .login-page .layout {
@@ -33,7 +62,7 @@
   margin-left: auto;
 }
 
-/* Content 改用 globals.css .bg-glass-mesh 4 色渐变背景 */
+/* Content 居中 */
 .login-page .content {
   flex: 1;
   display: flex;
@@ -45,14 +74,16 @@
 
 .login-page .content-row {
   width: 100%;
-  max-width: 1200px;
+  max-width: 1080px;
   align-items: center;
 }
 
+/* v3 brand hero (左) */
 .login-page .content-row-col1 {
-  text-align: center;
   padding: 40px;
   color: #fff;
+  position: relative;
+  z-index: 1;
 }
 
 .login-page .content-row-col1 h3 {
@@ -63,12 +94,15 @@
   background-clip: text;
   margin-bottom: 16px;
   font-weight: 700;
+  font-family: var(--font-sans);
 }
 
 .login-page .content-row-col1 h4 {
   font-size: 1.2rem;
   color: rgba(255, 255, 255, 0.85);
   margin-bottom: 32px;
+  line-height: 1.7;
+  max-width: 480px;
 }
 
 .login-page .content-row-col1 h5 {
@@ -82,7 +116,7 @@
   padding: 24px;
 }
 
-/* 登录卡: glass-card-dark 玻璃质感 */
+/* 登录卡: v3 玻璃质感 24px 圆角 */
 .login-page .card-login {
   width: 100%;
   max-width: 420px;
@@ -90,7 +124,7 @@
   backdrop-filter: blur(40px) !important;
   -webkit-backdrop-filter: blur(40px) !important;
   border: 1px solid rgba(255, 255, 255, 0.25) !important;
-  border-radius: var(--radius-4xl) !important;
+  border-radius: 24px !important;
   box-shadow: 0 20px 60px -10px rgba(0, 0, 0, 0.2) !important;
   padding: 40px !important;
   color: #fff;
@@ -138,7 +172,7 @@
   color: var(--brand-700) !important;
   border: 0 !important;
   font-weight: 600;
-  border-radius: var(--radius-xl) !important;
+  border-radius: 12px !important;
 }
 .login-page .login-form-button:hover {
   background: #fff !important;
@@ -147,8 +181,6 @@
   box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
 }
 
-/* "我要试用" 按钮 (cairui 21:00 拍 Option A hotfix #2)
-   之前硬编码 v1 #E6A23B (老 warning 警示色), 改用 v2 semantic var(--color-warning) #f59e0b */
 .login-page .login-form-button-warning {
   width: 100%;
   height: 40px;
@@ -157,11 +189,11 @@
   color: #fff !important;
   border: 0 !important;
   font-weight: 600;
-  border-radius: var(--radius-xl) !important;
+  border-radius: 12px !important;
   margin-top: 9px;
 }
 .login-page .login-form-button-warning:hover {
-  background: #d97706 !important;  /* darker warning on hover */
+  background: #d97706 !important;
   color: #fff !important;
   transform: translateY(-1px);
   box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
@@ -205,6 +237,7 @@
 }
 
 @media screen and (max-width: 768px) {
+  /* 移动端: hero 隐藏, 登录卡居中 (跟 hybrid.html Page D 一致) */
   .login-page .content-row-col1 {
     display: none;
   }
@@ -213,6 +246,10 @@
   }
   .login-page .card-login {
     padding: 28px !important;
+    max-width: 100%;
+  }
+  .login-page .content-row {
+    padding: 16px;
   }
 }
 
@@ -223,7 +260,6 @@
   padding: 12px 50px;
 }
 
-/* Tabs styling */
 .login-page .ant-tabs-tab-btn .anticon {
   margin-right: 8px !important;
   vertical-align: -0.125em;

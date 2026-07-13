@@ -157,7 +157,7 @@ export const Protocols: React.FC = () => {
     }
 
     return (
-        <>
+        <div className="bg-bento-canvas" style={{ position: 'relative', zIndex: 0 }}>
             <PageHeader
                 title="协议管理"
                 extra={<Button type="primary" onClick={() => setIsAddProtocolVisible(true)}>添加协议</Button>}
@@ -196,8 +196,7 @@ export const Protocols: React.FC = () => {
                 }}></AddProtocol>
             </Modal>
             <Divider></Divider>
-            <Table
-                loading={loading}
+            <Table className="v3-table"                 loading={loading}
                 dataSource={generateTableKey(data, '_id')}
                 scroll={{ x: 1000 }}
                 pagination={{
@@ -282,7 +281,7 @@ export const Protocols: React.FC = () => {
                 ] as ColumnsType<Uart.protocol>}
             >
             </Table>
-        </>
+        </div>
     )
 }
 

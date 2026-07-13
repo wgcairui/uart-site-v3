@@ -31,7 +31,7 @@ export default function Terminal() {
     return (
         !terminal ? <Empty />
             :
-            <>
+            <div className="bg-bento-canvas" style={{ position: 'relative', zIndex: 0 }}>
                 <PageHeader
                     title={terminal.name || id}
                     breadcrumb={[{ title: '首页', href: '/main' }]}
@@ -56,7 +56,7 @@ export default function Terminal() {
                         },
                     ]}
                 />
-                <Card style={{ overflow: "auto", height: "100%",marginBottom:36 }}>
+                <Card className="v3-dev-card" style={{ overflow: "auto", height: "100%",marginBottom:36, background: 'rgba(255, 255, 255, 0.7)', backdropFilter: 'blur(20px)', border: '1px solid rgba(255, 255, 255, 0.9)', borderRadius: 18, boxShadow: '0 4px 20px -8px rgba(99, 102, 241, 0.12)' }}>
                     <Row>
                         <Col span={24} md={12}>
                             <Descriptions title={terminal?.name || id}>
@@ -75,6 +75,6 @@ export default function Terminal() {
 
                     </Row>
                 </Card>
-            </>
+            </div>
     )
 }

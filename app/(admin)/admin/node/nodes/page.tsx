@@ -10,9 +10,19 @@
  * 4. 端点全部切到 /api/v2/admin/dashboard/nodes(顺带修复旧端点无效 bug)
  *
  * 设计取舍:不做「批量迁移老节点」按钮 — 老节点走单节点「配 token」入口,hasToken=false 时按钮文案显示「配 token」。
+ *
+ * v3 化 (2026-07-12 · P1-4 batch C):
+ * - 顶部 PageHeader (h1 + 面包屑 + 添加节点按钮)
+ * - 顶部 PageSummary 4 卡 (总数/在线/总连接/平均设备) 替代旧 16 Card 堆叠
+ * - 主容器 .bg-bento-canvas (hybrid.html Page A 风格)
+ * - 桌面 Table 走 .v3-table (紫光 hover 已在 globals.css)
+ * - 移动端 < 768px 走 .nodes-mobile-cards 卡片视图 (P0-3 已 ship)
  */
 
-import { Button, Card, Divider, Form, Input, message, Modal, Space, Table, Tag } from 'antd'
+import { Button, Form, Input, message, Modal, Space, Table, Tag } from 'antd'
+import { PageHeader } from '@/components/common/PageHeader'
+import { PageSummary, type SummaryVariant } from '@/components/common/PageSummary'
+import { StatusTag } from '@/components/common/StatusTag'
 import { DeleteFilled, ReloadOutlined, SafetyCertificateOutlined } from '@ant-design/icons'
 import dayjs from 'dayjs'
 import relativeTime from 'dayjs/plugin/relativeTime'
@@ -151,6 +161,19 @@ export const Nodes: React.FC = () => {
         source: 'rotate' | 'create' | 'init'
     } | null>(null)
     const [query, setQuery] = useState<PaginationReq>({ page: 1, pageSize: 20, needTotal: true })
+
+    // 移动端 detection: < 768px 走 cards 视图, 桌面走 Table
+    // matchMedia hook 避免 SSR 报错 (window 仅 client 存在)
+    const [isMobile, setIsMobile] = useState(false)
+    useEffect(() => {
+        if (typeof window === 'undefined') return
+        const mq = window.matchMedia('(max-width: 768px)')
+        const update = () => setIsMobile(mq.matches)
+        update()
+        mq.addEventListener('change', update)
+        return () => mq.removeEventListener('change', update)
+    }, [])
+
     const router = useRouter()
 
     const { data: nodesData, fecth: refetch } = usePromise<Uart.NodeClient[]>(async () => {
@@ -161,11 +184,22 @@ export const Nodes: React.FC = () => {
 
     const nodes = nodesData ?? []
 
-    // 顶部 status cards — 后端 nodes 列表不带 count/online 字段，用 MaxConnections 兜底
-    const status = useMemo(
-        () => nodes.map((el: any) => ({ type: el.Name, value: el.MaxConnections || 0 })),
-        [nodes],
-    )
+    // v3 PageSummary 4 卡 — 总数 / 在线 / 总连接 (sum MaxConnections) / 平均设备
+    // online/count 字段后端可能不返回 (原代码注释确认), 缺失时按 0 兜底
+    const stats = useMemo(() => {
+        const total = nodes.length
+        const online = nodes.filter((n: any) => n.online).length
+        const totalConnections = nodes.reduce(
+            (acc, n) => acc + (n.MaxConnections || 0),
+            0,
+        )
+        const avgDevices = total > 0
+            ? Math.round(
+                  nodes.reduce((acc, n) => acc + ((n as any).count || 0), 0) / total,
+              )
+            : 0
+        return { total, online, totalConnections, avgDevices }
+    }, [nodes])
 
     const handleDelete = (node: string) => {
         Modal.confirm({
@@ -253,42 +287,63 @@ export const Nodes: React.FC = () => {
         )
     }
 
+    // 移动端 action handler 集 (与桌面 Table 操作列共享同一回调)
+    const editNode = (n: Uart.NodeClient) => {
+        setEditingItem(n)
+        setVisible(true)
+    }
+    const viewLogs = (n: Uart.NodeClient) => {
+        router.push(`/admin/node/nodes/info/${encodeURIComponent(n.Name)}`)
+    }
+    const restartNode = (n: Uart.NodeClient) => handleRestart(n.Name)
+    const rotateOrInit = (n: Uart.NodeClient) => handleRotate(n.Name, n.hasToken ?? false)
+    const deleteNodeAction = (n: Uart.NodeClient) => handleDelete(n.Name)
+
     return (
-        <>
-            <Divider plain>节点信息</Divider>
+        <div className="bg-bento-canvas" style={{ position: 'relative', zIndex: 0 }}>
+            <PageHeader
+                title="节点管理"
+                subtitle="管理所有 DTU 节点、最大连接数与鉴权 Token"
+                breadcrumb={[
+                    { title: '首页', href: '/admin' },
+                    { title: '节点' },
+                ]}
+                extra={
+                    <Button
+                        type="primary"
+                        onClick={() => {
+                            setEditingItem(null)
+                            setVisible(true)
+                        }}
+                    >
+                        添加节点
+                    </Button>
+                }
+            />
 
-            <div
-                style={{
-                    display: 'flex',
-                    flexWrap: 'wrap',
-                    gap: 10,
-                    margin: '16px 0',
-                }}
-            >
-                {status.map((item) => (
-                    <Card size="small" key={item.type}>
-                        <div>
-                            {item.type}: {item.value}
-                        </div>
-                    </Card>
-                ))}
-            </div>
-
-            <div
-                style={{
-                    marginBottom: 16,
-                    display: 'flex',
-                    gap: 8,
-                    flexWrap: 'wrap',
-                }}
-            >
-                <Button type="primary" onClick={() => {
-                    setEditingItem(null)
-                    setVisible(true)
-                }}>
-                    添加节点
-                </Button>
-            </div>
+            <PageSummary
+                items={[
+                    { label: '节点总数', value: stats.total, variant: 'primary' as SummaryVariant },
+                    {
+                        label: '在线节点',
+                        value: stats.online,
+                        variant: 'success' as SummaryVariant,
+                        extra: stats.total > 0
+                            ? `${Math.round((stats.online / stats.total) * 100)}% 在线率`
+                            : '—',
+                    },
+                    {
+                        label: '总连接上限',
+                        value: stats.totalConnections.toLocaleString(),
+                        variant: 'info' as SummaryVariant,
+                    },
+                    {
+                        label: '平均注册设备',
+                        value: stats.avgDevices,
+                        variant: 'purple' as SummaryVariant,
+                    },
+                ]}
+            />
 
             <AddNode
                 visible={visible}
@@ -315,125 +370,243 @@ export const Nodes: React.FC = () => {
                 />
             )}
 
-            <Table
-                dataSource={generateTableKey(nodes, '_id')}
-                {...tableConfig}
-                pagination={{
-                    current: query.page ?? 1,
-                    pageSize: query.pageSize ?? 20,
-                    total: nodes.length,
-                    showTotal: t => `共 ${t} 个节点`,
-                    showSizeChanger: true,
-                }}
-                onChange={pag => {
-                    setQuery(prev => ({
-                        ...prev,
-                        page: pag.current ?? prev.page ?? 1,
-                        pageSize: pag.pageSize ?? prev.pageSize ?? 20,
-                    }))
-                }}
-            >
-                <Table.Column dataIndex="Name" title="节点名称" />
-                <Table.Column dataIndex="IP" title="节点 IP" />
-                <Table.Column dataIndex="Port" title="节点端口" />
-                <Table.Column
-                    dataIndex="MaxConnections"
-                    title="最大连接数"
-                />
-                <Table.Column
-                    dataIndex="count"
-                    title="注册设备"
-                    render={(v) => v ?? <span style={{ color: '#b0b8c8' }}>—</span>}
-                />
-                <Table.Column
-                    dataIndex="online"
-                    title="在线设备"
-                    render={(v) => v ?? <span style={{ color: '#b0b8c8' }}>—</span>}
-                />
-                <Table.Column
-                    key="auth"
-                    title="鉴权状态"
-                    render={(_, r: Uart.NodeClient) => (
-                        <Space orientation="vertical" size={2}>
-                            {renderAuthBadge(r)}
-                            {r.hasToken && r.lastSeenAt && (
-                                <span style={{ fontSize: 12, color: '#7c8aa0' }}>
-                                    {renderLastSeen(r)}
-                                </span>
-                            )}
-                        </Space>
-                    )}
-                />
-                <Table.Column
-                    key="lastSeenIp"
-                    title="最近 IP"
-                    render={(_, r: Uart.NodeClient) =>
-                        r.lastSeenIp ? (
-                            <code
-                                style={{
-                                    fontFamily: "'JetBrains Mono', ui-monospace, monospace",
-                                    fontSize: 12,
-                                }}
-                            >
-                                {r.lastSeenIp}
-                            </code>
-                        ) : (
-                            <span style={{ color: '#b0b8c8' }}>—</span>
-                        )
-                    }
-                />
-                <Table.Column
-                    key="op"
-                    title="操作"
-                    render={(_, r: Uart.NodeClient) => (
-                        <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
-                            <Button
-                                type="link"
-                                size="small"
-                                onClick={() => {
-                                    setEditingItem(r)
-                                    setVisible(true)
-                                }}
-                            >
-                                编辑
-                            </Button>
-                            <Button
-                                type="link"
-                                size="small"
-                                onClick={() =>
-                                    router.push(`/admin/node/nodes/info/${encodeURIComponent(r.Name)}`)
-                                }
-                            >
-                                查看日志
-                            </Button>
-                            <Button
-                                type="link"
-                                size="small"
-                                icon={<ReloadOutlined />}
-                                onClick={() => handleRestart(r.Name)}
-                            >
-                                重启
-                            </Button>
-                            <Button
-                                type="link"
-                                size="small"
-                                loading={rotating === r.Name}
-                                onClick={() => handleRotate(r.Name, r.hasToken ?? false)}
-                            >
-                                {r.hasToken ? '重置 token' : '配 token'}
-                            </Button>
-                            <Button
-                                type="link"
-                                size="small"
-                                danger
-                                icon={<DeleteFilled />}
-                                onClick={() => handleDelete(r.Name)}
-                            />
+            {isMobile ? (
+                <div className="nodes-mobile-cards" data-testid="nodes-mobile-cards">
+                    {generateTableKey(nodes, '_id').map((n: any) => (
+                        <div key={n._id ?? n.Name} className="node-mobile-card">
+                            <div className="node-mobile-card-header">
+                                <span className="node-name">{n.Name}</span>
+                                <StatusTag
+                                    variant={n.online ? 'online' : 'offline'}
+                                    size="sm"
+                                />
+                            </div>
+                            <div className="node-mobile-card-body">
+                                <div className="kv">
+                                    <span>节点 IP</span>
+                                    <span>{n.IP || '—'}</span>
+                                </div>
+                                <div className="kv">
+                                    <span>节点端口</span>
+                                    <span>{n.Port ?? '—'}</span>
+                                </div>
+                                <div className="kv">
+                                    <span>最大连接</span>
+                                    <span>{n.MaxConnections ?? '—'}</span>
+                                </div>
+                                <div className="kv">
+                                    <span>注册设备</span>
+                                    <span>{n.count ?? '—'}</span>
+                                </div>
+                                <div className="kv">
+                                    <span>在线设备</span>
+                                    <span>
+                                        <StatusTag
+                                            variant={n.online ? 'online' : 'offline'}
+                                            size="sm"
+                                        />
+                                    </span>
+                                </div>
+                                <div className="kv">
+                                    <span>鉴权状态</span>
+                                    <span>
+                                        <div className="chip-stack">
+                                            {renderAuthBadge(n)}
+                                            {n.hasToken && n.lastSeenAt && (
+                                                <span style={{ fontSize: 11, color: '#7c8aa0' }}>
+                                                    {renderLastSeen(n)}
+                                                </span>
+                                            )}
+                                        </div>
+                                    </span>
+                                </div>
+                                <div className="kv">
+                                    <span>最近 IP</span>
+                                    <span>
+                                        {n.lastSeenIp ? (
+                                            <code
+                                                style={{
+                                                    fontFamily:
+                                                        "'JetBrains Mono', ui-monospace, monospace",
+                                                    fontSize: 12,
+                                                }}
+                                            >
+                                                {n.lastSeenIp}
+                                            </code>
+                                        ) : (
+                                            <span style={{ color: '#b0b8c8' }}>—</span>
+                                        )}
+                                    </span>
+                                </div>
+                            </div>
+                            <div className="node-mobile-card-actions">
+                                <Button
+                                    size="small"
+                                    onClick={() => editNode(n)}
+                                >
+                                    编辑
+                                </Button>
+                                <Button
+                                    size="small"
+                                    onClick={() => viewLogs(n)}
+                                >
+                                    查看日志
+                                </Button>
+                                <Button
+                                    size="small"
+                                    icon={<ReloadOutlined />}
+                                    onClick={() => restartNode(n)}
+                                >
+                                    重启
+                                </Button>
+                                <Button
+                                    size="small"
+                                    loading={rotating === n.Name}
+                                    onClick={() => rotateOrInit(n)}
+                                >
+                                    {n.hasToken ? '重置 token' : '配 token'}
+                                </Button>
+                                <Button
+                                    size="small"
+                                    danger
+                                    icon={<DeleteFilled />}
+                                    onClick={() => deleteNodeAction(n)}
+                                />
+                            </div>
                         </div>
+                    ))}
+                    {nodes.length === 0 && (
+                        <div className="node-mobile-empty">暂无节点</div>
                     )}
-                />
-            </Table>
-        </>
+                </div>
+            ) : (
+                <Table className="v3-table"                 dataSource={generateTableKey(nodes, '_id')}
+                    {...tableConfig}
+                    pagination={{
+                        current: query.page ?? 1,
+                        pageSize: query.pageSize ?? 20,
+                        total: nodes.length,
+                        showTotal: t => `共 ${t} 个节点`,
+                        showSizeChanger: true,
+                    }}
+                    onChange={pag => {
+                        setQuery(prev => ({
+                            ...prev,
+                            page: pag.current ?? prev.page ?? 1,
+                            pageSize: pag.pageSize ?? prev.pageSize ?? 20,
+                        }))
+                    }}
+                >
+                    <Table.Column dataIndex="Name" title="节点名称" />
+                    <Table.Column dataIndex="IP" title="节点 IP" />
+                    <Table.Column dataIndex="Port" title="节点端口" />
+                    <Table.Column
+                        dataIndex="MaxConnections"
+                        title="最大连接数"
+                    />
+                    <Table.Column
+                        dataIndex="count"
+                        title="注册设备"
+                        render={(v) => v ?? <span style={{ color: '#b0b8c8' }}>—</span>}
+                    />
+                    <Table.Column
+                        dataIndex="online"
+                        title="在线设备"
+                        render={(v) => v ? <StatusTag variant="online" /> : <StatusTag variant="offline" />}
+                    />
+                    <Table.Column
+                        key="auth"
+                        title="鉴权状态"
+                        render={(_, r: Uart.NodeClient) => (
+                            <Space orientation="vertical" size={2}>
+                                {renderAuthBadge(r)}
+                                {r.hasToken && r.lastSeenAt && (
+                                    <span style={{ fontSize: 12, color: '#7c8aa0' }}>
+                                        {renderLastSeen(r)}
+                                    </span>
+                                )}
+                            </Space>
+                        )}
+                    />
+                    <Table.Column
+                        key="lastSeenIp"
+                        title="最近 IP"
+                        render={(_, r: Uart.NodeClient) =>
+                            r.lastSeenIp ? (
+                                <code
+                                    style={{
+                                        fontFamily: "'JetBrains Mono', ui-monospace, monospace",
+                                        fontSize: 12,
+                                    }}
+                                >
+                                    {r.lastSeenIp}
+                                </code>
+                            ) : (
+                                <span style={{ color: '#b0b8c8' }}>—</span>
+                            )
+                        }
+                    />
+                    <Table.Column
+                        key="op"
+                        title="操作"
+                        render={(_, r: Uart.NodeClient) => (
+                            <div
+                                style={{
+                                    display: 'flex',
+                                    gap: 4,
+                                    flexWrap: 'wrap',
+                                    alignItems: 'center',
+                                }}
+                                className="op-cell"
+                            >
+                                <Button
+                                    type="link"
+                                    size="small"
+                                    onClick={() => {
+                                        setEditingItem(r)
+                                        setVisible(true)
+                                    }}
+                                >
+                                    编辑
+                                </Button>
+                                <Button
+                                    type="link"
+                                    size="small"
+                                    onClick={() =>
+                                        router.push(`/admin/node/nodes/info/${encodeURIComponent(r.Name)}`)
+                                    }
+                                >
+                                    查看日志
+                                </Button>
+                                <Button
+                                    type="link"
+                                    size="small"
+                                    icon={<ReloadOutlined />}
+                                    onClick={() => handleRestart(r.Name)}
+                                >
+                                    重启
+                                </Button>
+                                <Button
+                                    type="link"
+                                    size="small"
+                                    loading={rotating === r.Name}
+                                    onClick={() => handleRotate(r.Name, r.hasToken ?? false)}
+                                >
+                                    {r.hasToken ? '重置 token' : '配 token'}
+                                </Button>
+                                <Button
+                                    type="link"
+                                    size="small"
+                                    danger
+                                    icon={<DeleteFilled />}
+                                    onClick={() => handleDelete(r.Name)}
+                                />
+                            </div>
+                        )}
+                    />
+                </Table>
+            )}
+        </div>
     )
 }
 
