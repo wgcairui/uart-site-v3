@@ -463,7 +463,7 @@ const ProtocolInfo: React.FC = () => {
               </div>
               <div className="app-kv-cell">
                 <span className="app-kv-label">已挂载终端</span>
-                <span className="app-kv-value">— (TODO)</span>
+                <span className="app-kv-value">—</span>
               </div>
             </>
           ) : undefined

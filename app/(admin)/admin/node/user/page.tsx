@@ -1,7 +1,7 @@
 'use client'
 import React, { useState } from "react";
 import { deleteUser, getUser, sendUserSocketInfo, users as getUsers, getUserStats } from "@/lib/api/fetchRoot"
-import { Avatar, Button, Col, Divider, message, Modal, Row, Table, Tag, Descriptions, Space } from "antd";
+import { Avatar, Button, Col, message, Modal, Row, Table, Tag, Descriptions, Space } from "antd";
 import { SwapOutlined } from "@ant-design/icons";
 import { MigrateUserResourcesModal } from "@/components/admin/MigrateUserResourcesModal";
 import {
@@ -16,6 +16,7 @@ import { usePromise } from "@/lib/hooks/usePromise";
 import { MyCopy } from "@/components/common/MyCopy";
 import { UserStat } from "@/components/data/UserStat";
 import { useNav } from "@/lib/hooks/useNav";
+import { PageHeader } from "@/components/common/PageHeader";
 import { PaginationReq } from "@/types";
 
 export const User: React.FC = () => {
@@ -94,7 +95,19 @@ export const User: React.FC = () => {
 
     return (
         <div className="bg-bento-canvas" style={{ position: 'relative', zIndex: 0 }}>
-            <Divider plain>用户信息 / {pagination.total ?? users.length}</Divider>
+            <PageHeader
+                title="用户管理"
+                subtitle="管理所有注册用户、权限组、迁移资源"
+                breadcrumb={[
+                    { title: '首页', href: '/admin' },
+                    { title: '用户' },
+                ]}
+                extra={
+                    <Button type="primary" onClick={() => message.info('请联系 cairui 手动添加')}>
+                        添加用户
+                    </Button>
+                }
+            />
 
             <Row gutter={36}>
                 <Col span={12} key="types">
@@ -196,10 +209,13 @@ export const User: React.FC = () => {
                         key: 'gz',
                         title: 'wx状态',
                         width: 60,
-                        render: (_, user) => <>
-                            {user.wxId && <Tag color="blue">公众号</Tag>}
-                            {user.wpId && <Tag color="cyan">小程序</Tag>}
-                        </>
+                        render: (_, user) => {
+                            if (!user.wxId && !user.wpId) return <span style={{ color: '#b0b8c8' }}>未关注</span>
+                            return <Space size={4}>
+                                {user.wxId && <Tag color="blue">公众号</Tag>}
+                                {user.wpId && <Tag color="cyan">小程序</Tag>}
+                            </Space>
+                        },
                     },
                     {
                         title: '操作',

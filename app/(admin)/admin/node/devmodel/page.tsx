@@ -145,6 +145,10 @@ export const DevModel: React.FC = () => {
         <div className="bg-bento-canvas" style={{ position: 'relative', zIndex: 0 }}>
             <PageHeader
                 title="设备类型"
+                breadcrumb={[
+                    { title: '首页', href: '/admin' },
+                    { title: '设备类型' },
+                ]}
                 extra={
                     <Space>
                         <Input.Search

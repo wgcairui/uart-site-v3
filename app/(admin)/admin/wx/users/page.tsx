@@ -1,12 +1,13 @@
 'use client'
 import { DownOutlined } from '@ant-design/icons'
-import { Avatar, Button, Divider, Dropdown, message, Modal, Table } from 'antd'
+import { Avatar, Button, Dropdown, message, Modal, Table } from 'antd'
 import { ColumnsType } from 'antd/lib/table'
 import dayjs from 'dayjs'
 import React, { useMemo, useState } from 'react'
 import { update_wx_users_all, wx_send_info, wx_users } from '@/lib/api/fetchRoot'
 import { extractServerTableQuery, generateTableKey, makeServerSearchProp } from '@/lib/utils/tableCommon'
 import { MyCopy } from '@/components/common/MyCopy'
+import { PageHeader } from '@/components/common/PageHeader'
 import { usePromise } from '@/lib/hooks/usePromise'
 import { PaginationReq, V2ListResponse } from '@/types'
 
@@ -64,18 +65,17 @@ export const WxUser: React.FC = () => {
 
   return (
     <>
-      <Divider plain>
-        所有微信关注用户 / {pagination.total}
-        <Button
-          shape="round"
-          type="primary"
-          size="small"
-          onClick={updateUsers}
-          style={{ marginLeft: 8 }}
-        >
-          更新用户库
-        </Button>
-      </Divider>
+      <PageHeader
+        title="公众号用户"
+        subtitle="查看所有关注公众号的用户信息"
+        breadcrumb={[
+          { title: '首页', href: '/admin' },
+          { title: '公众号用户' },
+        ]}
+        extra={
+          <Button type="primary" onClick={updateUsers}>更新用户库</Button>
+        }
+      />
       <Table
         loading={loading}
         dataSource={generateTableKey(data, 'openid')}
@@ -102,38 +102,41 @@ export const WxUser: React.FC = () => {
         columns={
           [
             {
-              title: 'avater',
+              title: '头像',
               dataIndex: 'headimgurl',
               width: 60,
               render: val => <Avatar src={val || null} size={38} />,
             },
             {
               dataIndex: 'nickname',
-              title: 'nickname',
+              title: '昵称',
               ...makeServerSearchProp('nickname', handleSearch),
               render: val => <MyCopy value={val}></MyCopy>,
             },
             {
               dataIndex: 'openid',
-              title: 'openid',
+              title: 'OpenID',
               ...makeServerSearchProp('openid', handleSearch),
               render: val => <MyCopy value={val}></MyCopy>,
             },
             {
               dataIndex: 'unionid',
-              title: 'unionid',
+              title: 'UnionID',
               ...makeServerSearchProp('unionid', handleSearch),
               render: val => <MyCopy value={val}></MyCopy>,
             },
             {
               dataIndex: 'sex',
               title: '性别',
-              render: val => (val ? '男' : '女'),
+              render: val => (val === 1 ? '男' : val === 2 ? '女' : '未知'),
             },
             {
-              title: 'city',
-              key: 'city',
-              render: (_, user) => `${user.country}-${user.province}-${user.city || user.province}`,
+              key: 'region',
+              title: '地区',
+              render: (_, user) => {
+                const parts = [user.country, user.province, user.city].filter(Boolean)
+                return parts.length > 0 ? parts.join(' · ') : '—'
+              },
             },
             {
               dataIndex: 'subscribe_time',

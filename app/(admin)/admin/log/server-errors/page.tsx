@@ -294,7 +294,14 @@ export const ServerErrorsPage: React.FC = () => {
 
     return (
         <>
-            <PageHeader title="服务端错误日志" breadcrumb={[{ title: '日志' }]} />
+            <PageHeader
+                title="服务端错误日志"
+                subtitle="查看 5xx 错误与堆栈详情"
+                breadcrumb={[
+                    { title: '首页', href: '/admin' },
+                    { title: '日志' },
+                ]}
+            />
 
             <PageSummary
                 items={[

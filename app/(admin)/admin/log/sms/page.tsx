@@ -8,6 +8,7 @@ import { usePromise } from "@/lib/hooks/usePromise"
 import { Log } from "@/components/log/log";
 import { DesList } from "@/components/data/DesList";
 import { PageSummary } from "@/components/common/PageSummary";
+import { PageHeader } from "@/components/common/PageHeader";
 import { PaginationReq, V2ListResponse } from "@/types";
 
 /**
@@ -60,62 +61,71 @@ export const LogSms: React.FC = () => {
     };
 
     return (
-        <Tabs items={[
-            {
-                key: 'log',
-                label: '日志',
-                children: (
-                    <>
-                        <Space style={{ marginBottom: 12 }}>
-                            <Input
-                                placeholder="输入手机号搜索"
-                                value={phone}
-                                onChange={e => setPhone(e.target.value)}
-                                onPressEnter={() => setRefreshKey(k => k + 1)}
-                                style={{ width: 180 }}
-                                allowClear
-                            />
-                            <Button type="primary" onClick={() => setRefreshKey(k => k + 1)}>搜索</Button>
-                        </Space>
-                        <Log
-                            key={refreshKey}
-                            lastDay={15}
-                            dataFun={logsmssends}
-                            filterPhone={phone}
-                            cPie={["tels"]}
-                            columns={[
-                            {
-                                dataIndex: 'tels',
-                                title: 'tels',
-                                ...getColumnSearchProp('tels')
-                            },
-                            {
-                                dataIndex: 'sendParams',
-                                title: 'sendParams',
-                                render: val => parse(val.TemplateParam, ['remind', 'code'])
-                            },
-                            {
-                                key: 'result',
-                                title: 'result',
-                                render: (_, sms: Uart.logSmsSend) => sms?.Success?.Message || sms?.Error?.message || 'null'
-                            }
-                        ]}
-                        expandable={{
-                            expandedRowRender: (li: Uart.logSmsSend) =>
-                                <Card>
-                                    <DesList title="sendParams" data={li.sendParams} />
-                                    <DesList title="Success" data={li.Success} />
-                                    <DesList title="Error" data={li.Error} />
-                                </Card>
-                        }}
-                    />
-                    </>
-                ),
-            },
-            {
-                key: 'count',
-                label: '短信消耗排布',
-                children: (
+        <>
+            <PageHeader
+                title="短信日志"
+                subtitle="查看短信发送历史与消耗统计"
+                breadcrumb={[
+                    { title: '首页', href: '/admin' },
+                    { title: '日志' },
+                ]}
+            />
+            <Tabs items={[
+                {
+                    key: 'log',
+                    label: '日志',
+                    children: (
+                        <>
+                            <Space style={{ marginBottom: 12 }}>
+                                <Input
+                                    placeholder="输入手机号搜索"
+                                    value={phone}
+                                    onChange={e => setPhone(e.target.value)}
+                                    onPressEnter={() => setRefreshKey(k => k + 1)}
+                                    style={{ width: 180 }}
+                                    allowClear
+                                />
+                                <Button type="primary" onClick={() => setRefreshKey(k => k + 1)}>搜索</Button>
+                            </Space>
+                            <Log
+                                key={refreshKey}
+                                lastDay={15}
+                                dataFun={logsmssends}
+                                filterPhone={phone}
+                                cPie={["tels"]}
+                                columns={[
+                                {
+                                    dataIndex: 'tels',
+                                    title: '收件人',
+                                    ...getColumnSearchProp('tels')
+                                },
+                                {
+                                    dataIndex: 'sendParams',
+                                    title: '发送参数',
+                                    render: val => parse(val.TemplateParam, ['remind', 'code'])
+                                },
+                                {
+                                    key: 'result',
+                                    title: '结果',
+                                    render: (_, sms: Uart.logSmsSend) => sms?.Success?.Message || sms?.Error?.message || '—'
+                                }
+                            ]}
+                            expandable={{
+                                expandedRowRender: (li: Uart.logSmsSend) =>
+                                    <Card>
+                                        <DesList title="sendParams" data={li.sendParams} />
+                                        <DesList title="Success" data={li.Success} />
+                                        <DesList title="Error" data={li.Error} />
+                                    </Card>
+                            }}
+                        />
+                        </>
+                    ),
+                },
+                {
+                    key: 'count',
+                    label: '短信消耗分布',
+                    children: (
                     <>
                         {/* 顶部 Stat 汇总 */}
                         <PageSummary
@@ -175,7 +185,7 @@ export const LogSms: React.FC = () => {
                                                 },
                                                 {
                                                     dataIndex: 'count',
-                                                    title: "count",
+                                                    title: '次数',
                                                     defaultSortOrder: 'descend',
                                                     sorter: (a: any, b: any) => a.count - b.count
                                                 }
@@ -189,6 +199,7 @@ export const LogSms: React.FC = () => {
                 ),
             },
         ]} />
+        </>
     )
 }
 

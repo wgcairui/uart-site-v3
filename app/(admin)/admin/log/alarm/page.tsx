@@ -23,6 +23,7 @@ import { loguartterminaldatatransfinites } from '@/lib/api/fetchRoot'
 import { getColumnSearchProp, generateTableKey } from '@/lib/utils/tableCommon'
 import { usePromise } from '@/lib/hooks/usePromise'
 import { MyDatePickerRange } from '@/components/common/MyDatePickerRange'
+import { PageHeader } from '@/components/common/PageHeader'
 
 dayjs.extend(relativeTime)
 dayjs.locale('zh-cn')
@@ -147,6 +148,14 @@ export const LogAlarm: React.FC = () => {
   if (isMobile) {
     return (
       <div className="bg-bento-canvas" style={{ position: 'relative', zIndex: 0 }}>
+        <PageHeader
+          title="告警日志"
+          subtitle="查看设备告警事件历史记录"
+          breadcrumb={[
+            { title: '首页', href: '/admin' },
+            { title: '日志' },
+          ]}
+        />
         <MobileAlarmCards />
       </div>
     )
@@ -154,15 +163,23 @@ export const LogAlarm: React.FC = () => {
 
   return (
     <div className="bg-bento-canvas" style={{ position: 'relative', zIndex: 0 }}>
+      <PageHeader
+        title="告警日志"
+        subtitle="查看设备告警事件历史记录"
+        breadcrumb={[
+          { title: '首页', href: '/admin' },
+          { title: '日志' },
+        ]}
+      />
       <Log
         lastDay={30}
         dataFun={loguartterminaldatatransfinites}
         cPie={['tag']}
         columns={[
-          { dataIndex: 'mac', title: 'mac', ...getColumnSearchProp('mac') },
-          { dataIndex: 'pid', title: 'pid' },
-          { dataIndex: 'tag', title: 'tag', ...getColumnSearchProp('tag') },
-          { dataIndex: 'msg', title: 'msg', ellipsis: true },
+          { dataIndex: 'mac', title: 'MAC 地址', ...getColumnSearchProp('mac') },
+          { dataIndex: 'pid', title: 'PID' },
+          { dataIndex: 'tag', title: '标签', ...getColumnSearchProp('tag') },
+          { dataIndex: 'msg', title: '消息', ellipsis: true },
           {
             dataIndex: 'timeStamp',
             title: '时间',

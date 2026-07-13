@@ -145,7 +145,14 @@ export default function Terminals() {
 
     return (
         <div className="bg-bento-canvas" style={{ position: 'relative', zIndex: 0 }}>
-            <PageHeader title="终端管理" subtitle="管理所有 DTU 设备、节点、协议、注册" />
+            <PageHeader
+                title="终端管理"
+                subtitle="管理所有 DTU 设备、节点、协议、注册"
+                breadcrumb={[
+                    { title: '首页', href: '/admin' },
+                    { title: '终端' },
+                ]}
+            />
             <div style={{ marginBottom: 24 }}>
                 <PageSummary
                     items={[
