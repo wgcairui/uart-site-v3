@@ -31,6 +31,31 @@ const Login: React.FC = () => {
 	const [tabdefaultActiveKey, setTabDefaultActiveKey] = useState<"wx_qr" | "login">("wx_qr");
 
 	const [loginLoading, setLoginLoading] = useState(false);
+	const [devLoginLoading, setDevLoginLoading] = useState(false);
+
+	// 开发环境一键管理员登录 — 仅当 .env.local 设了 NEXT_PUBLIC_HAS_DEV_CREDS=1 才显示按钮
+	// 真正的密码在 server-side route.ts (app/api/dev-login/route.ts) 读, 永不进 client bundle
+	const hasDevCreds = process.env.NEXT_PUBLIC_HAS_DEV_CREDS === '1'
+
+	const onDevLogin = async () => {
+		setDevLoginLoading(true)
+		try {
+			const res = await fetch('/api/dev-login', { method: 'POST' })
+			const json: any = await res.json().catch(() => ({}))
+			if (res.ok && json?.code === 200) {
+				// cookie 已在 route.ts 里 set, 直接跳 admin
+				// 等同于手工登录成功后的 navi("/admin")
+				message.success(`dev 登录成功: ${json.data?.user || 'admin'}`)
+				window.location.href = json.data?.redirect || '/admin'
+			} else {
+				message.error(`dev 登录失败: ${json?.message || res.status}`)
+			}
+		} catch (e: any) {
+			message.error(`dev 登录出错: ${e?.message || String(e)}`)
+		} finally {
+			setDevLoginLoading(false)
+		}
+	}
 
 	const checkUser = async () => {
 		if (!getToken()) return false;
@@ -196,6 +221,16 @@ const Login: React.FC = () => {
 														>
 															我要试用?
 														</Button>
+														{hasDevCreds && (
+															<Button
+																loading={devLoginLoading}
+																className="login-form-button-dev"
+																onClick={onDevLogin}
+																title="本机 .env.local 配置 DEV_ADMIN_USER / DEV_ADMIN_PASSWORD 才有效 (route.ts NODE_ENV guard)"
+															>
+																开发登录
+															</Button>
+														)}
 													</Form.Item>
 												</Form>
 											),
