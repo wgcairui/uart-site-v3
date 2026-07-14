@@ -221,7 +221,7 @@ export function AdminSider() {
         ))}
       </nav>
 
-      {/* 底部版权 / 版本 */}
+      {/* 底部：教程入口 + 版权 / 版本 */}
       {!collapsed && (
         <div
           style={{
@@ -234,6 +234,20 @@ export function AdminSider() {
             zIndex: 1,
           }}
         >
+          <a
+            href="https://besiv-uart.oss-cn-hangzhou.aliyuncs.com/docs/ladisuart/tutorial-v2.5.pdf"
+            style={{
+              display: 'block',
+              color: 'rgba(255, 255, 255, 0.65)',
+              textDecoration: 'none',
+              marginBottom: 8,
+              fontSize: 12,
+              fontFamily: 'var(--font-sans)',
+            }}
+            title="小程序使用教程 PDF"
+          >
+            📖 使用教程
+          </a>
           UART v3 · 2026
         </div>
       )}

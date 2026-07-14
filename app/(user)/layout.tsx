@@ -105,6 +105,13 @@ export default function UserLayout({ children }: { children: React.ReactNode }) 
                     </nav>
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                    <a
+                        href="https://besiv-uart.oss-cn-hangzhou.aliyuncs.com/docs/ladisuart/tutorial-v2.5.pdf"
+                        className="app-topbar-menu-item"
+                        title="小程序使用教程 PDF"
+                    >
+                        📖 使用教程
+                    </a>
                     <button
                         className="user-topbar-hamburger"
                         onClick={() => setMobileNavOpen(true)}

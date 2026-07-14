@@ -47,6 +47,7 @@ export const UserDropDown: React.FC<props> = ({ userPage }) => {
                 menu={{
                     items: [
                         { key: "info", label: <a onClick={() => nav(userPage || "/main/userinfo", { user: data?.user })}>用户信息</a> },
+                        { key: "tutorial", label: <a href="https://besiv-uart.oss-cn-hangzhou.aliyuncs.com/docs/ladisuart/tutorial-v2.5.pdf" title="小程序使用教程 PDF">📖 使用教程</a> },
                         { key: "exit", label: <a onClick={() => exit()}>退出</a> }
                     ]
                 }}
