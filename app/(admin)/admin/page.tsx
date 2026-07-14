@@ -1,6 +1,6 @@
 'use client'
 import { useEffect, useMemo, useState } from 'react'
-import { Spin, Button, Tooltip } from 'antd'
+import { Spin, Button, Tooltip, Row, Col } from 'antd'
 import { ReloadOutlined, ApiOutlined, AlertOutlined, ClusterOutlined, ExperimentOutlined } from '@ant-design/icons'
 import { PageHeader } from '@/components/common/PageHeader'
 import { runingState } from '@/lib/api/fetchRoot'
@@ -96,89 +96,99 @@ export default function AdminDashboardPage() {
                 }
             />
 
-            <div
-                style={{
-                    display: 'grid',
-                    gridTemplateColumns: 'repeat(12, 1fr)',
-                    gap: 20,
-                }}
-            >
-                {/* ───────── Row 1: KPI Hero + 3 KPI ───────── */}
-                <div
-                    className="bento-card kpi-hero"
-                    style={{
-                        gridColumn: 'span 5',
-                        padding: 32,
-                        background: 'linear-gradient(135deg, #1e1b4b 0%, #312e81 50%, #6d28d9 100%)',
-                        color: '#fff',
-                        border: 'none',
-                        position: 'relative',
-                        overflow: 'hidden',
-                    }}
-                >
-                    <div style={{ position: 'absolute', top: -50, right: -50, width: 200, height: 200, background: 'radial-gradient(circle, var(--accent-400) 0%, transparent 70%)', opacity: 0.5, pointerEvents: 'none' }} />
-                    <div style={{ position: 'relative', zIndex: 1, color: 'rgba(255,255,255,0.7)', fontSize: 12, fontWeight: 500, letterSpacing: '0.05em', textTransform: 'uppercase', fontFamily: 'var(--font-mono)' }}>
-                        // 设备总数 · TOTAL
+            <Row gutter={[20, 20]}>
+                {/* ───────── Row 1: KPI Hero + 3 KPI (antd Col 响应式: mobile 1-列, tablet 1-列, desktop 12-列) ───────── */}
+                <Col xs={24} sm={24} md={5}>
+                    <div
+                        className="bento-card kpi-hero"
+                        style={{
+                            padding: 32,
+                            background: 'linear-gradient(135deg, #1e1b4b 0%, #312e81 50%, #6d28d9 100%)',
+                            color: '#fff',
+                            border: 'none',
+                            position: 'relative',
+                            overflow: 'hidden',
+                            minHeight: 200,
+                        }}
+                    >
+                        <div style={{ position: 'absolute', top: -50, right: -50, width: 200, height: 200, background: 'radial-gradient(circle, var(--accent-400) 0%, transparent 70%)', opacity: 0.5, pointerEvents: 'none' }} />
+                        <div style={{ position: 'relative', zIndex: 1, color: 'rgba(255,255,255,0.7)', fontSize: 12, fontWeight: 500, letterSpacing: '0.05em', textTransform: 'uppercase', fontFamily: 'var(--font-mono)', whiteSpace: 'nowrap' }}>
+                            // 设备总数 · TOTAL
+                        </div>
+                        <div style={{ position: 'relative', zIndex: 1, fontSize: 64, fontWeight: 600, letterSpacing: '-0.03em', lineHeight: 1, marginTop: 16, fontFamily: 'var(--font-sans)', color: '#fff' }}>
+                            {hero.total}
+                        </div>
+                        <div style={{ position: 'relative', zIndex: 1, marginTop: 16, color: '#86efac', fontSize: 13, display: 'inline-flex', alignItems: 'center', gap: 6, background: 'rgba(134, 239, 172, 0.15)', padding: '6px 12px', borderRadius: 8, fontWeight: 500 }}>
+                            ↑ 实时统计
+                        </div>
+                        <div style={{ position: 'relative', zIndex: 1, marginTop: 32, display: 'flex', gap: 24, paddingTop: 24, borderTop: '1px solid rgba(255, 255, 255, 0.1)', flexWrap: 'wrap' }}>
+                            <HeroItem label="DTU 节点" value={hero.nodes} />
+                            <HeroItem label="协议数" value={hero.protocols} />
+                            <HeroItem label="用户数" value={hero.users} />
+                        </div>
                     </div>
-                    <div style={{ position: 'relative', zIndex: 1, fontSize: 64, fontWeight: 600, letterSpacing: '-0.03em', lineHeight: 1, marginTop: 16, fontFamily: 'var(--font-sans)', color: '#fff' }}>
-                        {hero.total}
-                    </div>
-                    <div style={{ position: 'relative', zIndex: 1, marginTop: 16, color: '#86efac', fontSize: 13, display: 'inline-flex', alignItems: 'center', gap: 6, background: 'rgba(134, 239, 172, 0.15)', padding: '6px 12px', borderRadius: 8, fontWeight: 500 }}>
-                        ↑ 实时统计
-                    </div>
-                    <div style={{ position: 'relative', zIndex: 1, marginTop: 32, display: 'flex', gap: 24, paddingTop: 24, borderTop: '1px solid rgba(255, 255, 255, 0.1)' }}>
-                        <HeroItem label="DTU 节点" value={hero.nodes} />
-                        <HeroItem label="协议数" value={hero.protocols} />
-                        <HeroItem label="用户数" value={hero.users} />
-                    </div>
-                </div>
+                </Col>
 
-                <KpiCard gridColumn="span 3" icon={<ApiOutlined />} label="在线" value={counts.online} trend={`${hero.total > 0 ? Math.round((counts.online / hero.total) * 100) : 0}% 在线率`} trendColor="var(--color-success)" />
-                <KpiCard gridColumn="span 2" icon={null} label="离线" value={counts.offline} trend={`${hero.total > 0 ? Math.round((counts.offline / hero.total) * 100) : 0}%`} trendColor="var(--color-danger)" />
-                <KpiCard gridColumn="span 2" icon={<AlertOutlined />} label="告警" value={(counts.warning ?? 0) + (counts.error ?? 0)} trend={`${counts.warning ?? 0} 告警 · ${counts.error ?? 0} 故障 · 24h trend`} trendColor="var(--color-warning)" />
+                <Col xs={24} sm={12} md={3}>
+                    <KpiCard icon={<ApiOutlined />} label="在线" value={counts.online} trend={`${hero.total > 0 ? Math.round((counts.online / hero.total) * 100) : 0}% 在线率`} trendColor="var(--color-success)" />
+                </Col>
+                <Col xs={24} sm={12} md={2}>
+                    <KpiCard icon={null} label="离线" value={counts.offline} trend={`${hero.total > 0 ? Math.round((counts.offline / hero.total) * 100) : 0}%`} trendColor="var(--color-danger)" />
+                </Col>
+                <Col xs={24} sm={12} md={2}>
+                    <KpiCard icon={<AlertOutlined />} label="告警" value={(counts.warning ?? 0) + (counts.error ?? 0)} trend={`${counts.warning ?? 0} 告警 · ${counts.error ?? 0} 故障 · 24h trend`} trendColor="var(--color-warning)" />
+                </Col>
 
-                {/* ───────── Row 2: LiveControls + 节点状态 ───────── */}
-                <div style={{ gridColumn: 'span 8' }}>
+                {/* ───────── Row 2: LiveControls + 节点状态 (mobile 全 1-列, desktop 8/4) ───────── */}
+                <Col xs={24} sm={24} md={16} lg={8}>
                     <LiveControls variant="admin" title="实时状态 · 6 variant" />
-                </div>
-                <div className="bento-card status-bento" style={{ gridColumn: 'span 4', padding: 24 }}>
-                    <NodeStatusBento refreshTick={refreshTick} />
-                </div>
+                </Col>
+                <Col xs={24} sm={24} md={8} lg={4}>
+                    <div className="bento-card status-bento" style={{ padding: 24 }}>
+                        <NodeStatusBento refreshTick={refreshTick} />
+                    </div>
+                </Col>
 
-                {/* ───────── Row 3: 7-day 趋势 + 健康度评分 ───────── */}
-                <div className="bento-card chart-bento" style={{ gridColumn: 'span 8', padding: 24 }}>
-                    <TrendChartBento refreshTick={refreshTick} />
-                </div>
-                <div style={{ gridColumn: 'span 4' }}>
+                {/* ───────── Row 3: 7-day 趋势 + 健康度评分 (mobile 全 1-列, desktop 8/4) ───────── */}
+                <Col xs={24} sm={24} md={16} lg={8}>
+                    <div className="bento-card chart-bento" style={{ padding: 24 }}>
+                        <TrendChartBento refreshTick={refreshTick} />
+                    </div>
+                </Col>
+                <Col xs={24} sm={24} md={8} lg={4}>
                     <HealthScoreBento refreshTick={refreshTick} />
-                </div>
+                </Col>
 
-                {/* ───────── Row 3.5: 实时流量 sparkline (PR-A, span 12) ───────── */}
-                <div style={{ gridColumn: 'span 12' }}>
+                {/* ───────── Row 3.5: 实时流量 sparkline (PR-A, 全宽) ───────── */}
+                <Col xs={24} sm={24} md={24}>
                     <TrafficSparkBento refreshTick={refreshTick} />
-                </div>
+                </Col>
 
-                {/* ───────── Row 4: 分类分布 + 系统总览 ───────── */}
-                <div style={{ gridColumn: 'span 8' }}>
+                {/* ───────── Row 4: 分类分布 + 系统总览 (mobile 1-列, tablet 2-列, desktop 8/4) ───────── */}
+                <Col xs={24} sm={24} md={16} lg={8}>
                     <DistributionBento refreshTick={refreshTick} />
-                </div>
-                <div style={{ gridColumn: 'span 4' }}>
+                </Col>
+                <Col xs={24} sm={24} md={8} lg={4}>
                     <QuickStatsBento refreshTick={refreshTick} />
-                </div>
+                </Col>
 
                 {/* ───────── Row 5: 主服务运行状态 (全宽) ───────── */}
-                <div className="bento-card" style={{ gridColumn: 'span 12', padding: 24 }}>
-                    <ServerStatusTable refreshTick={refreshTick} />
-                </div>
+                <Col xs={24} sm={24} md={24}>
+                    <div className="bento-card" style={{ padding: 24 }}>
+                        <ServerStatusTable refreshTick={refreshTick} />
+                    </div>
+                </Col>
 
-                {/* ───────── Row 6: 24h 告警趋势 + 设备快速列表 ───────── */}
-                <div style={{ gridColumn: 'span 6' }}>
+                {/* ───────── Row 6: 24h 告警趋势 + 设备快速列表 (mobile 1-列, desktop 1:1) ───────── */}
+                <Col xs={24} sm={12} md={12} lg={6}>
                     <AlarmTrendBento refreshTick={refreshTick} />
-                </div>
-                <div className="bento-card devices-bento" style={{ gridColumn: 'span 6', padding: 0, overflow: 'hidden' }}>
-                    <DevicesBento />
-                </div>
-            </div>
+                </Col>
+                <Col xs={24} sm={12} md={12} lg={6}>
+                    <div className="bento-card devices-bento" style={{ padding: 0, overflow: 'hidden' }}>
+                        <DevicesBento />
+                    </div>
+                </Col>
+            </Row>
 
             {/* 底部: 刷新状态 */}
             <div style={{ marginTop: 16, display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 11, color: 'var(--ink-500)', fontFamily: 'var(--font-mono)' }}>
@@ -197,9 +207,9 @@ function HeroItem({ label, value }: { label: string; value: number | string }) {
     )
 }
 
-function KpiCard({ gridColumn, icon, label, value, trend, trendColor }: { gridColumn: string; icon: React.ReactNode; label: string; value: number; trend: string; trendColor: string }) {
+function KpiCard({ icon, label, value, trend, trendColor }: { icon: React.ReactNode; label: string; value: number; trend: string; trendColor: string }) {
     return (
-        <div className="bento-card" style={{ gridColumn, padding: 24, display: 'flex', flexDirection: 'column' }}>
+        <div className="bento-card" style={{ padding: 24, display: 'flex', flexDirection: 'column', height: '100%' }}>
             <div style={{ color: 'var(--brand-500)', fontSize: 11, fontWeight: 500, letterSpacing: '0.05em', textTransform: 'uppercase', fontFamily: 'var(--font-mono)', display: 'flex', alignItems: 'center', gap: 6 }}>
                 {icon} // {label}
             </div>
