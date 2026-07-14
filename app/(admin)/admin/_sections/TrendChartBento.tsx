@@ -109,34 +109,59 @@ export function TrendChartBento({ refreshTick }: { refreshTick?: number }) {
 
             {dataEmpty && snapshot ? (
                 // 历史端点全 0 (sibling 未 emit TERMINAL_OFFLINE) → 显示当前快照 fallback
-                <div style={{ marginTop: 24, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 32, height: 140 }}>
-                    <div style={{ textAlign: 'center' }}>
-                        <div style={{ fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.1em', color: 'var(--ink-500)', fontFamily: 'var(--font-mono)' }}>
-                            当前 online
-                        </div>
-                        <div style={{ fontSize: 36, fontWeight: 600, color: 'var(--brand-600, #7c3aed)', fontFamily: 'var(--font-sans)', marginTop: 4 }}>
-                            {snapshot.online}
-                        </div>
-                    </div>
-                    <div style={{ width: 1, height: 64, background: 'var(--ink-200, #e5e7eb)' }} />
-                    <div style={{ textAlign: 'center' }}>
-                        <div style={{ fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.1em', color: 'var(--ink-500)', fontFamily: 'var(--font-mono)' }}>
-                            当前 offline
-                        </div>
-                        <div style={{ fontSize: 36, fontWeight: 600, color: 'var(--ink-500, #6b7280)', fontFamily: 'var(--font-sans)', marginTop: 4 }}>
-                            {snapshot.offline}
-                        </div>
-                    </div>
-                    <div style={{ width: 1, height: 64, background: 'var(--ink-200, #e5e7eb)' }} />
-                    <div style={{ textAlign: 'center' }}>
-                        <div style={{ fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.1em', color: 'var(--ink-500)', fontFamily: 'var(--font-mono)' }}>
-                            总数
-                        </div>
-                        <div style={{ fontSize: 36, fontWeight: 600, color: 'var(--ink-900)', fontFamily: 'var(--font-sans)', marginTop: 4 }}>
-                            {snapshot.total}
+                <>
+                    <div
+                        style={{
+                            marginTop: 16,
+                            padding: '10px 14px',
+                            background: 'rgba(245, 158, 11, 0.08)',
+                            border: '1px solid rgba(245, 158, 11, 0.2)',
+                            borderRadius: 10,
+                            fontSize: 12,
+                            color: '#b45309',
+                            display: 'flex',
+                            alignItems: 'flex-start',
+                            gap: 8,
+                            lineHeight: 1.6,
+                        }}
+                    >
+                        <span style={{ fontSize: 14, lineHeight: 1 }}>⏳</span>
+                        <div>
+                            <strong>历史趋势等待 server emit TERMINAL_OFFLINE 事件</strong>
+                            <div style={{ color: '#92400e', fontSize: 11, marginTop: 2 }}>
+                                PR-B 端点已就绪, 等 sibling uart-server 把离线事件写入 <code style={{ fontFamily: 'var(--font-mono)', background: 'rgba(0,0,0,0.04)', padding: '1px 4px', borderRadius: 3 }}>log.terminalEvents</code> collection 后自动激活。下面是当前实时快照。
+                            </div>
                         </div>
                     </div>
-                </div>
+                    <div style={{ marginTop: 16, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 32, height: 120 }}>
+                        <div style={{ textAlign: 'center' }}>
+                            <div style={{ fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.1em', color: 'var(--ink-500)', fontFamily: 'var(--font-mono)' }}>
+                                当前 online
+                            </div>
+                            <div style={{ fontSize: 36, fontWeight: 600, color: 'var(--brand-600, #7c3aed)', fontFamily: 'var(--font-sans)', marginTop: 4 }}>
+                                {snapshot.online}
+                            </div>
+                        </div>
+                        <div style={{ width: 1, height: 56, background: 'var(--ink-200, #e5e7eb)' }} />
+                        <div style={{ textAlign: 'center' }}>
+                            <div style={{ fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.1em', color: 'var(--ink-500)', fontFamily: 'var(--font-mono)' }}>
+                                当前 offline
+                            </div>
+                            <div style={{ fontSize: 36, fontWeight: 600, color: 'var(--ink-500, #6b7280)', fontFamily: 'var(--font-sans)', marginTop: 4 }}>
+                                {snapshot.offline}
+                            </div>
+                        </div>
+                        <div style={{ width: 1, height: 56, background: 'var(--ink-200, #e5e7eb)' }} />
+                        <div style={{ textAlign: 'center' }}>
+                            <div style={{ fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.1em', color: 'var(--ink-500)', fontFamily: 'var(--font-mono)' }}>
+                                总数
+                            </div>
+                            <div style={{ fontSize: 36, fontWeight: 600, color: 'var(--ink-900)', fontFamily: 'var(--font-sans)', marginTop: 4 }}>
+                                {snapshot.total}
+                            </div>
+                        </div>
+                    </div>
+                </>
             ) : (
                 <div style={{ marginTop: 20, display: 'flex', alignItems: 'flex-end', gap: cfg.granularity === 'day' ? 6 : 4, height: 140, paddingTop: 8 }}>
                     {offlineBuckets.map((b: any, i: number) => {
