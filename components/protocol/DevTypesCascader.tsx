@@ -45,8 +45,24 @@ export const DevTypesCascader: React.FC<CascaderProps> = props => {
         // 已有 children, 不重复加载
         if (target.children || loaded.has(targetValue)) return;
 
+        // 显式设 loading 状态, antd v6 Cascader 用此字段显示 spinner
+        setCascader(prev => prev.map(opt =>
+            String(opt.value) === targetValue
+                ? { ...opt, loading: true }
+                : opt
+        ));
+
         getDevTypes(targetValue).then(el => {
-            const children = (el.data.items || []).map((type: any) => ({
+            // getDevTypes 实际返回: { code, data: DevsType[] } 数组直接
+            // 类型声明写的是 V2ListResponse { items, pagination } 是错的
+            // 这里兼容两种 shape
+            const raw = el?.data;
+            const items: any[] = Array.isArray(raw)
+                ? raw
+                : Array.isArray(raw?.items)
+                    ? raw.items
+                    : [];
+            const children = items.map((type: any) => ({
                 value: type.DevModel,
                 label: type.DevModel,
                 isLeaf: false,
@@ -59,12 +75,18 @@ export const DevTypesCascader: React.FC<CascaderProps> = props => {
             // 不可变更新, 不要直接 mutate target
             setCascader(prev => prev.map(opt =>
                 String(opt.value) === targetValue
-                    ? { ...opt, children, isLeaf: false }
+                    ? { ...opt, children, loading: false, isLeaf: false }
                     : opt
             ));
             setLoaded(prev => new Set(prev).add(targetValue));
-        }).catch(() => {
-            // 加载失败保留空 children, 允许用户重新点
+        }).catch((err) => {
+            // 加载失败回滚 loading 状态
+            setCascader(prev => prev.map(opt =>
+                String(opt.value) === targetValue
+                    ? { ...opt, loading: false }
+                    : opt
+            ));
+            console.error('[DevTypesCascader] loadData failed for', targetValue, err);
         });
     }
 
