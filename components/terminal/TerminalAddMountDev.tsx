@@ -1,6 +1,6 @@
 'use client'
 import { Modal, Form, Select, message } from "antd";
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { addTerminalMountDev, getTerminal } from "@/lib/api/fetch";
 import { usePromise } from "@/lib/hooks/usePromise";
 import { DevTypesCascader } from "@/components/protocol/DevTypesCascader";
@@ -26,8 +26,8 @@ interface addMountDev {
 export const TerminalAddMountDev: React.FC<addMountDev> = ({ visible, mac, onCancel, onChange }) => {
 
     /**
-         * 新的挂载
-         */
+     * 新的挂载
+     */
     const [mountDev, setMountDev] = useState<Uart.TerminalMountDevs>({
         pid: 1,
         protocol: '',
@@ -35,6 +35,19 @@ export const TerminalAddMountDev: React.FC<addMountDev> = ({ visible, mac, onCan
         Type: "UPS"
     })
 
+    /**
+     * 弹窗打开时重置 (避免上次选择残留)
+     */
+    useEffect(() => {
+        if (visible) {
+            setMountDev({
+                pid: 1,
+                protocol: '',
+                mountDev: '',
+                Type: "UPS",
+            });
+        }
+    }, [visible]);
 
     /**
      * 获取设备挂载下已使用的pids
@@ -55,6 +68,15 @@ export const TerminalAddMountDev: React.FC<addMountDev> = ({ visible, mac, onCan
         }
         return ns
     }, [mountDevPids])
+
+    // Cascader 受控 value: [Type, mountDev, protocol]
+    // 只有三段都填了才回显, 否则 undefined (显示 placeholder)
+    const cascaderValue = useMemo<(string[] | undefined)>(() => {
+        if (mountDev.Type && mountDev.mountDev && mountDev.protocol) {
+            return [mountDev.Type, mountDev.mountDev, mountDev.protocol]
+        }
+        return undefined
+    }, [mountDev.Type, mountDev.mountDev, mountDev.protocol])
 
     const postMountDev = () => {
         if (mountDev.protocol) {
@@ -78,15 +100,43 @@ export const TerminalAddMountDev: React.FC<addMountDev> = ({ visible, mac, onCan
     }
 
     return (
-        <Modal title="添加设备" open={visible} confirmLoading={!mountDev.protocol} {...(onCancel !== undefined ? { onCancel } : {})} onOk={postMountDev}>
-            <Form>
-                {<Form.Item label="设备协议">
-                    <DevTypesCascader onChange={([Type, mountDe, protocol]) => {
-                        setMountDev({ ...mountDev, Type: Type as string, protocol: protocol as string, mountDev: mountDe as string })
-                    }}></DevTypesCascader>
-                </Form.Item>}
-                <Form.Item label="设备地址">
-                    <Select defaultValue={mountDev.pid} onSelect={(pid: any) => setMountDev({ ...mountDev, pid })}>
+        <Modal
+            title="添加设备"
+            open={visible}
+            confirmLoading={!mountDev.protocol}
+            okText="添加"
+            cancelText="取消"
+            {...(onCancel !== undefined ? { onCancel } : {})}
+            onOk={postMountDev}
+            destroyOnHidden
+        >
+            <Form layout="vertical">
+                <Form.Item label="设备协议" required>
+                    <DevTypesCascader
+                        value={cascaderValue}
+                        placeholder="选择 Type / 设备型号 / 协议"
+                        changeOnSelect={false}
+                        onChange={(value: any) => {
+                            if (Array.isArray(value) && value.length >= 3) {
+                                setMountDev({
+                                    ...mountDev,
+                                    Type: value[0] as string,
+                                    mountDev: value[1] as string,
+                                    protocol: value[2] as string,
+                                })
+                            }
+                        }}
+                    />
+                </Form.Item>
+                <Form.Item label="设备地址 (pid)" required>
+                    <Select
+                        value={mountDev.pid}
+                        placeholder="选择 PID (0-254 中未使用的)"
+                        onChange={(pid: any) => setMountDev({ ...mountDev, pid })}
+                        style={{ width: '100%' }}
+                        showSearch
+                        optionFilterProp="children"
+                    >
                         {
                             pids.map(n => <Select.Option value={n} key={n}>{n}</Select.Option>)
                         }
@@ -94,5 +144,5 @@ export const TerminalAddMountDev: React.FC<addMountDev> = ({ visible, mac, onCan
                 </Form.Item>
             </Form>
         </Modal>
-    )
+    );
 }
