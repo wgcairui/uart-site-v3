@@ -52,7 +52,8 @@ export function PageSummary({ items, column = 4 }: PageSummaryProps) {
     <div
       style={{
         display: 'grid',
-        gridTemplateColumns: `repeat(${column}, minmax(0, 1fr))`,
+        // 响应式: 4 卡 → 2 卡 → 1 卡, 桌面端保持 column 列数, 窄屏自动 fallback
+        gridTemplateColumns: `repeat(auto-fit, minmax(${column >= 4 ? 220 : 280}px, 1fr))`,
         gap: 20,
         marginBottom: 32,
       }}

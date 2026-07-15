@@ -155,7 +155,7 @@ export default function DeviceHealthPage() {
                         opacity: 0.35, pointerEvents: 'none',
                     }}
                 />
-                <div style={{ position: 'relative', zIndex: 1, display: 'grid', gridTemplateColumns: '200px 1fr', gap: 48, alignItems: 'center' }}>
+                <div style={{ position: 'relative', zIndex: 1, display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 32, alignItems: 'center' }}>
                     {/* 左: 大圆环 */}
                     <div style={{ position: 'relative', width: 200, height: 200, flexShrink: 0 }}>
                         <svg width="200" height="200" viewBox="0 0 200 200" style={{ transform: 'rotate(-90deg)' }}>
