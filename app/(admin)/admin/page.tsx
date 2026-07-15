@@ -19,15 +19,17 @@ import { TrafficSparkBento } from './_sections/TrafficSparkBento'
 /**
  * admin 首页 — 系统仪表盘 (v3 hybrid v4 大重构 · 决策 C, 2026-07-12)
  *
- * 12 列 Bento Grid 布局 (跟 hybrid.html Page A 1:1 对齐 + v4 扩展 12 section):
+ * 响应式布局: 12-col design × 2 (antd 24-col grid)
  * ─────────────────────────────────────────────────────────────────
- * Row 1  │ KPI Hero (5)  │ KPI 1 在线 (3)   │ KPI 2 离线 (2)  │ KPI 3 告警 (2) │
- * Row 2  │ LiveControls 6 variant (8)              │ 节点状态分布 (4)         │
- * Row 3  │ 7-day 趋势图 (8)                       │ 健康度评分 (4)           │
- * Row 4  │ 设备类型 / 协议 / 用户 分布 tab (8)     │ 系统总览 (4)             │
- * Row 5  │ 主服务运行状态 (12 全宽)                                          │
- * Row 6  │ 24h 告警趋势 (6)                       │ 设备快速列表 (6)         │
+ * Row 1  │ KPI Hero (10)  │ KPI 1 在线 (6)  │ KPI 2 离线 (4)  │ KPI 3 告警 (4) │  10+6+4+4 = 24
+ * Row 2  │ LiveControls 6 variant (16)              │ 节点状态分布 (8)         │  16+8 = 24
+ * Row 3  │ 7-day 趋势图 (16)                        │ 健康度评分 (8)           │  16+8 = 24
+ * Row 4  │ 设备类型 / 协议 / 用户 分布 tab (16)      │ 系统总览 (8)             │  16+8 = 24
+ * Row 5  │ 主服务运行状态 (24 全宽)                                          │  24
+ * Row 6  │ 24h 告警趋势 (12)                        │ 设备快速列表 (12)        │  12+12 = 24
  * ─────────────────────────────────────────────────────────────────
+ * 移动端 (<768px) 全部 xs=24 → 单列竖排
+ * 桌面端 (≥768px)  antd Col md=N (N×2 凑 24)
  *
  * 数据源 (server 端 0 改动, 全部复用现有 endpoint):
  * - /api/v2/admin/dashboard/tiles  6 status enum
@@ -97,8 +99,8 @@ export default function AdminDashboardPage() {
             />
 
             <Row gutter={[20, 20]}>
-                {/* ───────── Row 1: KPI Hero + 3 KPI (antd Col 响应式: mobile 1-列, tablet 1-列, desktop 12-列) ───────── */}
-                <Col xs={24} sm={24} md={5}>
+                {/* ───────── Row 1: KPI Hero + 3 KPI (12-col design × 2 for antd 24-col) ───────── */}
+                <Col xs={24} md={10}>
                     <div
                         className="bento-card kpi-hero"
                         style={{
@@ -129,61 +131,61 @@ export default function AdminDashboardPage() {
                     </div>
                 </Col>
 
-                <Col xs={24} sm={12} md={3}>
+                <Col xs={24} md={6}>
                     <KpiCard icon={<ApiOutlined />} label="在线" value={counts.online} trend={`${hero.total > 0 ? Math.round((counts.online / hero.total) * 100) : 0}% 在线率`} trendColor="var(--color-success)" />
                 </Col>
-                <Col xs={24} sm={12} md={2}>
+                <Col xs={24} md={4}>
                     <KpiCard icon={null} label="离线" value={counts.offline} trend={`${hero.total > 0 ? Math.round((counts.offline / hero.total) * 100) : 0}%`} trendColor="var(--color-danger)" />
                 </Col>
-                <Col xs={24} sm={12} md={2}>
+                <Col xs={24} md={4}>
                     <KpiCard icon={<AlertOutlined />} label="告警" value={(counts.warning ?? 0) + (counts.error ?? 0)} trend={`${counts.warning ?? 0} 告警 · ${counts.error ?? 0} 故障 · 24h trend`} trendColor="var(--color-warning)" />
                 </Col>
 
-                {/* ───────── Row 2: LiveControls + 节点状态 (mobile 全 1-列, desktop 8/4) ───────── */}
-                <Col xs={24} sm={24} md={16} lg={8}>
+                {/* ───────── Row 2: LiveControls + 节点状态 (8/4 in 12-col design × 2 = 16/8 in 24-col) ───────── */}
+                <Col xs={24} md={16}>
                     <LiveControls variant="admin" title="实时状态 · 6 variant" />
                 </Col>
-                <Col xs={24} sm={24} md={8} lg={4}>
+                <Col xs={24} md={8}>
                     <div className="bento-card status-bento" style={{ padding: 24 }}>
                         <NodeStatusBento refreshTick={refreshTick} />
                     </div>
                 </Col>
 
-                {/* ───────── Row 3: 7-day 趋势 + 健康度评分 (mobile 全 1-列, desktop 8/4) ───────── */}
-                <Col xs={24} sm={24} md={16} lg={8}>
+                {/* ───────── Row 3: 7-day 趋势 + 健康度评分 (8/4 × 2 = 16/8) ───────── */}
+                <Col xs={24} md={16}>
                     <div className="bento-card chart-bento" style={{ padding: 24 }}>
                         <TrendChartBento refreshTick={refreshTick} />
                     </div>
                 </Col>
-                <Col xs={24} sm={24} md={8} lg={4}>
+                <Col xs={24} md={8}>
                     <HealthScoreBento refreshTick={refreshTick} />
                 </Col>
 
                 {/* ───────── Row 3.5: 实时流量 sparkline (PR-A, 全宽) ───────── */}
-                <Col xs={24} sm={24} md={24}>
+                <Col xs={24} md={24}>
                     <TrafficSparkBento refreshTick={refreshTick} />
                 </Col>
 
-                {/* ───────── Row 4: 分类分布 + 系统总览 (mobile 1-列, tablet 2-列, desktop 8/4) ───────── */}
-                <Col xs={24} sm={24} md={16} lg={8}>
+                {/* ───────── Row 4: 分类分布 + 系统总览 (8/4 × 2 = 16/8) ───────── */}
+                <Col xs={24} md={16}>
                     <DistributionBento refreshTick={refreshTick} />
                 </Col>
-                <Col xs={24} sm={24} md={8} lg={4}>
+                <Col xs={24} md={8}>
                     <QuickStatsBento refreshTick={refreshTick} />
                 </Col>
 
                 {/* ───────── Row 5: 主服务运行状态 (全宽) ───────── */}
-                <Col xs={24} sm={24} md={24}>
+                <Col xs={24} md={24}>
                     <div className="bento-card" style={{ padding: 24 }}>
                         <ServerStatusTable refreshTick={refreshTick} />
                     </div>
                 </Col>
 
-                {/* ───────── Row 6: 24h 告警趋势 + 设备快速列表 (mobile 1-列, desktop 1:1) ───────── */}
-                <Col xs={24} sm={12} md={12} lg={6}>
+                {/* ───────── Row 6: 24h 告警趋势 + 设备快速列表 (6/6 × 2 = 12/12) ───────── */}
+                <Col xs={24} md={12}>
                     <AlarmTrendBento refreshTick={refreshTick} />
                 </Col>
-                <Col xs={24} sm={12} md={12} lg={6}>
+                <Col xs={24} md={12}>
                     <div className="bento-card devices-bento" style={{ padding: 0, overflow: 'hidden' }}>
                         <DevicesBento />
                     </div>
@@ -209,7 +211,7 @@ function HeroItem({ label, value }: { label: string; value: number | string }) {
 
 function KpiCard({ icon, label, value, trend, trendColor }: { icon: React.ReactNode; label: string; value: number; trend: string; trendColor: string }) {
     return (
-        <div className="bento-card" style={{ padding: 24, display: 'flex', flexDirection: 'column', height: '100%' }}>
+        <div className="bento-card" style={{ padding: 24, display: 'flex', flexDirection: 'column', minHeight: 180 }}>
             <div style={{ color: 'var(--brand-500)', fontSize: 11, fontWeight: 500, letterSpacing: '0.05em', textTransform: 'uppercase', fontFamily: 'var(--font-mono)', display: 'flex', alignItems: 'center', gap: 6 }}>
                 {icon} // {label}
             </div>
