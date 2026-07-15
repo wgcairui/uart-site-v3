@@ -183,11 +183,6 @@ export default function AiGeneratePage() {
           return
         }
         const { deviceModel, suggestedProtocolName, confidence, reasoning } = res.data
-        console.log('[pre-analyze] data:', res.data, {
-          deviceModelTouched: deviceModelTouchedRef.current,
-          hintProtocolNameTouched: hintProtocolNameTouchedRef.current,
-          protocolTypeTouched: protocolTypeTouchedRef.current,
-        })
         // prefilled：只在用户没手动改过的字段上
         // 用 setFieldsValue 一次设多个字段（避免连续 setFieldValue 触发中间态 re-render）
         const prefill: Record<string, unknown> = {}
@@ -201,12 +196,8 @@ export default function AiGeneratePage() {
         if (res.data.protocolType && !protocolTypeTouchedRef.current) {
           prefill.protocolType = res.data.protocolType
         }
-        console.log('[pre-analyze] 准备 setFieldsValue:', prefill)
         if (Object.keys(prefill).length > 0) {
           form.setFieldsValue(prefill)
-          console.log('[pre-analyze] setFieldsValue 完成, 当前 values:', form.getFieldsValue())
-        } else {
-          console.log('[pre-analyze] 没有任何字段需要 prefill (全部 truthy 检查失败或 touched=true)')
         }
         setPreAnalyzeReasoning(reasoning)
         if (typeof confidence === 'number' && confidence < 0.6) {
@@ -289,7 +280,6 @@ export default function AiGeneratePage() {
 
   const submitGenerate = useCallback(
     async (values: GenerateStreamDto & { overrideExisting?: boolean }) => {
-      console.log('[submit] 入口, values:', values, { sourceMode, manualText: manualText.slice(0, 30), fileSource })
       if (!values.protocolType) {
         console.warn('[submit] 早 return: protocolType 缺失')
         message.warning('请选择设备类型')
@@ -355,7 +345,6 @@ export default function AiGeneratePage() {
         contentType: dtoContentType,
       }
 
-      console.log('[submit] 准备调 stream(), dto:', dto, 'isStreaming now:', isStreaming)
       await stream('/api/v2/admin/ai/generate-stream', dto, {
         onText: (delta) => {
           // 累积到当前 assistant 消息

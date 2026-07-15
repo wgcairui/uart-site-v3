@@ -3,6 +3,7 @@
 
 import type { ReactNode } from 'react'
 import { IconFont } from '@/components/common/IconFont'
+import { HeartFilled } from '@ant-design/icons'
 
 export interface AdminMenuItem {
   /** 唯一 key，用于 Menu 的 selectedKeys/openKeys */
@@ -38,6 +39,7 @@ export const ADMIN_MENU: AdminMenuGroup[] = [
       { key: 'devmodel', to: '/admin/node/devmodel', text: '设备类型', icon: <IconFont type="icon-fenzuguanli" /> },
       { key: 'nodes', to: '/admin/node/nodes', text: '节点', icon: <IconFont type="icon-shebeizhuangtai" /> },
       { key: 'terminal', to: '/admin/node/terminal', text: '终端', icon: <IconFont type="icon-shebeiguanli" /> },
+      { key: 'terminal-health', to: '/admin/node/terminal/health', text: '设备健康度', icon: <HeartFilled style={{ color: '#ec4899' }} /> },
       { key: 'user', to: '/admin/node/user', text: '用户', icon: <IconFont type="icon-icon_zhanghao" /> },
     ],
   },

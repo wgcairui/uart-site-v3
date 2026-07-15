@@ -1,7 +1,8 @@
 'use client'
 import { useEffect, useState } from 'react'
 import { Spin, Tooltip } from 'antd'
-import { HeartFilled } from '@ant-design/icons'
+import { HeartFilled, ArrowRightOutlined } from '@ant-design/icons'
+import { useRouter } from 'next/navigation'
 import { getDeviceHealth, getAdminTileCounts } from '@/lib/api/endpoints/admin/dashboard'
 import { runingState } from '@/lib/api/fetchRoot'
 
@@ -19,6 +20,7 @@ import { runingState } from '@/lib/api/fetchRoot'
  *   - 右下: topDanger 5 台 (低分)
  */
 export function HealthScoreBento({ refreshTick }: { refreshTick: number }) {
+    const router = useRouter()
     const [health, setHealth] = useState<Uart.DeviceHealthResp | null>(null)
     const [fallback, setFallback] = useState<{ score: number; total: number; timeout: number } | null>(null)
 
@@ -66,7 +68,12 @@ export function HealthScoreBento({ refreshTick }: { refreshTick: number }) {
     const label = score >= 80 ? '优秀' : score >= 60 ? '良好' : score >= 40 ? '需关注' : '高风险'
 
     return (
-        <div className="bento-card" style={{ padding: 24, height: '100%', display: 'flex', flexDirection: 'column' }}>
+        <div
+            className="bento-card"
+            style={{ padding: 24, height: '100%', display: 'flex', flexDirection: 'column', cursor: 'pointer' }}
+            onClick={() => router.push('/admin/node/terminal/health')}
+            role="button"
+        >
             <h3 style={{ fontSize: 14, fontWeight: 600, color: 'var(--ink-900)', marginBottom: 12, display: 'flex', alignItems: 'center', gap: 8 }}>
                 <HeartFilled style={{ color: '#ec4899' }} /> 设备健康度
                 <Tooltip title={source}>
@@ -74,6 +81,7 @@ export function HealthScoreBento({ refreshTick }: { refreshTick: number }) {
                         {isMain ? '4D algo' : 'fallback 6-status'}
                     </span>
                 </Tooltip>
+                <ArrowRightOutlined style={{ marginLeft: 'auto', fontSize: 12, color: 'var(--ink-400)' }} />
             </h3>
             <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 12 }}>
                 <div style={{ position: 'relative', width: 132, height: 132, flexShrink: 0 }}>

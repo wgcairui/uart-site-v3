@@ -160,6 +160,11 @@ export const Protocols: React.FC = () => {
         <div className="bg-bento-canvas" style={{ position: 'relative', zIndex: 0 }}>
             <PageHeader
                 title="协议管理"
+                subtitle="管理所有设备协议定义与配置"
+                breadcrumb={[
+                    { title: '首页', href: '/admin' },
+                    { title: '协议' },
+                ]}
                 extra={<Button type="primary" onClick={() => setIsAddProtocolVisible(true)}>添加协议</Button>}
             />
             <PageSummary

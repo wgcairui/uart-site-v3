@@ -1,6 +1,6 @@
 'use client'
 import React, { useEffect, useState } from "react";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { usePromise } from "@/lib/hooks/usePromise";
 import { BindDev, getUser, simulateLogin } from "@/lib/api/fetchRoot"
 import { Spin, Tabs, Button, message, Space } from "antd";
@@ -25,6 +25,7 @@ import { SmsStatsChart } from "@/components/chart/SmsStatsChart";
 import { MailStatsChart } from "@/components/chart/MailStatsChart";
 import { LoginLogTab } from "@/components/log/LoginLogTab";
 import { RequestLogTab } from "@/components/log/RequestLogTab";
+import { PageHeader } from "@/components/common/PageHeader";
 
 interface TerminalInfosProps {
     mac: string;
@@ -75,6 +76,7 @@ const TerminalInfos: React.FC<TerminalInfosProps> = ({ mac }) => {
 
 export const UserInfo: React.FC = () => {
     const params = useParams();
+    const router = useRouter();
     const user = params.user as string;
 
     const [activeKey, setActiveKey] = useState<string>('info');
@@ -118,37 +120,43 @@ export const UserInfo: React.FC = () => {
 
     return (
         loading ? <Spin />
-            : !data ? <div style={{ textAlign: 'center', padding: 50 }}>找不到该用户的数据</div>
+            : !data ? <div className="bg-bento-canvas" style={{ padding: 80, textAlign: 'center', color: '#999' }}>找不到该用户的数据</div>
             :
             <>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
-                    <h2 style={{ margin: 0 }}>{data.user}/{data.name}</h2>
-                    <Space>
-                        {data.userGroup !== 'root' && (
+                <PageHeader
+                    title={`${data.user} (${data.name})`}
+                    subtitle="查看用户详细信息、告警设置、挂载设备、操作日志等"
+                    breadcrumb={[
+                        { title: '首页', href: '/admin' },
+                        { title: '用户', href: '/admin/node/user' },
+                        { title: data.user },
+                    ]}
+                    back
+                    onBack={() => router.push('/admin/node/user')}
+                    extra={
+                        <Space>
+                            {data.userGroup !== 'root' && (
+                                <Button icon={<SwapOutlined />} onClick={() => setMigrateOpen(true)}>
+                                    资源迁移
+                                </Button>
+                            )}
                             <Button
-                                icon={<SwapOutlined />}
-                                onClick={() => setMigrateOpen(true)}
+                                type="primary"
+                                icon={<LoginOutlined />}
+                                onClick={async () => {
+                                    const { code, data: tokenData, message: msg } = await simulateLogin(user)
+                                    if (code === 200) {
+                                        window.open(`/simulate-login?token=${encodeURIComponent(tokenData.token)}`, '_blank')
+                                    } else {
+                                        message.error(msg || '模拟登录失败')
+                                    }
+                                }}
                             >
-                                资源迁移
+                                模拟登录
                             </Button>
-                        )}
-                        <Button
-                            type="primary"
-                            icon={<LoginOutlined />}
-                            onClick={async () => {
-                                const { code, data: tokenData, message: msg } = await simulateLogin(user)
-                                if (code === 200) {
-                                    // 跳转到中间页面，由中间页面设置 token 后再跳转
-                                    window.open(`/simulate-login?token=${encodeURIComponent(tokenData.token)}`, '_blank')
-                                } else {
-                                    message.error(msg || '模拟登录失败')
-                                }
-                            }}
-                        >
-                            模拟登录
-                        </Button>
-                    </Space>
-                </div>
+                        </Space>
+                    }
+                />
                 <Tabs activeKey={activeKey} onChange={onTabChange} items={[
                     { key: 'info', label: '详细信息', children: <UserDes user={data}></UserDes> },
                     { key: 'alarm', label: '告警设置', children: <UserAlarmPage user={data.user}></UserAlarmPage> },
@@ -177,7 +185,7 @@ export const UserInfo: React.FC = () => {
                             </>
                         )
                     },
-                    { key: 'log', label: '日志', children: <UserLog user={data.user} /> },
+                    { key: 'log', label: '操作日志', children: <UserLog user={data.user} /> },
                     { key: 'sms-stats', label: '短信消耗', children: <SmsStatsChart user={data.user} /> },
                     { key: 'mail-stats', label: '邮件消耗', children: <MailStatsChart user={data.user} /> },
                     { key: 'login-log', label: '登录日志', children: <LoginLogTab user={data.user} /> },

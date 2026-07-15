@@ -198,7 +198,7 @@ export const OssUpload: React.FC = () => {
     },
     {
       dataIndex: 'size',
-      title: 'size',
+      title: '大小',
       width: 110,
       sorter: true,
       render: (val: number | string) => formatSize(val),
