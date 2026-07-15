@@ -258,9 +258,9 @@ export default function DeviceHealthPage() {
                                 key={d.mac}
                                 onClick={() => router.push(`/admin/node/terminal/${encodeURIComponent(d.mac)}`)}
                                 style={{
-                                    display: 'grid',
-                                    gridTemplateColumns: '40px 1fr 100px 100px 60px',
+                                    display: 'flex',
                                     alignItems: 'center',
+                                    gap: 12,
                                     padding: '12px 16px',
                                     background: i === 0 ? 'rgba(239,68,68,0.05)' : 'var(--ink-50)',
                                     border: `1px solid ${i === 0 ? 'rgba(239,68,68,0.2)' : 'var(--ink-100)'}`,
@@ -273,7 +273,7 @@ export default function DeviceHealthPage() {
                             >
                                 <div
                                     style={{
-                                        width: 32, height: 32, borderRadius: 8,
+                                        flexShrink: 0, width: 32, height: 32, borderRadius: 8,
                                         background: d.score < 30 ? '#ef4444' : d.score < 50 ? '#f59e0b' : '#3b82f6',
                                         color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center',
                                         fontWeight: 700, fontSize: 13, fontFamily: 'var(--font-mono)',
@@ -281,24 +281,28 @@ export default function DeviceHealthPage() {
                                 >
                                     {i + 1}
                                 </div>
-                                <div style={{ minWidth: 0 }}>
-                                    <div style={{ color: 'var(--ink-900)', fontWeight: 500, fontSize: 13 }}>{d.name || d.mac}</div>
+                                <div style={{ flex: 1, minWidth: 0, overflow: 'hidden' }}>
+                                    <div style={{ color: 'var(--ink-900)', fontWeight: 500, fontSize: 13, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                        {d.name || d.mac}
+                                    </div>
                                     <div style={{ color: 'var(--ink-500)', fontSize: 11, fontFamily: 'var(--font-mono)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                                         {d.mac}
                                     </div>
                                 </div>
-                                <div style={{ color: 'var(--ink-500)', fontSize: 11, fontFamily: 'var(--font-mono)' }}>
-                                    SCORE
+                                <div style={{ flexShrink: 0, textAlign: 'right', minWidth: 50 }}>
+                                    <div style={{ fontSize: 9, color: 'var(--ink-500)', fontFamily: 'var(--font-mono)', letterSpacing: '0.05em' }}>
+                                        SCORE
+                                    </div>
+                                    <div
+                                        style={{
+                                            color: d.score < 30 ? '#ef4444' : d.score < 50 ? '#f59e0b' : '#3b82f6',
+                                            fontSize: 20, fontWeight: 700, fontFamily: 'var(--font-sans)', lineHeight: 1.1,
+                                        }}
+                                    >
+                                        {d.score}
+                                    </div>
                                 </div>
-                                <div
-                                    style={{
-                                        color: d.score < 30 ? '#ef4444' : d.score < 50 ? '#f59e0b' : '#3b82f6',
-                                        fontSize: 20, fontWeight: 700, fontFamily: 'var(--font-sans)',
-                                    }}
-                                >
-                                    {d.score}
-                                </div>
-                                <div style={{ textAlign: 'right' }}>
+                                <div style={{ flexShrink: 0, textAlign: 'right' }}>
                                     <ArrowRightOutlined style={{ color: 'var(--brand-500)' }} />
                                 </div>
                             </div>
@@ -312,7 +316,7 @@ export default function DeviceHealthPage() {
                 <h3 style={{ fontSize: 15, fontWeight: 600, color: 'var(--ink-900)', marginBottom: 16, display: 'flex', alignItems: 'center', gap: 8 }}>
                     <ExperimentOutlined style={{ color: '#8b5cf6' }} /> PR-C 4 维算法
                 </h3>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 16 }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 16 }}>
                     <AlgoRow
                         tag="G1"
                         title="alarm severity"
@@ -343,7 +347,7 @@ export default function DeviceHealthPage() {
             {/* ─── 5. 相关链接 ─── */}
             <div className="bento-card" style={{ padding: 24 }}>
                 <h3 style={{ fontSize: 15, fontWeight: 600, color: 'var(--ink-900)', marginBottom: 16 }}>相关链接</h3>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12 }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 12 }}>
                     <LinkCard
                         icon={<AlertOutlined />}
                         title="告警日志"
