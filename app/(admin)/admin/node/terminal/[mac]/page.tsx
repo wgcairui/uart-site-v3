@@ -5,8 +5,6 @@ import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { Spin, Tabs } from "antd";
 import { usePromise } from "@/lib/hooks/usePromise";
 import { getTerminal } from "@/lib/api/fetch";
-import { TerminalBindUsers } from "@/components/terminal/TerminalIccidInfo";
-import { TerminalMountDevs } from "@/components/terminal/TerminalMountDevs";
 import { TerminalAT } from "@/components/terminal/TerminalAT";
 import { TerminalOprate } from "@/components/terminal/TerminalOprate";
 import { TerminalRunLog } from "@/components/terminal/TerminalRunLog";
@@ -21,6 +19,7 @@ import { TerminalCurData, TerminalHistoryData } from "./TerminalDataTab";
 import { DeviceActions } from "@/components/common/DeviceActions";
 import { TerminalOverview } from "@/components/terminal/TerminalOverview";
 import { MountDevicesStrip } from "@/components/terminal/MountDevicesStrip";
+import { BindUsersSection } from "@/components/terminal/BindUsersSection";
 
 function TerminalDetailPageInner() {
     const params = useParams();
@@ -28,7 +27,7 @@ function TerminalDetailPageInner() {
     const router = useRouter();
     const mac = params.mac as string;
 
-    const [activeKey, setActiveKey] = useState(searchParams.get('tab') || 'mountDevs');
+    const [activeKey, setActiveKey] = useState(searchParams.get('tab') || 'at');
 
     useEffect(() => {
         const tab = searchParams.get('tab');
@@ -54,8 +53,6 @@ function TerminalDetailPageInner() {
     }, [ter.data]);
 
     const baseTabs = data ? [
-        { key: 'mountDevs', label: '挂载设备', children: <TerminalMountDevs terminal={data} ex={true} showTitle={false} InterValShow onChange={fecth} /> },
-        { key: 'bindUsers', label: '绑定用户', children: <TerminalBindUsers mac={data.DevMac} share={data?.share ?? false} ownerId={(data as any)?.ownerId} update={fecth} /> },
         { key: 'at', label: 'AT调试', children: <TerminalAT mac={data.DevMac} /> },
         { key: 'query', label: '指令调试', children: <TerminalOprate mac={data.DevMac} /> },
         { key: 'scheduled-op', label: '定时操作', children: <AdminScheduledOpTab mac={data.DevMac} /> },
@@ -177,9 +174,19 @@ function TerminalDetailPageInner() {
                         </div>
                     </div>
 
-                    {/* Mount Devices 横向 strip · 把"挂载设备"tab 提到主视图 */}
+                    {/* Mount Devices 完整管理 (含 image/add/delete/refresh/view) · 替代原「挂载设备」tab */}
                     <div style={{ marginBottom: 20 }}>
                         <MountDevicesStrip mac={data.DevMac} mountDevs={data.mountDevs || []} onChange={fecth} />
+                    </div>
+
+                    {/* Bind Users 表 · 替代原「绑定用户」tab */}
+                    <div style={{ marginBottom: 20 }}>
+                        <BindUsersSection
+                            mac={data.DevMac}
+                            share={!!data.share}
+                            ownerId={(data as any)?.ownerId}
+                            onChange={fecth}
+                        />
                     </div>
 
                     <div className="bento-card" style={{ padding: 24 }}>
