@@ -18,9 +18,10 @@ import { AdminScheduledOpTab } from "@/components/terminal/AdminScheduledOpTab";
 import { useTerminalUpdate } from "@/lib/hooks/useTerminalData";
 import { DevRealTimeLog } from "@/components/data/devRealTimeLog";
 import { TerminalCurData, TerminalHistoryData } from "./TerminalDataTab";
-import { LiveControls } from "@/components/common/LiveControls";
 import { DeviceActions } from "@/components/common/DeviceActions";
 import { PageHeader } from "@/components/common/PageHeader";
+import { TerminalOverview } from "@/components/terminal/TerminalOverview";
+import { MountDevicesStrip } from "@/components/terminal/MountDevicesStrip";
 
 function TerminalDetailPageInner() {
     const params = useParams();
@@ -141,16 +142,21 @@ function TerminalDetailPageInner() {
                             </div>
                         </div>
                     </div>
-                    {/* v3 hybrid Page B · 设备详情完整 4 区: device hero + live controls + actions + trend */}
+                    {/* v3 hybrid Page B · 设备详情完整 4 区: device hero + overview + actions + mount strip */}
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(12, 1fr)', gap: 20, marginBottom: 20 }}>
-                        {/* Live Controls 6 tile (8 列) */}
-                        <div style={{ gridColumn: 'span 8' }}>
-                            <LiveControls variant="device" mac={data.DevMac} pid={data.PID ?? 0} title="实时数据 · 设备" />
+                        {/* Terminal Overview KV 12 (8 列) · 填掉空 LiveControls 留下的空白 */}
+                        <div style={{ gridColumn: 'span 8', minHeight: 360 }}>
+                            <TerminalOverview terminal={data} onChange={fecth} />
                         </div>
                         {/* Device Actions 玻璃卡 (4 列) */}
-                        <div style={{ gridColumn: 'span 4' }}>
+                        <div style={{ gridColumn: 'span 4', minHeight: 360 }}>
                             <DeviceActions mac={data.DevMac} />
                         </div>
+                    </div>
+
+                    {/* Mount Devices 横向 strip · 把"挂载设备"tab 提到主视图 */}
+                    <div style={{ marginBottom: 20 }}>
+                        <MountDevicesStrip mac={data.DevMac} mountDevs={data.mountDevs || []} onChange={fecth} />
                     </div>
 
                     <div className="bento-card" style={{ padding: 24 }}>
