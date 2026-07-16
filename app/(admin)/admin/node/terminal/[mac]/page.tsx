@@ -1,7 +1,7 @@
 'use client'
 
 import { Suspense, useState, useEffect, useCallback } from "react";
-import { useParams, useSearchParams } from "next/navigation";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { Spin, Tabs } from "antd";
 import { usePromise } from "@/lib/hooks/usePromise";
 import { getTerminal } from "@/lib/api/fetch";
@@ -19,13 +19,13 @@ import { useTerminalUpdate } from "@/lib/hooks/useTerminalData";
 import { DevRealTimeLog } from "@/components/data/devRealTimeLog";
 import { TerminalCurData, TerminalHistoryData } from "./TerminalDataTab";
 import { DeviceActions } from "@/components/common/DeviceActions";
-import { PageHeader } from "@/components/common/PageHeader";
 import { TerminalOverview } from "@/components/terminal/TerminalOverview";
 import { MountDevicesStrip } from "@/components/terminal/MountDevicesStrip";
 
 function TerminalDetailPageInner() {
     const params = useParams();
     const searchParams = useSearchParams();
+    const router = useRouter();
     const mac = params.mac as string;
 
     const [activeKey, setActiveKey] = useState(searchParams.get('tab') || 'info');
@@ -78,16 +78,6 @@ function TerminalDetailPageInner() {
 
     return (
         <>
-            <PageHeader
-                title={data?.DevMac || '终端详情'}
-                subtitle={data ? `${data.name} · 协议: ${(data as any).protocol ?? '-'} · 节点: ${(data as any).NodeName ?? '-'}` : undefined}
-                breadcrumb={[
-                    { title: '首页', href: '/admin' },
-                    { title: '终端', href: '/admin/node/terminal' },
-                    { title: data?.DevMac || '详情' },
-                ]}
-                back
-            />
             {loading ? (
                 <div className="bg-bento-canvas" style={{ padding: 80, textAlign: 'center' }}>
                     <Spin size="large" />
@@ -98,11 +88,45 @@ function TerminalDetailPageInner() {
                 </div>
             ) : (
                 <div className="bg-bento-canvas" style={{ position: 'relative', zIndex: 0 }}>
+                    {/* ─── 1. 薄导航条 (返回 + 面包屑, 标题/副标题让给 hero, 避免重复) ─── */}
+                    <nav
+                        style={{
+                            display: 'flex', alignItems: 'center', gap: 10,
+                            fontSize: 12, color: 'var(--ink-500)',
+                            marginBottom: 12,
+                            fontFamily: 'var(--font-mono)',
+                        }}
+                    >
+                        <a
+                            onClick={() => router.back()}
+                            style={{ cursor: 'pointer', color: 'var(--ink-500)' }}
+                        >
+                            ← 返回
+                        </a>
+                        <span style={{ color: 'var(--ink-300)' }}>/</span>
+                        <a
+                            onClick={() => router.push('/admin')}
+                            style={{ cursor: 'pointer', color: 'var(--ink-500)' }}
+                        >
+                            首页
+                        </a>
+                        <span style={{ color: 'var(--ink-300)' }}>/</span>
+                        <a
+                            onClick={() => router.push('/admin/node/terminal')}
+                            style={{ cursor: 'pointer', color: 'var(--ink-500)' }}
+                        >
+                            终端
+                        </a>
+                        <span style={{ color: 'var(--ink-300)' }}>/</span>
+                        <span style={{ color: 'var(--ink-700)', fontWeight: 500 }}>{data.DevMac}</span>
+                    </nav>
+
+                    {/* ─── 2. device hero 紫渐变 (hybrid Page B 1:1) — 唯一标题源 ─── */}
                     <div
                         className="bento-card v3-device-hero"
                         style={{
                             marginBottom: 20,
-                            padding: '24px 32px',
+                            padding: '20px 28px',
                             background: 'linear-gradient(135deg, #1e1b4b 0%, #312e81 60%, #6d28d9 100%)',
                             color: '#fff',
                             border: 'none',
@@ -113,33 +137,32 @@ function TerminalDetailPageInner() {
                         <div
                             style={{
                                 position: 'absolute', top: -80, right: -80,
-                                width: 280, height: 280,
+                                width: 240, height: 240,
                                 background: 'radial-gradient(circle, var(--accent-400) 0%, transparent 70%)',
                                 opacity: 0.4, pointerEvents: 'none',
                             }}
                         />
-                        <div style={{ position: 'relative', zIndex: 1, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                            <div>
-                                <h2 style={{ fontSize: 24, fontWeight: 600, letterSpacing: '-0.02em', color: '#fff', margin: 0 }}>{data.DevMac}</h2>
-                                <div style={{ fontFamily: 'var(--font-mono)', fontSize: 13, color: 'rgba(255,255,255,0.7)', marginTop: 6 }}>
+                        <div style={{ position: 'relative', zIndex: 1, display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 16 }}>
+                            <div style={{ minWidth: 0 }}>
+                                <h2 style={{ fontSize: 22, fontWeight: 600, letterSpacing: '-0.02em', color: '#fff', margin: 0, lineHeight: 1.3 }}>{data.DevMac}</h2>
+                                <div style={{ fontFamily: 'var(--font-mono)', fontSize: 12, color: 'rgba(255,255,255,0.7)', marginTop: 4 }}>
                                     {data.name} · 协议: {(data as any).protocol ?? '-'} · 节点: {(data as any).NodeName ?? '-'}
                                 </div>
                             </div>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                                <span
-                                    style={{
-                                        display: 'inline-flex', alignItems: 'center', gap: 6,
-                                        padding: '6px 14px', borderRadius: 999,
-                                        background: data.online ? 'rgba(16, 185, 129, 0.2)' : 'rgba(244, 63, 94, 0.2)',
-                                        border: `1px solid ${data.online ? 'rgba(16, 185, 129, 0.3)' : 'rgba(244, 63, 94, 0.3)'}`,
-                                        color: data.online ? '#86efac' : '#fda4af',
-                                        fontSize: 13, fontWeight: 600,
-                                    }}
-                                >
-                                    <span style={{ width: 6, height: 6, borderRadius: '50%', background: data.online ? '#86efac' : '#fda4af', animation: 'pulse-dot 2s infinite' }} />
-                                    {data.online ? '实时连接' : '离线'}
-                                </span>
-                            </div>
+                            <span
+                                style={{
+                                    display: 'inline-flex', alignItems: 'center', gap: 6,
+                                    padding: '5px 12px', borderRadius: 999,
+                                    background: data.online ? 'rgba(16, 185, 129, 0.2)' : 'rgba(244, 63, 94, 0.2)',
+                                    border: `1px solid ${data.online ? 'rgba(16, 185, 129, 0.3)' : 'rgba(244, 63, 94, 0.3)'}`,
+                                    color: data.online ? '#86efac' : '#fda4af',
+                                    fontSize: 12, fontWeight: 600,
+                                    flexShrink: 0,
+                                }}
+                            >
+                                <span style={{ width: 6, height: 6, borderRadius: '50%', background: data.online ? '#86efac' : '#fda4af', animation: 'pulse-dot 2s infinite' }} />
+                                {data.online ? '实时连接' : '离线'}
+                            </span>
                         </div>
                     </div>
                     {/* v3 hybrid Page B · 设备详情完整 4 区: device hero + overview + actions + mount strip */}
