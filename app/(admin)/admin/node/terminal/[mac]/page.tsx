@@ -5,7 +5,7 @@ import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { Spin, Tabs } from "antd";
 import { usePromise } from "@/lib/hooks/usePromise";
 import { getTerminal } from "@/lib/api/fetch";
-import { TerminalInfo } from "@/components/terminal/TerminalInfo";
+import { TerminalBindUsers } from "@/components/terminal/TerminalIccidInfo";
 import { TerminalMountDevs } from "@/components/terminal/TerminalMountDevs";
 import { TerminalAT } from "@/components/terminal/TerminalAT";
 import { TerminalOprate } from "@/components/terminal/TerminalOprate";
@@ -28,7 +28,7 @@ function TerminalDetailPageInner() {
     const router = useRouter();
     const mac = params.mac as string;
 
-    const [activeKey, setActiveKey] = useState(searchParams.get('tab') || 'info');
+    const [activeKey, setActiveKey] = useState(searchParams.get('tab') || 'mountDevs');
 
     useEffect(() => {
         const tab = searchParams.get('tab');
@@ -54,8 +54,8 @@ function TerminalDetailPageInner() {
     }, [ter.data]);
 
     const baseTabs = data ? [
-        { key: 'info', label: '详细信息', children: <TerminalInfo terminal={data} ex={true} showTitle={false} /> },
         { key: 'mountDevs', label: '挂载设备', children: <TerminalMountDevs terminal={data} ex={true} showTitle={false} InterValShow onChange={fecth} /> },
+        { key: 'bindUsers', label: '绑定用户', children: <TerminalBindUsers mac={data.DevMac} share={data?.share ?? false} ownerId={(data as any)?.ownerId} update={fecth} /> },
         { key: 'at', label: 'AT调试', children: <TerminalAT mac={data.DevMac} /> },
         { key: 'query', label: '指令调试', children: <TerminalOprate mac={data.DevMac} /> },
         { key: 'scheduled-op', label: '定时操作', children: <AdminScheduledOpTab mac={data.DevMac} /> },

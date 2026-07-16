@@ -12,9 +12,13 @@ import {
   CheckCircleFilled,
   WarningFilled,
   CopyOutlined,
+  UserOutlined,
+  UsbOutlined,
+  FileTextOutlined,
 } from '@ant-design/icons'
 import dayjs from 'dayjs'
 import { TerminalAddMountDev } from './TerminalAddMountDev'
+import { TerminalUser } from './TerminalIccidInfo'
 
 interface TerminalOverviewProps {
   terminal: Uart.Terminal
@@ -35,11 +39,12 @@ interface KVItem {
  * 把原本藏在「详细信息」tab 里的 terminal 静态数据提到主视图,
  * 填掉 LiveControls 在 terminal 级别无效(需 mount device pid)留下的空白。
  *
- * 12 KV · 3x4 grid (响应式):
+ * 15 KV · 3x5 grid (响应式):
  * - 别名(name) / 状态(online) / 共享(share)
  * - AT / PID / 挂载节点
  * - ICCID / IP / Port
- * - 信号 / 定位(jw) / 更新时间
+ * - 信号 / 定位(jw) / 固件(Gver/ver)
+ * - 用户(owner) / 串口参数(uart) / 备注(remark)
  *
  * 视觉: 玻璃 bento-card 16px padding · 18px 圆角 · 紫光阴影
  * 防御: 所有字段 ?? '-' 兜底, trial mode 缺数据也漂亮渲染
@@ -127,6 +132,32 @@ export function TerminalOverview({ terminal, onChange }: TerminalOverviewProps) 
           {t.ver ? <Tooltip title="应用固件"><Tag color="blue">V {t.ver}</Tag></Tooltip> : null}
           {!t.Gver && !t.ver ? '-' : null}
         </span>
+      ),
+    },
+    {
+      label: '用户',
+      icon: <UserOutlined />,
+      value: <TerminalUser mac={t.DevMac} />,
+    },
+    {
+      label: '串口参数',
+      icon: <UsbOutlined />,
+      value: <span style={{ fontFamily: 'var(--font-mono)' }}>{t.uart || '-'}</span>,
+      copyable: t.uart || undefined,
+    },
+    {
+      label: '备注',
+      icon: <FileTextOutlined />,
+      value: (
+        <Tooltip title={t.remark || ''}>
+          <span style={{
+            overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+            maxWidth: '100%',
+            color: t.remark ? 'var(--ink-700)' : 'var(--ink-400)',
+          }}>
+            {t.remark || '—'}
+          </span>
+        </Tooltip>
       ),
     },
   ]
