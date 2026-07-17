@@ -29,7 +29,6 @@ import { getProtocol, getProtocolSetup } from '@/lib/api/fetch'
 import { prompt } from '@/lib/utils/prompt'
 import { generateTableKey } from '@/lib/utils/tableCommon'
 import { MyInput } from '@/components/common/MyInput'
-import { PageHeader } from '@/components/common/PageHeader'
 import { ProtocolAlarmStat } from '@/components/protocol/ProtocolAlarmStat'
 import { ProtocolContant } from '@/components/protocol/ProtocolContant'
 import { ProtocolOprate } from '@/components/protocol/ProtocolOprate'
@@ -420,62 +419,81 @@ const ProtocolInfo: React.FC = () => {
 
   return (
     <>
-      <PageHeader
-        title={
-          <Space size={8} align="center">
-            <span>{Protocol}</span>
+      {/* 紫渐变 hero (v3 hybrid Page B) — 协议名 + AI生成 tag + 6 KV */}
+      <div
+        className="bento-card v3-device-hero"
+        style={{
+          marginBottom: 20,
+          padding: '20px 28px',
+          background: 'linear-gradient(135deg, #1e1b4b 0%, #312e81 60%, #6d28d9 100%)',
+          color: '#fff',
+          border: 'none',
+          position: 'relative',
+          overflow: 'hidden',
+        }}
+      >
+        <div
+          style={{
+            position: 'absolute', top: -80, right: -80,
+            width: 240, height: 240,
+            background: 'radial-gradient(circle, var(--accent-400) 0%, transparent 70%)',
+            opacity: 0.4, pointerEvents: 'none',
+          }}
+        />
+        <div style={{ position: 'relative', zIndex: 1, display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 16, flexWrap: 'wrap' }}>
+          <div style={{ minWidth: 0, flex: 1 }}>
+            <h2 style={{ fontSize: 22, fontWeight: 600, letterSpacing: '-0.02em', color: '#fff', margin: 0, lineHeight: 1.3, display: 'inline-flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+              {Protocol}
+              {protocolMeta && (
+                <ProtocolSourceTag source={protocolMeta.source} remark={protocolMeta.remark} />
+              )}
+            </h2>
             {protocolMeta && (
-              <ProtocolSourceTag source={protocolMeta.source} remark={protocolMeta.remark} />
+              <div
+                style={{
+                  marginTop: 14,
+                  display: 'flex', gap: '12px 28px', flexWrap: 'wrap',
+                  fontSize: 12, color: 'rgba(255,255,255,0.7)',
+                }}
+              >
+                <div className="app-kv-cell" style={{ color: 'inherit' }}>
+                  <span style={{ color: 'rgba(255,255,255,0.55)' }}>类型</span>
+                  <span style={{ color: '#fff' }}>{protocolMeta.Type || '—'}</span>
+                </div>
+                <div className="app-kv-cell" style={{ color: 'inherit' }}>
+                  <span style={{ color: 'rgba(255,255,255,0.55)' }}>设备类型</span>
+                  <span style={{ color: '#fff' }}>{protocolMeta.ProtocolType || '—'}</span>
+                </div>
+                <div className="app-kv-cell" style={{ color: 'inherit' }}>
+                  <span style={{ color: 'rgba(255,255,255,0.55)' }}>版本</span>
+                  <span style={{ color: '#fff' }}>v{protocolMeta.version ?? '—'}</span>
+                </div>
+                <div className="app-kv-cell" style={{ color: 'inherit' }}>
+                  <span style={{ color: 'rgba(255,255,255,0.55)' }}>最后修改</span>
+                  <span style={{ color: '#fff', fontFamily: 'var(--font-mono)' }}>
+                    {protocolMeta.updatedAt
+                      ? dayjs(protocolMeta.updatedAt).format('YYYY-MM-DD HH:mm')
+                      : '—'}
+                  </span>
+                </div>
+                <div className="app-kv-cell" style={{ color: 'inherit' }}>
+                  <span style={{ color: 'rgba(255,255,255,0.55)' }}>已挂载终端</span>
+                  <span style={{ color: '#fff' }}>—</span>
+                </div>
+              </div>
             )}
-          </Space>
-        }
-        breadcrumb={[{ title: '协议管理', href: '/admin/node/protocols' }]}
-        back
-        onBack={() => router.push('/admin/node/protocols')}
-        meta={
-          protocolMeta ? (
-            <>
-              <div className="app-kv-cell">
-                <span className="app-kv-label">类型</span>
-                <span className="app-kv-value">{protocolMeta.Type || '—'}</span>
-              </div>
-              <div className="app-kv-cell">
-                <span className="app-kv-label">设备类型</span>
-                <span className="app-kv-value">{protocolMeta.ProtocolType || '—'}</span>
-              </div>
-              <div className="app-kv-cell">
-                <span className="app-kv-label">版本</span>
-                <span className="app-kv-value">v{protocolMeta.version ?? '—'}</span>
-              </div>
-              <div className="app-kv-cell">
-                <span className="app-kv-label">最后修改</span>
-                <span className="app-kv-value">
-                  {protocolMeta.updatedAt
-                    ? dayjs(protocolMeta.updatedAt).format('YYYY-MM-DD HH:mm')
-                    : '—'}
-                </span>
-              </div>
-              <div className="app-kv-cell">
-                <span className="app-kv-label">来源</span>
-                <span className="app-kv-value">
-                  <ProtocolSourceTag source={protocolMeta.source} remark={protocolMeta.remark} />
-                </span>
-              </div>
-              <div className="app-kv-cell">
-                <span className="app-kv-label">已挂载终端</span>
-                <span className="app-kv-value">—</span>
-              </div>
-            </>
-          ) : undefined
-        }
-        extra={
-          <Space>
-            <Button icon={<UploadOutlined />} onClick={() => setUploadModalOpen(true)}>
+          </div>
+          <Space style={{ flexShrink: 0 }}>
+            <Button
+              icon={<UploadOutlined />}
+              onClick={() => setUploadModalOpen(true)}
+              style={{ background: 'rgba(255,255,255,0.15)', borderColor: 'rgba(255,255,255,0.3)', color: '#fff' }}
+            >
               上传本地 JSON
             </Button>
           </Space>
-        }
-      />
+        </div>
+      </div>
       <Tabs
         activeKey={query.get('tab') ?? 'info'}
         onChange={(key) => {

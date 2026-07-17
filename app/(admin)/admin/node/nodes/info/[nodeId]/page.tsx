@@ -263,13 +263,8 @@ export const NodeDetail: React.FC = () => {
                 </div>
             </div>
 
-            {/* ─── 2. PageHeader (返回 / 重置 token / 重启) ─── */}
+            {/* ─── 2. 顶部操作条 (返回 / 重置 token / 重启) · 标题/breadcrumb 让给 hero + 顶栏 ─── */}
             <PageHeader
-                title={node.Name}
-                subtitle={`节点 ID: ${node._id} · 端口 ${node.Port} · 最大连接 ${maxConn}`}
-                breadcrumb={[
-                    { title: '节点管理', href: '/admin/node/nodes' },
-                ]}
                 back
                 extra={
                     <Space>

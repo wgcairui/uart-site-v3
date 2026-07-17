@@ -5,7 +5,6 @@ import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { MessageOutlined } from '@ant-design/icons'
-import { PageHeader } from '@/components/common/PageHeader'
 import { StatusTag, type StatusTagVariant } from '@/components/common/StatusTag'
 import { AiWorkspace } from '@/components/ai/AiWorkspace'
 import {
@@ -100,15 +99,7 @@ export default function AiChatPage() {
         }
       `}</style>
 
-      <PageHeader
-        title={`AI 修改协议：${name || '(未指定)'}`}
-        breadcrumb={[
-          { title: '首页', href: '/admin' },
-          { title: 'AI 工具', href: '/admin/ai/generate' },
-          { title: 'AI 修改协议', href: '/admin/ai/chat' },
-          { title: name },
-        ]}
-      />
+      {/* 面包屑由顶栏 AdminHeader 提供, 不再渲染 PageHeader (避免重复) */}
       {name ? <AiChatContent key={name} name={name} /> : <Empty name="(未指定)" />}
     </div>
   )
