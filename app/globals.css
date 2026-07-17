@@ -1551,6 +1551,23 @@ html, body {
 }
 
 /* =============================================================
+ * admin user list · hero 移动端响应式 (2026-07-17)
+ * 4-列 metric grid → 2-列, 数字从 64px 降到 40px
+ * ============================================================= */
+@media (max-width: 768px) {
+  .user-hero-metrics {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 16px !important;
+  }
+  .v3-user-hero {
+    padding: 20px 20px !important;
+  }
+  .v3-user-hero [style*="font-size: 64"] {
+    font-size: 40px !important;
+  }
+}
+
+/* =============================================================
  * admin alarm 移动端卡片视图（P2-4 · 2026-07-12）
  * 5 列 Table 在 < 768px 视口 msg 列被挤压、时间列竖排问题
  * 改为卡片堆叠 + dayjs.fromNow() 相对时间
