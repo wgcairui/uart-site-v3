@@ -184,11 +184,17 @@ export const Nodes: React.FC = () => {
 
     const nodes = nodesData ?? []
 
+    // 节点是否在线: 后端不返回 `online` 字段 (Uart.NodeClient type 也没声明),
+    // 改用 lastSeenAt 派生 — 60s 内有心跳算在线 (Token 鉴权每次握手都会刷新 lastSeenAt)
+    const isNodeAlive = (n: Uart.NodeClient): boolean => {
+        if (!n.lastSeenAt) return false
+        return dayjs().diff(dayjs(n.lastSeenAt), 'second') <= 60
+    }
+
     // v3 PageSummary 4 卡 — 总数 / 在线 / 总连接 (sum MaxConnections) / 平均设备
-    // online/count 字段后端可能不返回 (原代码注释确认), 缺失时按 0 兜底
     const stats = useMemo(() => {
         const total = nodes.length
-        const online = nodes.filter((n: any) => n.online).length
+        const online = nodes.filter((n) => isNodeAlive(n)).length
         const totalConnections = nodes.reduce(
             (acc, n) => acc + (n.MaxConnections || 0),
             0,
@@ -377,7 +383,7 @@ export const Nodes: React.FC = () => {
                             <div className="node-mobile-card-header">
                                 <span className="node-name">{n.Name}</span>
                                 <StatusTag
-                                    variant={n.online ? 'online' : 'offline'}
+                                    variant={isNodeAlive(n) ? 'online' : 'offline'}
                                     size="sm"
                                 />
                             </div>
@@ -402,7 +408,7 @@ export const Nodes: React.FC = () => {
                                     <span>在线设备</span>
                                     <span>
                                         <StatusTag
-                                            variant={n.online ? 'online' : 'offline'}
+                                            variant={isNodeAlive(n) ? 'online' : 'offline'}
                                             size="sm"
                                         />
                                     </span>
@@ -512,7 +518,9 @@ export const Nodes: React.FC = () => {
                     <Table.Column
                         dataIndex="online"
                         title="在线设备"
-                        render={(v) => v ? <StatusTag variant="online" /> : <StatusTag variant="offline" />}
+                        render={(_, r: Uart.NodeClient) => (
+                            <StatusTag variant={isNodeAlive(r) ? 'online' : 'offline'} />
+                        )}
                     />
                     <Table.Column
                         key="auth"
