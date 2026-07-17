@@ -2,6 +2,7 @@
 import { DeleteFilled, WarningFilled } from "@ant-design/icons";
 import { Button, Form, Input, message, Modal, Space, Table } from 'antd'
 import React, { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { addDevType, deleteDevModel, DevTypes, getDevModelStats } from "@/lib/api/fetchRoot";
 import {
     generateTableKey,
@@ -89,6 +90,7 @@ export const DevModel: React.FC = () => {
     const [statFilter, setStatFilter] = useState<string[]>([]);
     const [visible, setVisible] = useState(false);
     const [editingItem, setEditingItem] = useState<Uart.DevsType | null>(null);
+    const router = useRouter();
     const apiQuery: PaginationReq = {
         ...query,
         search: searchFields,
@@ -212,6 +214,14 @@ export const DevModel: React.FC = () => {
                     title="设备型号"
                     sorter={true}
                     {...makeServerSearchProp("DevModel", handleSearch) as any}
+                    render={(val: string) => (
+                        <a
+                            onClick={(e) => { e.stopPropagation(); router.push(`/admin/node/devmodel/${encodeURIComponent(val)}`) }}
+                            style={{ color: 'var(--brand-500)', cursor: 'pointer', fontWeight: 500 }}
+                        >
+                            {val}
+                        </a>
+                    )}
                 />
                 <Table.Column
                     dataIndex="Type"
