@@ -253,11 +253,11 @@ function UserInfoInner() {
                 </div>
 
                 {/* v3 hybrid Page B · 8+4: UserOverview KV 17 (8 列) + UserActions 4 列 */}
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(12, 1fr)', gap: 20, marginBottom: 20 }}>
-                    <div style={{ gridColumn: 'span 8', minHeight: 360 }}>
+                <div className="user-detail-grid">
+                    <div style={{ minHeight: 360 }}>
                         <UserOverview user={data} onChange={fecth} />
                     </div>
-                    <div style={{ gridColumn: 'span 4', minHeight: 360 }}>
+                    <div style={{ minHeight: 360 }}>
                         <UserActions user={data} onChange={fecth} />
                     </div>
                 </div>

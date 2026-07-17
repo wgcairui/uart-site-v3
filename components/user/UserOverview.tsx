@@ -222,9 +222,8 @@ export function UserOverview({ user, onChange }: UserOverviewProps) {
       </div>
 
       <div
+        className="user-overview-kv"
         style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(3, minmax(0, 1fr))',
           gap: '4px 18px',
           flex: 1,
           alignContent: 'start',
