@@ -9,8 +9,8 @@ export interface BreadcrumbItem {
 }
 
 interface PageHeaderProps {
-  /** 主标题 */
-  title: ReactNode
+  /** 主标题 (可选, 跟 hero 冲突时可省略) */
+  title?: ReactNode
   /** 副标题 */
   subtitle?: ReactNode
   /** 面包屑（不含当前页） */
@@ -87,7 +87,7 @@ export function PageHeader({
             )}
           </div>
         )}
-        <h1 className="app-page-header-title">{title}</h1>
+        {title && <h1 className="app-page-header-title">{title}</h1>}
         {subtitle && <p className="app-page-header-subtitle">{subtitle}</p>}
         {meta && <div className="app-page-header-meta">{meta}</div>}
       </div>

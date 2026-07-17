@@ -98,7 +98,6 @@ function DevInner() {
                     </div>
                 </div>
                 <PageHeader
-                    title={mountDev.mountDev}
                     extra={
                         <Dropdown menu={{
                             items: terminal.mountDevs.map(({ mountDev, pid }) => ({
@@ -111,10 +110,6 @@ function DevInner() {
                             </Button>
                         </Dropdown>
                     }
-                    breadcrumb={[
-                        { title: '首页', href: '/main' },
-                        { title: terminal.name, href: `/main/terminal/${terminal.DevMac}` },
-                    ]}
                 />
                 <PageSummary
                     items={[

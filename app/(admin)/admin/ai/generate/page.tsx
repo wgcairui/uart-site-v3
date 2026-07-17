@@ -10,7 +10,6 @@ import {
 } from '@ant-design/icons'
 import { useRouter } from 'next/navigation'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { PageHeader } from '@/components/common/PageHeader'
 import { PageSummary } from '@/components/common/PageSummary'
 import { StatusTag } from '@/components/common/StatusTag'
 import { AiWorkspace } from '@/components/ai/AiWorkspace'
@@ -780,14 +779,7 @@ export default function AiGeneratePage() {
 
   return (
     <>
-      <PageHeader
-        title="AI 生成新协议"
-        breadcrumb={[
-          { title: '首页', href: '/admin' },
-          { title: 'AI 工具', href: '/admin/ai/generate' },
-          { title: '生成新协议' },
-        ]}
-      />
+      {/* 面包屑由顶栏 AdminHeader 提供, 不渲染 PageHeader (避免重复) */}
       <div
         className="bg-bento-canvas"
         style={{ position: 'relative', zIndex: 0, paddingLeft: 0, paddingRight: 0 }}
