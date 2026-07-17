@@ -25,6 +25,9 @@ const SEGMENT_LABELS: Record<string, string> = {
   info: '详情',
   addterminal: '添加终端',
   userinfo: '用户信息',
+  // PR-2 (2026-07-17): AI 生成页从 /admin/ai/generate 搬到 /admin/node/protocols/generate
+  // 自动面包屑最后一段映射为「AI 生成」(跟 menu 文本对齐)
+  generate: 'AI 生成',
 }
 
 /**

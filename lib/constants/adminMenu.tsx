@@ -36,6 +36,8 @@ export const ADMIN_MENU: AdminMenuGroup[] = [
     ico: <IconFont type="icon-jichuguanli" />,
     child: [
       { key: 'protocols', to: '/admin/node/protocols', text: '协议', icon: <IconFont type="icon-jichuguanli" /> },
+      // PR-2 (2026-07-17): AI 生成从 /admin/ai/generate 搬到 /admin/node/protocols/generate, 收编进「协议」group
+      { key: 'protocols-generate', to: '/admin/node/protocols/generate', text: 'AI 生成', icon: <IconFont type="icon-zhire" /> },
       { key: 'devmodel', to: '/admin/node/devmodel', text: '设备类型', icon: <IconFont type="icon-fenzuguanli" /> },
       { key: 'nodes', to: '/admin/node/nodes', text: '节点', icon: <IconFont type="icon-shebeizhuangtai" /> },
       { key: 'terminal', to: '/admin/node/terminal', text: '终端', icon: <IconFont type="icon-shebeiguanli" /> },
@@ -69,16 +71,10 @@ export const ADMIN_MENU: AdminMenuGroup[] = [
       { key: 'log-server-errors', to: '/admin/log/server-errors', text: '服务端错误日志', icon: <IconFont type="icon-bug" /> },
     ],
   },
-  {
-    // 决策 16 + 19 + 20 / 2026-06-24：AI 协议生成器 admin 端入口
-    // PR-1 (2026-07-17): ai-chat / ai-dry-run 已并入协议详情 tab, 暂时只留 ai-generate
-    // PR-2 将进一步把 ai-generate 移到协议 group 下, 删除整个 "AI 工具" group
-    title: 'AI 工具',
-    ico: <IconFont type="icon-zhire" />,
-    child: [
-      { key: 'ai-generate', to: '/admin/ai/generate', text: '生成新协议', icon: <IconFont type="icon-zhire" /> },
-    ],
-  },
+  // PR-2 (2026-07-17): "AI 工具" group 整体移除
+  //  - AI 生成已并入「协议」group 下
+  //  - AI 修改 / Dry-run 已在 PR-1 合并到协议详情 tab
+  // 历史 group 留 removed-from-2026-07-17 标记, 方便回溯
 ]
 
 /** 默认展开的一级分组 key */
