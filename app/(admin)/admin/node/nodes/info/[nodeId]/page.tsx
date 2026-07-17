@@ -60,13 +60,17 @@ export const NodeDetail: React.FC = () => {
 
     if (!node) return null
 
-    // online 字段在 Uart.NodeClient 类型里没声明, 但后端实际返回 (sibling nodes/page.tsx 也是 any 取)
+    // 节点是否在线: 后端不返回 `online` 字段 (Uart.NodeClient type 也没声明),
+    // 改用 lastSeenAt 派生 — 60s 内有心跳算在线 (Token 鉴权每次握手刷新)
     const nodeAny = node as any
-    const isOnline = Number(nodeAny.online ?? 0) > 0
+    const isOnline = !!node.lastSeenAt && dayjs().diff(dayjs(node.lastSeenAt), 'second') <= 60
     const regCount = Number(nodeAny.count ?? 0)
-    const onlineCount = Number(nodeAny.online ?? 0)
+    // online 字段后端不一定返回, undefined 时显示 '—'
+    const onlineCount: number | string = nodeAny.online != null ? Number(nodeAny.online) : '—'
     const maxConn = Number(node.MaxConnections ?? 0)
-    const onlineRate = regCount > 0 ? Math.round((onlineCount / regCount) * 100) : 0
+    const onlineRate = regCount > 0 && typeof onlineCount === 'number'
+        ? Math.round((onlineCount / regCount) * 100)
+        : 0
 
     // LiveControls 6 tile 实时数据需要的 mac/pid — node 实体没 mac/pid, 用 _id 当 mac, 默认 0 当 pid
     const tileMac = String((node as any).mac ?? node._id ?? node.Name)
