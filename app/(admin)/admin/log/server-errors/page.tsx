@@ -15,22 +15,26 @@
 import React, { useEffect, useMemo, useState } from 'react'
 import {
     Button,
-    Card,
     Checkbox,
     DatePicker,
-    Descriptions,
     Drawer,
     Input,
     Select,
     Space,
+    Spin,
     Table,
     Tag,
     Typography,
 } from 'antd'
-import { ReloadOutlined, SearchOutlined } from '@ant-design/icons'
+import {
+    ReloadOutlined, SearchOutlined,
+    FireOutlined, WarningOutlined, FileTextOutlined,
+    BarChartOutlined, FilterOutlined,
+} from '@ant-design/icons'
 import dayjs from 'dayjs'
 import { PageHeader } from '@/components/common/PageHeader'
 import { PageSummary } from '@/components/common/PageSummary'
+import { EmptyState } from '@/components/common/EmptyState'
 import { logservererrorById, logservererrors } from '@/lib/api/endpoints/admin/logs'
 import type { V2ListResponse } from '@/types'
 
@@ -293,7 +297,7 @@ export const ServerErrorsPage: React.FC = () => {
     ]
 
     return (
-        <>
+        <div className="bg-bento-canvas" style={{ position: 'relative', zIndex: 0 }}>
             <PageHeader
                 title="服务端错误日志"
                 subtitle="查看 5xx 错误与堆栈详情"
@@ -301,30 +305,64 @@ export const ServerErrorsPage: React.FC = () => {
                     { title: '首页', href: '/admin' },
                     { title: '日志' },
                 ]}
+                extra={
+                    <Space>
+                        <Button
+                            type="primary"
+                            icon={<SearchOutlined />}
+                            onClick={handleSearch}
+                            className="btn-brand"
+                        >
+                            搜索
+                        </Button>
+                        <Button onClick={handleReset}>重置</Button>
+                        <Button
+                            icon={<ReloadOutlined />}
+                            onClick={fetchList}
+                            shape="circle"
+                        />
+                    </Space>
+                }
             />
 
             <PageSummary
+                column={4}
                 items={[
-                    { label: '当前查询总数', value: total, variant: 'danger' },
                     {
-                        label: '5xx',
+                        label: '当前查询总数',
+                        value: total,
+                        variant: 'danger',
+                        icon: <BarChartOutlined />,
+                        extra: `${range[0].format('MM-DD HH:mm')} ~ ${range[1].format('MM-DD HH:mm')}`,
+                    },
+                    {
+                        label: '5xx (本页)',
                         value: data.filter((d) => d.status >= 500).length,
                         variant: 'danger',
+                        icon: <FireOutlined />,
+                        extra: data.length > 0 ? `${Math.round((data.filter((d) => d.status >= 500).length / data.length) * 100)}% 本页占比` : undefined,
                     },
                     {
-                        label: '4xx',
+                        label: '4xx (本页)',
                         value: data.filter((d) => d.status >= 400 && d.status < 500).length,
                         variant: 'warning',
+                        icon: <WarningOutlined />,
+                        extra: data.length > 0 ? `${Math.round((data.filter((d) => d.status >= 400 && d.status < 500).length / data.length) * 100)}% 本页占比` : undefined,
                     },
                     {
-                        label: '本页',
+                        label: '当前页',
                         value: data.length,
                         variant: 'info',
+                        icon: <FileTextOutlined />,
+                        extra: `page ${page} / ${Math.max(1, Math.ceil(total / pageSize))}`,
                     },
                 ]}
             />
 
-            <Card size="small" style={{ marginBottom: 12 }} styles={{ body: { padding: 12 } }}>
+            <div className="bento-card" style={{ padding: 20, marginBottom: 20 }}>
+                <div style={{ marginBottom: 12, color: 'var(--ink-500)', fontSize: 12, display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <FilterOutlined /> 筛选条件
+                </div>
                 <Space wrap size="middle">
                     <Space size={4}>
                         <Text type="secondary" style={{ fontSize: 12 }}>
@@ -437,14 +475,6 @@ export const ServerErrorsPage: React.FC = () => {
                         allowClear
                     />
 
-                    <Space size={4}>
-                        <Button type="primary" icon={<SearchOutlined />} onClick={handleSearch}>
-                            搜索
-                        </Button>
-                        <Button onClick={handleReset}>重置</Button>
-                        <Button icon={<ReloadOutlined />} onClick={fetchList} />
-                    </Space>
-
                     <Space size={8} style={{ marginLeft: 8 }}>
                         <Checkbox
                             checked={hideNonServerErrors}
@@ -475,34 +505,49 @@ export const ServerErrorsPage: React.FC = () => {
                         </Checkbox>
                     </Space>
                 </Space>
-            </Card>
+            </div>
 
-            <Card size="small" styles={{ body: { padding: 0 } }}>
-                <Table
-                    size="small"
-                    loading={loading}
-                    dataSource={data as any}
-                    rowKey="_id"
-                    columns={columns as any}
-                    pagination={{
-                        current: page,
-                        pageSize,
-                        total,
-                        showSizeChanger: true,
-                        pageSizeOptions: ['20', '50', '100', '200'],
-                        showTotal: (t: number) => `共 ${t} 条`,
-                    }}
-                    onChange={(pag) => {
-                        setPage(pag.current ?? 1)
-                        setPageSize(pag.pageSize ?? 20)
-                    }}
-                    onRow={(record: any) => ({
-                        onClick: () => openDetail(record),
-                        style: { cursor: 'pointer' },
-                    })}
-                    scroll={{ x: 1100 }}
-                />
-            </Card>
+            <div className="bento-card" style={{ padding: 20, marginBottom: 20 }}>
+                {loading && data.length === 0 ? (
+                    <div style={{ padding: 80, textAlign: 'center' }}>
+                        <Spin size="large" />
+                    </div>
+                ) : data.length === 0 ? (
+                    <EmptyState
+                        description="当前筛选条件下没有错误日志"
+                        actionLabel="重置筛选"
+                        onAction={handleReset}
+                        secondaryLabel="刷新"
+                        onSecondary={() => fetchList()}
+                    />
+                ) : (
+                    <Table
+                        className="v3-table"
+                        size="small"
+                        loading={loading}
+                        dataSource={data as any}
+                        rowKey="_id"
+                        columns={columns as any}
+                        pagination={{
+                            current: page,
+                            pageSize,
+                            total,
+                            showSizeChanger: true,
+                            pageSizeOptions: ['20', '50', '100', '200'],
+                            showTotal: (t: number) => `共 ${t} 条`,
+                        }}
+                        onChange={(pag) => {
+                            setPage(pag.current ?? 1)
+                            setPageSize(pag.pageSize ?? 20)
+                        }}
+                        onRow={(record: any) => ({
+                            onClick: () => openDetail(record),
+                            style: { cursor: 'pointer' },
+                        })}
+                        scroll={{ x: 1100 }}
+                    />
+                )}
+            </div>
 
             <Drawer
                 title={
@@ -533,30 +578,48 @@ export const ServerErrorsPage: React.FC = () => {
             >
                 {detailRecord && (
                     <Space orientation="vertical" style={{ width: '100%' }} size="middle">
-                        <Descriptions
-                            size="small"
-                            column={2}
-                            bordered
-                            items={[
-                                { key: 'timeStamp', label: '时间', children: dayjs(detailRecord.timeStamp).format('YYYY-MM-DD HH:mm:ss.SSS') },
-                                { key: 'requestId', label: 'requestId', children: <Text code copyable>{detailRecord.requestId}</Text> },
-                                { key: 'userId', label: 'userId', children: detailRecord.userId ?? '—' },
-                                { key: 'userGroup', label: '用户组', children: detailRecord.userGroup ? <Tag color={USER_GROUP_COLOR[detailRecord.userGroup] ?? 'default'}>{detailRecord.userGroup}</Tag> : '—' },
-                                { key: 'ip', label: 'IP', children: detailRecord.ip ?? '—' },
-                                { key: 'handler', label: 'Handler', children: detailRecord.handler ?? '—' },
-                                { key: 'errorName', label: '错误名', children: <Tag>{detailRecord.errorName}</Tag> },
-                                {
-                                    key: 'errorMessage',
-                                    label: '错误信息',
-                                    children: (
-                                        <Text style={{ wordBreak: 'break-all' }}>
-                                            {detailRecord.errorMessage}
-                                        </Text>
-                                    ),
-                                    span: 2,
-                                },
-                            ]}
-                        />
+                        <div
+                            className="bento-card"
+                            style={{
+                                padding: 20,
+                                display: 'grid',
+                                gridTemplateColumns: 'repeat(2, minmax(0, 1fr))',
+                                gap: '12px 24px',
+                            }}
+                        >
+                            <div className="app-kv-cell">
+                                <span className="app-kv-label">时间</span>
+                                <span className="app-kv-value" style={{ fontFamily: 'ui-monospace, monospace' }}>{dayjs(detailRecord.timeStamp).format('YYYY-MM-DD HH:mm:ss.SSS')}</span>
+                            </div>
+                            <div className="app-kv-cell">
+                                <span className="app-kv-label">requestId</span>
+                                <span className="app-kv-value"><Text code copyable style={{ fontSize: 12 }}>{detailRecord.requestId}</Text></span>
+                            </div>
+                            <div className="app-kv-cell">
+                                <span className="app-kv-label">userId</span>
+                                <span className="app-kv-value">{detailRecord.userId ?? '—'}</span>
+                            </div>
+                            <div className="app-kv-cell">
+                                <span className="app-kv-label">用户组</span>
+                                <span className="app-kv-value">{detailRecord.userGroup ? <Tag color={USER_GROUP_COLOR[detailRecord.userGroup] ?? 'default'} style={{ margin: 0 }}>{detailRecord.userGroup}</Tag> : '—'}</span>
+                            </div>
+                            <div className="app-kv-cell">
+                                <span className="app-kv-label">IP</span>
+                                <span className="app-kv-value">{detailRecord.ip ?? '—'}</span>
+                            </div>
+                            <div className="app-kv-cell">
+                                <span className="app-kv-label">Handler</span>
+                                <span className="app-kv-value" style={{ fontFamily: 'ui-monospace, monospace', fontSize: 12 }}>{detailRecord.handler ?? '—'}</span>
+                            </div>
+                            <div className="app-kv-cell">
+                                <span className="app-kv-label">错误名</span>
+                                <span className="app-kv-value"><Tag style={{ margin: 0 }}>{detailRecord.errorName}</Tag></span>
+                            </div>
+                            <div className="app-kv-cell" style={{ gridColumn: 'span 2' }}>
+                                <span className="app-kv-label">错误信息</span>
+                                <span className="app-kv-value" style={{ whiteSpace: 'normal', wordBreak: 'break-all' }}>{detailRecord.errorMessage}</span>
+                            </div>
+                        </div>
 
                         {detailRecord.params !== undefined && (
                             <Section title="Params (GET query, post-sanitize)" data={detailRecord.params} />
@@ -597,33 +660,40 @@ export const ServerErrorsPage: React.FC = () => {
                     </Space>
                 )}
             </Drawer>
-        </>
+        </div>
     )
 }
 
 const Section: React.FC<{ title: string; data: any; kv?: boolean }> = ({ title, data, kv }) => (
     <div>
-        <Text type="secondary" style={{ fontSize: 12 }}>
+        <div style={{ color: 'var(--ink-500)', fontSize: 12, fontWeight: 500, marginBottom: 8, display: 'flex', alignItems: 'center', gap: 6 }}>
             {title}
-        </Text>
+        </div>
         {kv ? (
-            <Descriptions
-                size="small"
-                column={1}
-                bordered
-                items={Object.entries(data).map(([k, v]) => ({
-                    key: k,
-                    label: k,
-                    children: Array.isArray(v) ? v.join(', ') : String(v ?? '—'),
-                }))}
-            />
+            <div
+                className="bento-card"
+                style={{
+                    padding: 16,
+                    display: 'grid',
+                    gridTemplateColumns: 'minmax(120px, max-content) 1fr',
+                    gap: '8px 16px',
+                    fontSize: 12,
+                }}
+            >
+                {Object.entries(data).map(([k, v]) => (
+                    <React.Fragment key={k}>
+                        <span className="app-kv-label" style={{ fontFamily: 'ui-monospace, monospace' }}>{k}</span>
+                        <span className="app-kv-value" style={{ wordBreak: 'break-all' }}>{Array.isArray(v) ? v.join(', ') : String(v ?? '—')}</span>
+                    </React.Fragment>
+                ))}
+            </div>
         ) : (
             <pre
                 style={{
                     background: '#fafafa',
-                    border: '1px solid #f0f0f0',
+                    border: '1px solid var(--ink-200)',
                     padding: 12,
-                    borderRadius: 4,
+                    borderRadius: 8,
                     fontSize: 12,
                     maxHeight: 240,
                     overflow: 'auto',
