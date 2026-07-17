@@ -1,9 +1,8 @@
 'use client'
 
-import { App, Button, Form, Input, Skeleton, Space } from 'antd'
+import { App, Skeleton } from 'antd'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { MessageOutlined } from '@ant-design/icons'
 import { AiWorkspace } from '@/components/ai/AiWorkspace'
 import {
   buildAssistantMessage,
@@ -31,11 +30,15 @@ interface ProtocolAiChatTabProps {
  * 流程（与原 /admin/ai/chat/:name 完全一致）：
  * 1. mount → GET /api/v2/user/protocols/:name 加载当前 protocol
  *    （admin JWT 有 USER 角色权限，复用 user 端 GET 端点；admin 端没暴露 GET :name）
- * 2. 中间 form 实时显示当前 protocol
- * 3. admin 在 Sender 输入修改诉求 → POST /api/v2/admin/ai/chat-stream (SSE)
+ * 2. 右侧 form 实时显示当前 protocol
+ * 3. admin 在 ChatPane 内置 Sender 输入修改诉求 → POST /api/v2/admin/ai/chat-stream (SSE)
  * 4. 流式渲染 text delta + tool_start
  * 5. tool_done 后 form 实时绑定 tool_done.input（chat 不允许改 Protocol 名）
  * 6. saved 事件 → 显示「已保存 v(N+1)」，自动 refresh form
+ *
+ * 修复 (2026-07-17)：之前 chat tab 上面塞了一个独立的 Input + 发送按钮（inputFormNode），
+ * 跟 ChatPane 底部内置 Sender 形成两个 input。同时 onSubmit 传了 `() => undefined` no-op，
+ * 导致下面那个 Sender 永远点不动。统一只用 ChatPane 内置 Sender，删除冗余 inputForm。
  *
  * 同一协议累计 chat 次数无限制（v1 简化，v2 加 10 轮上限）。
  */
@@ -49,7 +52,7 @@ interface AiChatContentProps {
 
 function AiChatContent({ name }: AiChatContentProps) {
   const { message } = App.useApp()
-  const { stream, abort, isStreaming, error: streamError } = useAiStream()
+  const { stream, isStreaming, error: streamError } = useAiStream()
   const router = useRouter()
 
   const [protocol, setProtocol] = useState<Partial<Uart.protocol> | null>(null)
@@ -60,9 +63,8 @@ function AiChatContent({ name }: AiChatContentProps) {
   const [messages, setMessages] = useState<ChatPaneMessage[]>([])
   const assistantMsgIdRef = useRef<string | null>(null)
   const toolJsonAccumRef = useRef<string>('')
-  const [chatForm] = Form.useForm<{ userPrompt: string }>()
 
-  // 跳转到协议详情页（保留 ?tab=info&version=N 锚定到 info tab 方便查看新版本）
+  // 跳转到协议详情页（保留 ?tab=info 锚定到 info tab 方便查看新版本）
   const goProtocolDetail = (protocolName: string) => {
     router.push(`/admin/node/protocols/info?Protocol=${encodeURIComponent(protocolName)}&tab=info`)
   }
@@ -216,44 +218,6 @@ function AiChatContent({ name }: AiChatContentProps) {
     [name, stream]
   )
 
-  const inputFormNode = (
-    <Space.Compact style={{ width: '100%' }}>
-      <Form form={chatForm} style={{ flex: 1 }}>
-        <Form.Item name="userPrompt" noStyle>
-          <Input
-            placeholder="输入修改诉求后回车（如：把输入电压系数改为 0.1 / 加上电池容量字段）"
-            disabled={isStreaming || loadingProtocol}
-            onPressEnter={(e) => {
-              e.preventDefault()
-              const v = chatForm.getFieldValue('userPrompt') as string
-              if (v && v.trim()) {
-                submitChat(v)
-                chatForm.resetFields()
-              }
-            }}
-            style={{ width: '100%' }}
-          />
-        </Form.Item>
-      </Form>
-      <Button
-        type="primary"
-        icon={<MessageOutlined />}
-        loading={isStreaming}
-        disabled={loadingProtocol}
-        onClick={() => {
-          const v = chatForm.getFieldValue('userPrompt') as string
-          if (v && v.trim()) {
-            submitChat(v)
-            chatForm.resetFields()
-          }
-        }}
-      >
-        发送
-      </Button>
-      {isStreaming && <Button onClick={abort}>中止</Button>}
-    </Space.Compact>
-  )
-
   const instructionCount = protocol?.instruct?.length ?? 0
 
   return (
@@ -337,13 +301,7 @@ function AiChatContent({ name }: AiChatContentProps) {
             <ChatPane
               messages={messages}
               isStreaming={isStreaming}
-              inputForm={inputFormNode}
-              onSubmit={() => undefined}
-              retryButton={
-                <Button size="small" danger onClick={() => chatForm.submit()}>
-                  重试
-                </Button>
-              }
+              onSubmit={submitChat}
             />
           </div>
         }
