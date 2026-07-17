@@ -17,8 +17,10 @@
  *   GET /api/v2/admin/system/oss/files?prefix=&page=&pageSize=&sortBy=&sortOrder=
  *   返回 V2ListResponse<ossfiles>（pagination 无 total，server needTotal=false）
  */
-import { CopyOutlined, DeleteOutlined, LinkOutlined, SearchOutlined, SyncOutlined, UploadOutlined } from '@ant-design/icons'
-import { Button, Form, Input, message, Modal, Space, Table, Tooltip, Upload } from 'antd'
+import { CopyOutlined, DeleteOutlined, LinkOutlined, SearchOutlined, UploadOutlined,
+  FileImageOutlined, FileTextOutlined, FileOutlined, FolderOutlined, ReloadOutlined,
+} from '@ant-design/icons'
+import { Button, Form, Input, message, Modal, Space, Spin, Table, Tooltip, Upload } from 'antd'
 import type { ColumnsType, TablePaginationConfig } from 'antd/lib/table'
 import type { UploadChangeParam } from 'antd/lib/upload'
 import type { UploadFile } from 'antd/lib/upload/interface'
@@ -31,6 +33,7 @@ import { CopyClipboard } from '@/lib/utils/util'
 import { usePromise } from '@/lib/hooks/usePromise'
 import { PageHeader } from '@/components/common/PageHeader'
 import { PageSummary } from '@/components/common/PageSummary'
+import { EmptyState } from '@/components/common/EmptyState'
 import { PaginationReq, V2ListResponse } from '@/types'
 
 // ─── helpers ─────────────────────────────────────────────────────────────────
@@ -258,15 +261,15 @@ export const OssUpload: React.FC = () => {
   }
 
   return (
-    <>
+    <div className="bg-bento-canvas" style={{ position: 'relative', zIndex: 0 }}>
       <PageHeader
         title="OSS 文件管理"
         breadcrumb={[{ title: '首页', href: '/admin' }, { title: '设备数据' }]}
         extra={
           <Space>
-            <Button icon={<SyncOutlined />} onClick={() => fecth()}>
-              刷新
-            </Button>
+            <Tooltip title="刷新">
+              <Button icon={<ReloadOutlined />} onClick={() => fecth()} shape="circle" />
+            </Tooltip>
             <Upload
               onChange={handleUploadChange}
               multiple
@@ -274,7 +277,7 @@ export const OssUpload: React.FC = () => {
               headers={{ Authorization: `Bearer ${getToken()}` }}
               showUploadList={false}
             >
-              <Button icon={<UploadOutlined />} type="primary">
+              <Button icon={<UploadOutlined />} type="primary" className="btn-brand">
                 上传文件
               </Button>
             </Upload>
@@ -282,68 +285,88 @@ export const OssUpload: React.FC = () => {
         }
       />
       <PageSummary
+        column={4}
         items={[
-          { label: '本页文件', value: files.length, variant: 'primary' },
-          { label: '图片', value: buckets.image, variant: 'info' },
-          { label: '文档', value: buckets.document, variant: 'success' },
-          { label: '其他', value: buckets.other, variant: 'warning' },
+          { label: '本页文件', value: files.length, variant: 'primary', icon: <FolderOutlined /> },
+          { label: '图片', value: buckets.image, variant: 'info', icon: <FileImageOutlined /> },
+          { label: '文档', value: buckets.document, variant: 'success', icon: <FileTextOutlined /> },
+          { label: '其他', value: buckets.other, variant: 'warning', icon: <FileOutlined /> },
         ]}
       />
-      <Form layout="inline" style={{ marginBottom: 16 }}>
-        <Form.Item label="前缀">
-          <Input
-            value={prefix}
-            onChange={e => setPrefix(e.target.value)}
-            onPressEnter={triggerSearch}
-            placeholder="按文件名前缀过滤 (空 = 全部)"
-            style={{ width: 320 }}
-            allowClear
-          />
-        </Form.Item>
-        <Form.Item>
-          <Space>
-            <Button onClick={triggerSearch} icon={<SearchOutlined />} type="primary">
-              查找
-            </Button>
-            <Button
-              danger
-              disabled={selectedRowKeys.length === 0}
-              onClick={() => deleteFiles(selectedRowKeys as string[])}
-            >
-              删除所选 ({selectedRowKeys.length})
-            </Button>
-          </Space>
-        </Form.Item>
-      </Form>
+      <div className="bento-card" style={{ padding: 20, marginBottom: 20 }}>
+        <Form layout="inline" style={{ marginBottom: 16 }}>
+          <Form.Item label="前缀">
+            <Input
+              value={prefix}
+              onChange={e => setPrefix(e.target.value)}
+              onPressEnter={triggerSearch}
+              placeholder="按文件名前缀过滤 (空 = 全部)"
+              style={{ width: 320 }}
+              allowClear
+            />
+          </Form.Item>
+          <Form.Item>
+            <Space>
+              <Button onClick={triggerSearch} icon={<SearchOutlined />} type="primary" className="btn-brand">
+                查找
+              </Button>
+              <Button
+                danger
+                disabled={selectedRowKeys.length === 0}
+                onClick={() => deleteFiles(selectedRowKeys as string[])}
+              >
+                删除所选 ({selectedRowKeys.length})
+              </Button>
+            </Space>
+          </Form.Item>
+        </Form>
 
-      <Table
-        loading={loading}
-        dataSource={generateTableKey(files, 'name')}
-        rowKey="name"
-        scroll={{ x: 800 }}
-        rowSelection={{
-          selectedRowKeys,
-          onChange: setSelectedRowKeys,
-          preserveSelectedRowKeys: true,
-          columnWidth: 48,
-        }}
-        pagination={{
-          current: query.page ?? 1,
-          pageSize: query.pageSize ?? 20,
-          total: pagination.total ?? 0,
-          showTotal: t =>
-            pagination.hasNext
-              ? `本页 ${files.length} 个 · 还有更多（点右下角切换 pageSize 看更多）`
-              : t > 0
-                ? `共 ${t} 个`
-                : '本页空',
-          showSizeChanger: true,
-          pageSizeOptions: ['20', '50', '100', '200'],
-        }}
-        onChange={handleTableChange}
-        columns={columns}
-      />
-    </>
+        {loading && files.length === 0 ? (
+          <div style={{ padding: 80, textAlign: 'center' }}>
+            <Spin size="large" />
+          </div>
+        ) : files.length === 0 ? (
+          <EmptyState
+            description={prefix ? `前缀 "${prefix}" 无匹配文件` : '暂无 OSS 文件,试试上传第一个'}
+            {...(prefix
+              ? { actionLabel: '清除过滤', onAction: () => setPrefix('') }
+              : { actionLabel: '刷新', onAction: () => fecth() }
+            )}
+            secondaryLabel="刷新"
+            onSecondary={() => fecth()}
+          />
+        ) : (
+          <Table
+            className="v3-table"
+            loading={loading}
+            dataSource={generateTableKey(files, 'name')}
+            rowKey="name"
+            scroll={{ x: 800 }}
+            rowSelection={{
+              selectedRowKeys,
+              onChange: setSelectedRowKeys,
+              preserveSelectedRowKeys: true,
+              columnWidth: 48,
+            }}
+            pagination={{
+              current: query.page ?? 1,
+              pageSize: query.pageSize ?? 20,
+              total: pagination.total ?? 0,
+              showTotal: t =>
+                pagination.hasNext
+                  ? `本页 ${files.length} 个 · 还有更多（点右下角切换 pageSize 看更多）`
+                  : t > 0
+                    ? `共 ${t} 个`
+                    : '本页空',
+              showSizeChanger: true,
+              pageSizeOptions: ['20', '50', '100', '200'],
+            }}
+            onChange={handleTableChange}
+            columns={columns}
+          />
+        )}
+      </div>
+    </div>
   )
 }
 
