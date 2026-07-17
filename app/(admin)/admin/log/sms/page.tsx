@@ -1,5 +1,6 @@
 'use client'
-import { Card, Divider, Input, Table, Tabs, Space, Button } from "antd"
+import { Divider, Input, Table, Tabs, Space, Button } from "antd"
+import { SearchOutlined, TeamOutlined, DollarOutlined, UserOutlined } from '@ant-design/icons'
 import { useState } from "react"
 import { getUserAlarmSetups, logsmssends, logsmssendsCountInfo } from "@/lib/api/fetchRoot"
 import { generateTableKey, getColumnSearchProp, makeServerSearchProp } from '@/lib/utils/tableCommon'
@@ -9,6 +10,7 @@ import { Log } from "@/components/log/log";
 import { DesList } from "@/components/data/DesList";
 import { PageSummary } from "@/components/common/PageSummary";
 import { PageHeader } from "@/components/common/PageHeader";
+import { EmptyState } from "@/components/common/EmptyState";
 import { PaginationReq, V2ListResponse } from "@/types";
 
 /**
@@ -61,7 +63,7 @@ export const LogSms: React.FC = () => {
     };
 
     return (
-        <>
+        <div className="bg-bento-canvas" style={{ position: 'relative', zIndex: 0 }}>
             <PageHeader
                 title="短信日志"
                 subtitle="查看短信发送历史与消耗统计"
@@ -70,136 +72,148 @@ export const LogSms: React.FC = () => {
                     { title: '日志' },
                 ]}
             />
-            <Tabs items={[
-                {
-                    key: 'log',
-                    label: '日志',
-                    children: (
+            <div className="bento-card" style={{ padding: 20, marginBottom: 20 }}>
+                <Tabs items={[
+                    {
+                        key: 'log',
+                        label: '日志',
+                        children: (
+                            <>
+                                <Space style={{ marginBottom: 12 }}>
+                                    <Input
+                                        placeholder="输入手机号搜索"
+                                        value={phone}
+                                        onChange={e => setPhone(e.target.value)}
+                                        onPressEnter={() => setRefreshKey(k => k + 1)}
+                                        style={{ width: 240 }}
+                                        allowClear
+                                        prefix={<SearchOutlined style={{ color: 'var(--ink-400)' }} />}
+                                    />
+                                    <Button type="primary" icon={<SearchOutlined />} onClick={() => setRefreshKey(k => k + 1)} className="btn-brand">
+                                        搜索
+                                    </Button>
+                                </Space>
+                                <Log
+                                    key={refreshKey}
+                                    lastDay={15}
+                                    dataFun={logsmssends}
+                                    filterPhone={phone}
+                                    cPie={["tels"]}
+                                    columns={[
+                                    {
+                                        dataIndex: 'tels',
+                                        title: '收件人',
+                                        ...getColumnSearchProp('tels')
+                                    },
+                                    {
+                                        dataIndex: 'sendParams',
+                                        title: '发送参数',
+                                        render: val => parse(val.TemplateParam, ['remind', 'code'])
+                                    },
+                                    {
+                                        key: 'result',
+                                        title: '结果',
+                                        render: (_, sms: Uart.logSmsSend) => sms?.Success?.Message || sms?.Error?.message || '—'
+                                    }
+                                ]}
+                                expandable={{
+                                    expandedRowRender: (li: Uart.logSmsSend) =>
+                                        <div className="bento-card" style={{ padding: 16 }}>
+                                            <DesList title="sendParams" data={li.sendParams} />
+                                            <DesList title="Success" data={li.Success} />
+                                            <DesList title="Error" data={li.Error} />
+                                        </div>
+                                }}
+                            />
+                            </>
+                        ),
+                    },
+                    {
+                        key: 'count',
+                        label: '短信消耗分布',
+                        children: (
                         <>
-                            <Space style={{ marginBottom: 12 }}>
-                                <Input
-                                    placeholder="输入手机号搜索"
-                                    value={phone}
-                                    onChange={e => setPhone(e.target.value)}
-                                    onPressEnter={() => setRefreshKey(k => k + 1)}
-                                    style={{ width: 180 }}
-                                    allowClear
+                            {/* 顶部 Stat 汇总 */}
+                            <PageSummary
+                                column={3}
+                                items={[
+                                    { label: '用户总数', value: userPagination.total, variant: 'primary', icon: <TeamOutlined /> },
+                                    { label: '当前页合计', value: totalCount, variant: 'warning', icon: <DollarOutlined />, extra: '每用户合计基于当前页用户计算' },
+                                    { label: '平均每用户', value: enriched.length > 0 ? Math.round(totalCount / enriched.length) : 0, variant: 'info', icon: <UserOutlined />, extra: '当前页平均' },
+                                ]}
+                            />
+                            {enriched.length === 0 && !loading ? (
+                                <EmptyState
+                                    description="暂无用户短信消耗数据"
+                                    secondaryLabel="刷新"
+                                    onSecondary={() => refetchUsers()}
                                 />
-                                <Button type="primary" onClick={() => setRefreshKey(k => k + 1)}>搜索</Button>
-                            </Space>
-                            <Log
-                                key={refreshKey}
-                                lastDay={15}
-                                dataFun={logsmssends}
-                                filterPhone={phone}
-                                cPie={["tels"]}
-                                columns={[
-                                {
-                                    dataIndex: 'tels',
-                                    title: '收件人',
-                                    ...getColumnSearchProp('tels')
-                                },
-                                {
-                                    dataIndex: 'sendParams',
-                                    title: '发送参数',
-                                    render: val => parse(val.TemplateParam, ['remind', 'code'])
-                                },
-                                {
-                                    key: 'result',
-                                    title: '结果',
-                                    render: (_, sms: Uart.logSmsSend) => sms?.Success?.Message || sms?.Error?.message || '—'
-                                }
-                            ]}
-                            expandable={{
-                                expandedRowRender: (li: Uart.logSmsSend) =>
-                                    <Card>
-                                        <DesList title="sendParams" data={li.sendParams} />
-                                        <DesList title="Success" data={li.Success} />
-                                        <DesList title="Error" data={li.Error} />
-                                    </Card>
-                            }}
-                        />
+                            ) : (
+                                <Table
+                                    className="v3-table"
+                                    dataSource={generateTableKey(enriched, "user")}
+                                    loading={loading}
+                                    pagination={{
+                                        current: query.page ?? 1,
+                                        pageSize: query.pageSize ?? 20,
+                                        total: userPagination.total,
+                                        showTotal: t => `共 ${t} 个用户`,
+                                        showSizeChanger: true,
+                                    }}
+                                    onChange={(pag) => {
+                                        setQuery(prev => ({
+                                            ...prev,
+                                            page: pag.current ?? prev.page ?? 1,
+                                            pageSize: pag.pageSize ?? prev.pageSize ?? 20,
+                                        }));
+                                    }}
+                                    columns={[
+                                        {
+                                            dataIndex: 'user',
+                                            title: '用户',
+                                            ...makeServerSearchProp('user', handleSearch) as any
+                                        },
+                                        {
+                                            dataIndex: "count",
+                                            title: '合计',
+                                            defaultSortOrder: 'descend',
+                                            sorter: (a: any, b: any) => a.count - b.count
+                                        }
+                                    ]}
+
+                                    expandable={{
+                                        expandedRowRender: (re: any) => {
+                                            return <div className="bento-card" style={{ padding: 16 }}>
+                                                <Divider plain>用户信息</Divider>
+                                                <UserDes user={re.user}></UserDes>
+                                                <Divider plain>使用情况</Divider>
+                                                <Table
+                                                    className="v3-table"
+                                                    dataSource={generateTableKey(re.map, "tel")}
+                                                    columns={[
+                                                        {
+                                                            dataIndex: 'tel',
+                                                            title: '告警手机'
+                                                        },
+                                                        {
+                                                            dataIndex: 'count',
+                                                            title: '次数',
+                                                            defaultSortOrder: 'descend',
+                                                            sorter: (a: any, b: any) => a.count - b.count
+                                                        }
+                                                    ]}
+                                                ></Table>
+                                            </div>
+                                        }
+                                    }}
+                                ></Table>
+                            )}
                         </>
                     ),
                 },
-                {
-                    key: 'count',
-                    label: '短信消耗分布',
-                    children: (
-                    <>
-                        {/* 顶部 Stat 汇总 */}
-                        <PageSummary
-                            items={[
-                                { label: '用户总数', value: userPagination.total, variant: 'primary' },
-                                { label: '当前页合计', value: totalCount, variant: 'warning' },
-                                {
-                                    label: '提示',
-                                    value: '—',
-                                    variant: 'warning',
-                                    extra: '每用户合计基于当前页用户计算。如需全网精确统计，请走日志页筛选。',
-                                },
-                            ]}
-                        />
-                        <Table
-                            dataSource={generateTableKey(enriched, "user")}
-                            loading={loading}
-                            pagination={{
-                                current: query.page ?? 1,
-                                pageSize: query.pageSize ?? 20,
-                                total: userPagination.total,
-                                showTotal: t => `共 ${t} 个用户`,
-                                showSizeChanger: true,
-                            }}
-                            onChange={(pag) => {
-                                setQuery(prev => ({
-                                    ...prev,
-                                    page: pag.current ?? prev.page ?? 1,
-                                    pageSize: pag.pageSize ?? prev.pageSize ?? 20,
-                                }));
-                            }}
-                            columns={[
-                                {
-                                    dataIndex: 'user',
-                                    title: '用户',
-                                    ...makeServerSearchProp('user', handleSearch) as any
-                                },
-                                {
-                                    dataIndex: "count",
-                                    title: '合计',
-                                    defaultSortOrder: 'descend',
-                                    sorter: (a: any, b: any) => a.count - b.count
-                                }
-                            ]}
-
-                            expandable={{
-                                expandedRowRender: (re: any) => {
-                                    return <Card>
-                                        <Divider plain>用户信息</Divider>
-                                        <UserDes user={re.user}></UserDes>
-                                        <Divider plain>使用情况</Divider>
-                                        <Table dataSource={generateTableKey(re.map, "tel")}
-                                            columns={[
-                                                {
-                                                    dataIndex: 'tel',
-                                                    title: '告警手机'
-                                                },
-                                                {
-                                                    dataIndex: 'count',
-                                                    title: '次数',
-                                                    defaultSortOrder: 'descend',
-                                                    sorter: (a: any, b: any) => a.count - b.count
-                                                }
-                                            ]}
-                                        ></Table>
-                                    </Card>
-                                }
-                            }}
-                        ></Table>
-                    </>
-                ),
-            },
-        ]} />
-        </>
+            ]} />
+            </div>
+        </div>
     )
 }
 
