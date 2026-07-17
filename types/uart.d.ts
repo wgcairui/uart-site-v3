@@ -1086,6 +1086,39 @@ declare namespace Uart {
         topDanger: { mac: string; name: string; score: number }[];
     }
 
+    // ─── v2 admin user detailed stats (server 343/admin-dashboard.controller.ts:399 getUserDetailedStats, 2026-07-17) ───
+    /** GET /api/v2/admin/dashboard/users/detailed-stats
+     *  server PR #76 / commit e3dd670 (squash merged 5e1824e3a, deploy eb769492c64d) */
+    interface UserDetailedStatsResp {
+        /** 总用户数 (server countDocuments, 不是当前页) */
+        total: number;
+        /** 按注册类型 (rgtype) 分组: pesiv / wx / web / app */
+        rgType: { label: string; value: number }[];
+        /** 按用户组 (userGroup) 分组: user / root / admin */
+        userGroup: { label: string; value: number }[];
+        /** 活跃用户: 按 logUserLogin.timeStamp distinct user */
+        activeUsers: {
+            /** 7 天内登录过 */
+            last7Days: number;
+            /** 30 天内登录过 */
+            last30Days: number;
+        };
+        // === PR #76 新增 5 字段 (2026-07-17) ===
+        /** 微信绑定 (wxId OR wpId 非空) */
+        wxBound: number;
+        /** 有邮箱 */
+        withMail: number;
+        /** 有手机 (tel 非 null) */
+        withTel: number;
+        /** 新注册用户: 按 creatTime 窗口 */
+        newUsers: {
+            /** 7 天内新注册 */
+            last7Days: number;
+            /** 30 天内新注册 */
+            last30Days: number;
+        };
+    }
+
     // ─── v2 admin user 资源迁移 (server PR #70 / commit 3aacaf1b, 2026-07-13) ───
     // 离职 user 资源迁移到在职 user, 含 dryRun 预览 + 4 类资源选迁
     /** POST /api/v2/admin/users/migrate-resources */

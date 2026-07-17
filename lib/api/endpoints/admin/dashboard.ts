@@ -16,7 +16,7 @@ export const getUserStats = () => Get<universalResult<any[]>>('/api/v2/admin/das
 export const getTerminalStats = () => Get<universalResult<any>>('/api/v2/admin/dashboard/terminals/stats')
 export const getProtocolStats = () => Get<universalResult<any[]>>('/api/v2/admin/dashboard/protocols/stats')
 export const getDevModelStats = () => Get<universalResult<any[]>>('/api/v2/admin/dashboard/dev-models/stats')
-export const getUserDetailedStats = () => Get<universalResult<any>>('/api/v2/admin/dashboard/users/detailed-stats')
+export const getUserDetailedStats = () => Get<universalResult<Uart.UserDetailedStatsResp>>('/api/v2/admin/dashboard/users/detailed-stats')
 export const getTerminalDetailedStats = () => Get<universalResult<any>>('/api/v2/admin/dashboard/terminals/detailed-stats')
 export const getAlarmStats = () => Get<universalResult<any>>('/api/v2/admin/dashboard/alarms/stats')
 export const getProtocolDetailedStats = () => Get<universalResult<any>>('/api/v2/admin/dashboard/protocols/detailed-stats')

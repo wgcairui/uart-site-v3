@@ -7,9 +7,10 @@ import {
     ApiOutlined,
     CrownOutlined,
     UserOutlined,
+    FireOutlined,
 } from '@ant-design/icons'
 import { runingState } from '@/lib/api/fetchRoot'
-import { getUserStats } from '@/lib/api/endpoints/admin/dashboard'
+import { getUserDetailedStats } from '@/lib/api/endpoints/admin/dashboard'
 
 interface UserHeroProps {
     /** 当前页用户总数 (server pagination.total) */
@@ -23,30 +24,30 @@ interface UserHeroProps {
  * - 紫色 aurora 渐变 (#1e1b4b → #312e81 → #6d28d9)
  * - 右上角 radial glow (accent-400 粉)
  * - 大数字 (text-[64px] font-semibold)
- * - 底部 4 个 sub-metric (在线 / 普通用户 / 管理员 / 其他)
+ * - 底部 4 个 sub-metric (普通用户 / 管理员 / 在线 / 7d活跃)
  *
  * 数据源 (server 端 0 改动):
- * - /api/v2/admin/dashboard/stats  runingState → User.all / User.online
- * - /api/v2/admin/dashboard/users/stats  getUserStats → [{type, value}] (按 userGroup 聚合)
+ * - /api/v2/admin/dashboard/stats  runingState → User.online (实时)
+ * - /api/v2/admin/dashboard/users/detailed-stats  getUserDetailedStats → total / userGroup / activeUsers.{7d,30d}
  */
 export function UserHero({ total }: UserHeroProps) {
     const [serverTotal, setServerTotal] = useState<number>(0)
     const [online, setOnline] = useState<number>(0)
+    const [active7d, setActive7d] = useState<number>(0)
     const [groupStats, setGroupStats] = useState<Record<string, number>>({})
     const [loading, setLoading] = useState(true)
 
     useEffect(() => {
         let alive = true
-        Promise.all([runingState(), getUserStats()])
-            .then(([s, g]) => {
+        Promise.all([runingState(), getUserDetailedStats()])
+            .then(([s, d]) => {
                 if (!alive) return
-                setServerTotal(s?.data?.User?.all ?? 0)
+                setServerTotal(d?.data?.total ?? s?.data?.User?.all ?? 0)
                 setOnline(s?.data?.User?.online ?? 0)
-                // getUserStats 返回 [{type: 'user', value: 50}, {type: 'root', value: 2}]
+                setActive7d(d?.data?.activeUsers?.last7Days ?? 0)
                 const map: Record<string, number> = {}
-                const list = (g.data as any[]) || []
-                list.forEach((it: any) => {
-                    map[it.type] = (map[it.type] ?? 0) + (it.value ?? 0)
+                ;((d?.data?.userGroup as any[]) || []).forEach((it: any) => {
+                    map[it.label] = (map[it.label] ?? 0) + (it.value ?? 0)
                 })
                 setGroupStats(map)
             })
@@ -198,9 +199,9 @@ export function UserHero({ total }: UserHeroProps) {
                         color="#fde68a"
                     />
                     <SubMetric
-                        icon={<ApiOutlined />}
-                        label="在线"
-                        value={online}
+                        icon={<FireOutlined />}
+                        label="7d 活跃"
+                        value={active7d}
                         color="#67e8f9"
                     />
                     <SubMetric

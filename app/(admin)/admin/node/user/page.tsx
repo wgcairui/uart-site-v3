@@ -10,6 +10,8 @@ import {
     SwapOutlined, SearchOutlined, ReloadOutlined,
     EyeOutlined, DeleteOutlined, MessageOutlined,
     CloudSyncOutlined, UserAddOutlined, TeamOutlined,
+    FireOutlined, ThunderboltOutlined, CrownOutlined, WechatOutlined,
+    MailOutlined, PhoneOutlined,
 } from "@ant-design/icons";
 import { MigrateUserResourcesModal } from "@/components/admin/MigrateUserResourcesModal";
 import {
@@ -28,11 +30,12 @@ import { PageHeader } from "@/components/common/PageHeader";
 import { PageSummary } from "@/components/common/PageSummary";
 import { EmptyState } from "@/components/common/EmptyState";
 import { PaginationReq } from "@/types";
-import { getUserStats } from "@/lib/api/endpoints/admin/dashboard";
+import { getUserDetailedStats } from "@/lib/api/endpoints/admin/dashboard";
 import { UserHero } from "./_components/UserHero";
 
 type GroupFilter = 'all' | 'root' | 'admin' | 'user' | 'other'
 type WxFilter = 'all' | 'wx' | 'wp' | 'none'
+type RgTypeFilter = 'all' | 'pesiv' | 'wx' | 'web' | 'app'
 
 /**
  * Admin · User 列表页 (v3 hybrid v4 设计语言 · 2026-07-17)
@@ -61,6 +64,7 @@ export const User: React.FC = () => {
     const [migrateFrom, setMigrateFrom] = useState<string | undefined>(undefined);
     const [groupFilter, setGroupFilter] = useState<GroupFilter>('all')
     const [wxFilter, setWxFilter] = useState<WxFilter>('all')
+    const [rgTypeFilter, setRgTypeFilter] = useState<RgTypeFilter>('all')
     const [searchKw, setSearchKw] = useState('')
 
     // Merged query for API: page/sort params + search keywords
@@ -71,23 +75,50 @@ export const User: React.FC = () => {
         return data as any
     }, { items: [], pagination: {} }, [JSON.stringify(apiQuery)])
 
-    // === Server-side 全量统计 (runingState + getUserStats) — 跟 hero 共享数据源, PageSummary 用全量而非当前页 ===
+    // === Server-side 全量统计 (runingState + getUserDetailedStats) ===
+    // data 字段: total / rgType[] / userGroup[] / activeUsers{7d,30d} / wxBound / withMail / withTel / newUsers{7d,30d}
+    // 跟 hero / PageSummary 共享, 全量不依赖当前页
     const { data: serverStats } = usePromise(async () => {
-        const [s, g] = await Promise.all([runingState(), getUserStats()])
+        const [s, d] = await Promise.all([runingState(), getUserDetailedStats()])
+        const det = d?.data
         const groupMap: Record<string, number> = {}
-        const list = (g?.data as any[]) || []
-        list.forEach((it: any) => { groupMap[it.type] = (groupMap[it.type] ?? 0) + (it.value ?? 0) })
+        ;(det?.userGroup ?? []).forEach((it: { label: string; value: number }) => { groupMap[it.label] = (groupMap[it.label] ?? 0) + (it.value ?? 0) })
+        const rgMap: Record<string, number> = {}
+        ;(det?.rgType ?? []).forEach((it: { label: string; value: number }) => { rgMap[it.label] = (rgMap[it.label] ?? 0) + (it.value ?? 0) })
         return {
-            all: s?.data?.User?.all ?? 0,
+            // 总数: 优先用 detailedStats.total (server countDocuments), fallback runingState
+            all: det?.total ?? s?.data?.User?.all ?? 0,
             online: s?.data?.User?.online ?? 0,
+            // 活跃用户
+            active7d: det?.activeUsers?.last7Days ?? 0,
+            active30d: det?.activeUsers?.last30Days ?? 0,
+            // 用户组分布
             group: {
                 user: groupMap['user'] ?? 0,
                 root: groupMap['root'] ?? 0,
                 admin: groupMap['admin'] ?? 0,
-                other: Math.max((s?.data?.User?.all ?? 0) - (groupMap['user'] ?? 0) - (groupMap['root'] ?? 0) - (groupMap['admin'] ?? 0), 0),
+                other: Math.max((det?.total ?? 0) - (groupMap['user'] ?? 0) - (groupMap['root'] ?? 0) - (groupMap['admin'] ?? 0), 0),
             },
+            // 注册类型分布
+            rgType: {
+                pesiv: rgMap['pesiv'] ?? 0,
+                wx: rgMap['wx'] ?? 0,
+                web: rgMap['web'] ?? 0,
+                app: rgMap['app'] ?? 0,
+            },
+            // === PR #76 新增 5 字段 (server PR #76 / e3dd670 / deploy eb769492c64d) ===
+            wxBound: det?.wxBound ?? 0,
+            withMail: det?.withMail ?? 0,
+            withTel: det?.withTel ?? 0,
+            newUsers7d: det?.newUsers?.last7Days ?? 0,
+            newUsers30d: det?.newUsers?.last30Days ?? 0,
         }
-    }, { all: 0, online: 0, group: { user: 0, root: 0, admin: 0, other: 0 } })
+    }, {
+        all: 0, online: 0, active7d: 0, active30d: 0,
+        group: { user: 0, root: 0, admin: 0, other: 0 },
+        rgType: { pesiv: 0, wx: 0, web: 0, app: 0 },
+        wxBound: 0, withMail: 0, withTel: 0, newUsers7d: 0, newUsers30d: 0,
+    })
 
     const users = useMemo(
         () => (userData?.items ?? []) as Uart.UserInfo[],
@@ -95,7 +126,7 @@ export const User: React.FC = () => {
     );
     const pagination = userData?.pagination ?? { total: 0 };
 
-    // === 客户端二次过滤: userGroup / wx 状态 ===
+    // === 客户端二次过滤: userGroup / wx 状态 / rgtype ===
     // (server 端已按 query.search 过滤, 这里只做当前页内细分)
     const filteredUsers = useMemo(() => {
         return users.filter(u => {
@@ -109,18 +140,12 @@ export const User: React.FC = () => {
                 if (wxFilter === 'wp' && !u.wpId) return false
                 if (wxFilter === 'none' && (u.wxId || u.wpId)) return false
             }
+            if (rgTypeFilter !== 'all' && u.rgtype !== rgTypeFilter) return false
             return true
         })
-    }, [users, groupFilter, wxFilter])
+    }, [users, groupFilter, wxFilter, rgTypeFilter])
 
-    // === 当前页内的派生统计 (仅 wx 绑定 / 邮箱用 current page 计数, 因为 server 没现成 endpoint) ===
-    const pageStats = useMemo(() => {
-        const wxBound = users.filter(u => u.wxId || u.wpId).length
-        const withMail = users.filter(u => !!u.mail).length
-        return { wxBound, withMail, total: serverStats.all || pagination.total || 0 }
-    }, [users, serverStats.all, pagination.total])
-
-    const hasAnyFilter = groupFilter !== 'all' || wxFilter !== 'all' || Object.keys(searchFields).length > 0 || searchKw !== ''
+    const hasAnyFilter = groupFilter !== 'all' || wxFilter !== 'all' || rgTypeFilter !== 'all' || Object.keys(searchFields).length > 0 || searchKw !== ''
 
     /**
      * 更新单个用户信息
@@ -177,6 +202,7 @@ export const User: React.FC = () => {
         setSearchKw('')
         setGroupFilter('all')
         setWxFilter('all')
+        setRgTypeFilter('all')
         setQuery({ page: 1, pageSize: 20, needTotal: true })
     }
 
@@ -187,6 +213,10 @@ export const User: React.FC = () => {
 
     const toggleWx = (w: WxFilter) => {
         setWxFilter(prev => prev === w ? 'all' : w)
+    }
+
+    const toggleRgType = (r: RgTypeFilter) => {
+        setRgTypeFilter(prev => prev === r ? 'all' : r)
     }
 
     return (
@@ -224,14 +254,23 @@ export const User: React.FC = () => {
             <UserHero total={pagination.total ?? 0} />
 
             <PageSummary
+                column={5}
                 items={[
                     {
                         label: '总用户',
-                        value: pageStats.total,
+                        value: serverStats.all,
                         variant: 'primary',
                         icon: <TeamOutlined />,
                         active: !hasAnyFilter,
                         onClick: handleResetFilters,
+                    },
+                    {
+                        label: '7d 活跃',
+                        value: serverStats.active7d,
+                        variant: 'success',
+                        icon: <FireOutlined />,
+                        extra: serverStats.all > 0 ? `${Math.round((serverStats.active7d / serverStats.all) * 100)}% 活跃率` : undefined,
+                        active: false,
                     },
                     {
                         label: '普通用户',
@@ -241,20 +280,108 @@ export const User: React.FC = () => {
                         onClick: () => toggleGroup('user'),
                     },
                     {
+                        label: '管理员',
+                        value: serverStats.group.root + serverStats.group.admin,
+                        variant: 'warning',
+                        icon: <CrownOutlined />,
+                        active: groupFilter === 'root' || groupFilter === 'admin',
+                        onClick: () => {
+                            if (groupFilter === 'root' || groupFilter === 'admin') {
+                                toggleGroup(groupFilter)
+                            } else {
+                                toggleGroup('root')
+                            }
+                        },
+                    },
+                    {
                         label: '微信绑定',
-                        value: pageStats.wxBound,
+                        value: serverStats.wxBound,
                         variant: 'info',
+                        icon: <WechatOutlined />,
+                        extra: serverStats.all > 0 ? `${Math.round((serverStats.wxBound / serverStats.all) * 100)}% 绑定率` : undefined,
                         active: wxFilter === 'wx' || wxFilter === 'wp',
                         onClick: () => toggleWx(wxFilter === 'wx' || wxFilter === 'wp' ? 'all' : 'wx'),
                     },
-                    {
-                        label: '已留邮箱',
-                        value: pageStats.withMail,
-                        variant: 'warning',
-                        active: false,
-                    },
                 ]}
             />
+
+            {/* 用户档案 secondary stats (4 卡, server 全量) */}
+            <div
+                style={{
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
+                    gap: 12,
+                    marginBottom: 20,
+                }}
+            >
+                {([
+                    { label: '已留邮箱', value: serverStats.withMail, color: '#6366f1', icon: <MailOutlined /> },
+                    { label: '已留手机', value: serverStats.withTel, color: '#06b6d4', icon: <PhoneOutlined /> },
+                    { label: '7d 新注册', value: serverStats.newUsers7d, color: '#a855f7', icon: <UserAddOutlined /> },
+                    { label: '30d 新注册', value: serverStats.newUsers30d, color: '#7c3aed', icon: <UserAddOutlined /> },
+                ] as { label: string; value: number; color: string; icon: React.ReactNode }[]).map(it => {
+                    const total = serverStats.all || 1
+                    const pct = Math.round((it.value / total) * 100)
+                    return (
+                        <div key={it.label} className="stat-card">
+                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                                <div style={{ minWidth: 0, flex: 1 }}>
+                                    <div className="stat-card-label">{it.label}</div>
+                                    <div className="stat-card-value" style={{ color: it.color, fontSize: 24 }}>{it.value}</div>
+                                    <div className="stat-card-extra">{pct}%</div>
+                                </div>
+                                <div className="stat-card-icon" style={{ background: `${it.color}15`, color: it.color }}>
+                                    {it.icon}
+                                </div>
+                            </div>
+                        </div>
+                    )
+                })}
+            </div>
+
+            {/* 注册类型分布: 4-col secondary stats (server 全量, 可点击 toggle filter) */}
+            <div
+                style={{
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
+                    gap: 12,
+                    marginBottom: 20,
+                }}
+            >
+                {([
+                    { key: 'wx', label: '微信注册', value: serverStats.rgType.wx, color: '#10b981' },
+                    { key: 'pesiv', label: '试用 (pesiv)', value: serverStats.rgType.pesiv, color: '#f43f5e' },
+                    { key: 'web', label: 'Web 注册', value: serverStats.rgType.web, color: '#6366f1' },
+                    { key: 'app', label: 'App 注册', value: serverStats.rgType.app, color: '#f59e0b' },
+                ] as { key: RgTypeFilter; label: string; value: number; color: string }[]).map(it => {
+                    const total = serverStats.all || 1
+                    const pct = Math.round((it.value / total) * 100)
+                    const active = rgTypeFilter === it.key
+                    return (
+                        <div
+                            key={it.key}
+                            className="stat-card stat-card-clickable"
+                            onClick={() => toggleRgType(it.key)}
+                            style={{
+                                cursor: 'pointer',
+                                outline: active ? `1px solid ${it.color}` : undefined,
+                                background: active ? `${it.color}10` : undefined,
+                            }}
+                        >
+                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                                <div style={{ minWidth: 0, flex: 1 }}>
+                                    <div className="stat-card-label">{it.label}</div>
+                                    <div className="stat-card-value" style={{ color: it.color, fontSize: 24 }}>{it.value}</div>
+                                    <div className="stat-card-extra">{pct}%</div>
+                                </div>
+                                <div className="stat-card-icon" style={{ background: `${it.color}15`, color: it.color }}>
+                                    <WechatOutlined />
+                                </div>
+                            </div>
+                        </div>
+                    )
+                })}
+            </div>
 
             <div className="bento-card" style={{ padding: 20, marginBottom: 20 }}>
                 <div
@@ -388,6 +515,11 @@ export const User: React.FC = () => {
                         {wxFilter !== 'all' && (
                             <Tag color="blue" closable onClose={(e) => { e.preventDefault(); toggleWx(wxFilter) }} style={{ margin: 0 }}>
                                 微信: {wxFilter}
+                            </Tag>
+                        )}
+                        {rgTypeFilter !== 'all' && (
+                            <Tag color="cyan" closable onClose={(e) => { e.preventDefault(); toggleRgType(rgTypeFilter) }} style={{ margin: 0 }}>
+                                注册: {rgTypeFilter}
                             </Tag>
                         )}
                         <Button type="link" size="small" onClick={handleResetFilters}>
