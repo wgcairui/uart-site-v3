@@ -1,5 +1,5 @@
 'use client'
-import { Button, Divider, Dropdown, Form, Input, message, Modal, Radio, Space, Table } from 'antd'
+import { Button, Dropdown, Form, Input, message, Modal, Radio, Space, Spin, Table } from 'antd'
 import React, { useMemo, useState } from "react";
 import { deleteProtocol, getProtocols, setProtocol, getProtocolStats } from "@/lib/api/fetchRoot";
 import { generateTableKey, makeServerSearchProp, makeServerFilterProp, extractServerTableQuery } from "@/lib/utils/tableCommon";
@@ -7,10 +7,11 @@ import { generateTableKey, makeServerSearchProp, makeServerFilterProp, extractSe
 import { usePromise } from "@/lib/hooks/usePromise";
 import { ColumnsType } from "antd/lib/table";
 import { useNav } from "@/lib/hooks/useNav";
-import { MoreOutlined } from "@ant-design/icons";
+import { MoreOutlined, PlusOutlined, FileTextOutlined, FilterOutlined } from '@ant-design/icons';
 import { MyCopy } from "@/components/common/MyCopy";
 import { PageHeader } from "@/components/common/PageHeader";
 import { PageSummary, type SummaryVariant } from "@/components/common/PageSummary";
+import { EmptyState } from "@/components/common/EmptyState";
 import { ProtocolSourceTag } from "@/components/protocol/ProtocolSourceTag";
 import { downJson } from "@/lib/utils/util";
 import { getProtocol } from "@/lib/api/fetch";
@@ -165,15 +166,27 @@ export const Protocols: React.FC = () => {
                     { title: '首页', href: '/admin' },
                     { title: '协议' },
                 ]}
-                extra={<Button type="primary" onClick={() => setIsAddProtocolVisible(true)}>添加协议</Button>}
+                extra={<Button type="primary" icon={<PlusOutlined />} onClick={() => setIsAddProtocolVisible(true)} className="btn-brand">添加协议</Button>}
             />
             <PageSummary
+                column={4}
                 items={[
-                    { label: '协议总数', value: pagination.total ?? data.length, variant: 'primary' },
-                    ...(protocolStats || []).slice(0, 3).map((s: any): { label: string; value: any; variant: SummaryVariant; active: boolean; onClick: () => void } => ({
+                    {
+                        label: '协议总数',
+                        value: pagination.total ?? data.length,
+                        variant: 'primary',
+                        icon: <FileTextOutlined />,
+                        active: statFilter.length === 0,
+                        onClick: () => {
+                            setStatFilter([])
+                            setQuery(prev => ({ ...prev, page: 1 }))
+                        },
+                    },
+                    ...(protocolStats || []).slice(0, 3).map((s: any): { label: string; value: any; variant: SummaryVariant; icon: React.ReactNode; active: boolean; onClick: () => void } => ({
                         label: s.type,
                         value: s.value,
                         variant: 'info',
+                        icon: <FilterOutlined />,
                         active: statFilter.includes(s.type),
                         onClick: () => {
                             // 多选叠加：再次点击移除
@@ -200,92 +213,110 @@ export const Protocols: React.FC = () => {
                     nav('/admin/node/protocols/info', { Protocol: p })
                 }}></AddProtocol>
             </Modal>
-            <Divider></Divider>
-            <Table className="v3-table"                 loading={loading}
-                dataSource={generateTableKey(data, '_id')}
-                scroll={{ x: 1000 }}
-                pagination={{
-                    current: query.page ?? 1,
-                    pageSize: query.pageSize ?? 20,
-                    total: pagination.total,
-                    showTotal: (t) => `共 ${t} 条`,
-                    showSizeChanger: true,
-                }}
-                onChange={(pag, filters, sorter) => {
-                    const sq = extractServerTableQuery(pag, filters, sorter)
-                    setQuery(prev => ({
-                        ...prev,
-                        page: sq.page,
-                        pageSize: sq.pageSize,
-                        sortBy: sq.sortBy,
-                        sortOrder: sq.sortOrder,
-                        filters: sq.filters,
-                    } as any))
-                }}
-                columns={[
-                    {
-                        dataIndex: 'Protocol',
-                        title: "协议",
-                        sorter: true,
-                        ...makeServerSearchProp('Protocol', handleSearch),
-                        width: 220
-                    },
-                    {
-                        dataIndex: 'source',
-                        title: '来源',
-                        width: 100,
-                        render: (_, re: any) => (
-                            <ProtocolSourceTag source={re.source} remark={re.remark} />
-                        ),
-                    },
-                    {
-                        dataIndex: 'ProtocolType',
-                        title: "协议类型",
-                        ...makeServerFilterProp('ProtocolType',
-                            protocolStats.map((s: any) => s.type).filter(Boolean)
-                        ),
-                        width: 120
-                    },
-                    {
-                        dataIndex: "Type",
-                        title: "串口类型",
-                        ...makeServerFilterProp('Type', ['485', '232']),
-                        width: 120
-                    },
-                    {
-                        dataIndex: 'updatedAt',
-                        title: '修改时间',
-                        width: 170,
-                        sorter: true,
-                        render: (val: string | undefined) => val ? new Date(val).toLocaleString('zh-CN') : '—',
-                    },
-                    {
-                        dataIndex: "remark",
-                        title: '备注',
-                        ellipsis: true,
-                        ...makeServerSearchProp('remark', handleSearch),
-                        render: val => <MyCopy value={val}></MyCopy>
-                    },
-                    {
-                        key: "oprate",
-                        title: "操作",
-                        width: 110,
-                        render: (_, re) => <Space size={0} wrap>
-                            <Button type="link" onClick={() => nav('/admin/node/protocols/info', { Protocol: re.Protocol })}>查看</Button>
-                            <Dropdown menu={{
-                                items: [
-                                    { key: '1', label: <span onClick={() => downProtocol(re.Protocol)}>下载协议</span> },
-                                    { key: '2', label: <span onClick={() => {}}>更新协议</span>, disabled: true },
-                                    { key: '3', label: <span onClick={() => deleteProtocols(re.Protocol)}>删除</span> }
-                                ]
-                            }}>
-                                <MoreOutlined />
-                            </Dropdown>
-                        </Space>
-                    }
-                ] as ColumnsType<Uart.protocol>}
-            >
-            </Table>
+            <div className="bento-card" style={{ padding: 20, marginBottom: 20 }}>
+                {loading && data.length === 0 ? (
+                    <div style={{ padding: 80, textAlign: 'center' }}>
+                        <Spin size="large" />
+                    </div>
+                ) : data.length === 0 ? (
+                    <EmptyState
+                        description={statFilter.length > 0 ? `当前过滤条件 (${statFilter.join(', ')}) 下无协议` : '暂无协议,试试添加第一个'}
+                        actionLabel={statFilter.length > 0 ? '清除过滤' : '添加协议'}
+                        onAction={statFilter.length > 0
+                            ? () => { setStatFilter([]); setQuery(prev => ({ ...prev, page: 1 })) }
+                            : () => setIsAddProtocolVisible(true)
+                        }
+                        secondaryLabel="刷新"
+                        onSecondary={() => fecth()}
+                    />
+                ) : (
+                    <Table className="v3-table"                 loading={loading}
+                        dataSource={generateTableKey(data, '_id')}
+                        scroll={{ x: 1000 }}
+                        pagination={{
+                            current: query.page ?? 1,
+                            pageSize: query.pageSize ?? 20,
+                            total: pagination.total,
+                            showTotal: (t) => `共 ${t} 条`,
+                            showSizeChanger: true,
+                        }}
+                        onChange={(pag, filters, sorter) => {
+                            const sq = extractServerTableQuery(pag, filters, sorter)
+                            setQuery(prev => ({
+                                ...prev,
+                                page: sq.page,
+                                pageSize: sq.pageSize,
+                                sortBy: sq.sortBy,
+                                sortOrder: sq.sortOrder,
+                                filters: sq.filters,
+                            } as any))
+                        }}
+                        columns={[
+                            {
+                                dataIndex: 'Protocol',
+                                title: "协议",
+                                sorter: true,
+                                ...makeServerSearchProp('Protocol', handleSearch),
+                                width: 220
+                            },
+                            {
+                                dataIndex: 'source',
+                                title: '来源',
+                                width: 100,
+                                render: (_, re: any) => (
+                                    <ProtocolSourceTag source={re.source} remark={re.remark} />
+                                ),
+                            },
+                            {
+                                dataIndex: 'ProtocolType',
+                                title: "协议类型",
+                                ...makeServerFilterProp('ProtocolType',
+                                    protocolStats.map((s: any) => s.type).filter(Boolean)
+                                ),
+                                width: 120
+                            },
+                            {
+                                dataIndex: "Type",
+                                title: "串口类型",
+                                ...makeServerFilterProp('Type', ['485', '232']),
+                                width: 120
+                            },
+                            {
+                                dataIndex: 'updatedAt',
+                                title: '修改时间',
+                                width: 170,
+                                sorter: true,
+                                render: (val: string | undefined) => val ? new Date(val).toLocaleString('zh-CN') : '—',
+                            },
+                            {
+                                dataIndex: "remark",
+                                title: '备注',
+                                ellipsis: true,
+                                ...makeServerSearchProp('remark', handleSearch),
+                                render: val => <MyCopy value={val}></MyCopy>
+                            },
+                            {
+                                key: "oprate",
+                                title: "操作",
+                                width: 110,
+                                render: (_, re) => <Space size={0} wrap>
+                                    <Button type="link" onClick={() => nav('/admin/node/protocols/info', { Protocol: re.Protocol })}>查看</Button>
+                                    <Dropdown menu={{
+                                        items: [
+                                            { key: '1', label: <span onClick={() => downProtocol(re.Protocol)}>下载协议</span> },
+                                            { key: '2', label: <span onClick={() => {}}>更新协议</span>, disabled: true },
+                                            { key: '3', label: <span onClick={() => deleteProtocols(re.Protocol)}>删除</span> }
+                                        ]
+                                    }}>
+                                        <MoreOutlined />
+                                    </Dropdown>
+                                </Space>
+                            }
+                        ] as ColumnsType<Uart.protocol>}
+                    >
+                    </Table>
+                )}
+            </div>
         </div>
     )
 }
