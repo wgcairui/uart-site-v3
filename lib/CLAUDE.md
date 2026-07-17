@@ -19,14 +19,17 @@ lib/
 │           ├── protocols.ts    # Admin 协议/设备类型
 │           ├── nodes.ts        # Admin 节点管理
 │           ├── logs.ts         # Admin 日志
-│           └── system.ts       # Admin Redis/OSS + IOT/Secrets(deprecated)
+│           ├── system.ts       # Admin Redis/OSS + IOT/Secrets(deprecated)
+│           ├── ai.ts           # Admin AI 工具（aiPreAnalyze / aiCommit / aiDryRun）— PR #44
+│           └── scheduledOps.ts # Admin 定时任务
 ├── constants/
 │   └── adminMenu.ts            # 管理员端菜单配置 + matchMenuKey 工具
 ├── hooks/
 │   ├── useToken.ts             # Token 管理（Cookie + URL query）
 │   ├── useNav.ts               # useRouter 包装，支持对象 query
 │   ├── useTerminalData.ts
-│   └── usePromise.ts           # 异步 loading/data/error 状态管理
+│   ├── usePromise.ts           # 异步 loading/data/error 状态管理
+│   └── useAiStream.ts          # SSE 流式 AI 消费（text/tool_start/tool_delta/saved/done/error）— PR #44
 ├── store/
 │   └── userStore.ts            # Zustand 全局状态（替代原 Redux）
 ├── socket.ts                   # Socket.IO 客户端单例
@@ -175,6 +178,29 @@ const { data, loading, fecth } = usePromise(async () => {
   return data
 })
 ```
+
+### useAiStream.ts（PR #44 引入）
+SSE 流式 AI 消费 hook。专为 `AiStreamEvent` 6 种事件类型设计（`text` / `tool_start` / `tool_delta` / `saved` / `done` / `error`），用 typed handler map 精确分发。
+
+```tsx
+const { stream, abort, isStreaming, error } = useAiStream()
+
+await stream('/api/v2/admin/ai/chat-stream',
+  { protocolName, userPrompt },
+  {
+    onText: (delta) => { /* 累积 assistant 文本 */ },
+    onToolStart: (toolName) => { /* 显示 🔧 tool: xxx */ },
+    onToolDelta: (delta) => { /* 累积 tool JSON 备用 */ },
+    onSaved: (info) => { /* saved 事件：info.protocolName + version + tokens */ },
+    onError: (err) => { /* 显示错误 */ },
+    onDone: () => { /* 关闭流（reader done 或 done 事件） */ },
+  }
+)
+```
+
+**为什么不用 `@ant-design/x` 的 `useXAgent`**：它的 `request(info, { onUpdate, onSuccess, onError })` 三回调模型装不下 6 种 SSE 事件 + 多 side effect。typed handler map 每个事件独立函数，可读性更好。
+
+**重试设计**：每次 `stream()` 内部 `new AbortController()`，旧 controller 在 finally 里 null 化，互不污染。组件 unmount 时 abort，避免泄漏。
 
 ## lib/constants/adminMenu.ts
 

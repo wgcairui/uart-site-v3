@@ -46,7 +46,7 @@ app/
         │   ├── terminal/page.tsx
         │   ├── terminal/[mac]/page.tsx
         │   ├── terminal/devline/page.tsx
-        │   ├── terminal/register/page.tsx
+        │   ├── terminal/health/page.tsx
         │   ├── user/page.tsx
         │   └── user/info/page.tsx
         ├── log/            # /admin/log/...（日志管理，12 个页面）
