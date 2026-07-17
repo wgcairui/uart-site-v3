@@ -141,38 +141,18 @@ function UserInfoInner() {
             </div>
         ) : (
             <div className="bg-bento-canvas" style={{ position: 'relative', zIndex: 0 }}>
-                {/* ─── 1. 薄导航条 (返回 + 面包屑, 标题让给 hero) ─── */}
-                <nav
+                {/* 单个 ← 返回 link (面包屑由 layout AdminHeader 顶栏提供, 避免重复) */}
+                <a
+                    onClick={() => router.back()}
                     style={{
-                        display: 'flex', alignItems: 'center', gap: 10,
+                        display: 'inline-flex', alignItems: 'center', gap: 4,
                         fontSize: 12, color: 'var(--ink-500)',
-                        marginBottom: 12,
                         fontFamily: 'var(--font-mono)',
+                        marginBottom: 12, cursor: 'pointer',
                     }}
                 >
-                    <a
-                        onClick={() => router.back()}
-                        style={{ cursor: 'pointer', color: 'var(--ink-500)' }}
-                    >
-                        ← 返回
-                    </a>
-                    <span style={{ color: 'var(--ink-300)' }}>/</span>
-                    <a
-                        onClick={() => router.push('/admin')}
-                        style={{ cursor: 'pointer', color: 'var(--ink-500)' }}
-                    >
-                        首页
-                    </a>
-                    <span style={{ color: 'var(--ink-300)' }}>/</span>
-                    <a
-                        onClick={() => router.push('/admin/node/user')}
-                        style={{ cursor: 'pointer', color: 'var(--ink-500)' }}
-                    >
-                        用户
-                    </a>
-                    <span style={{ color: 'var(--ink-300)' }}>/</span>
-                    <span style={{ color: 'var(--ink-700)', fontWeight: 500 }}>{data.user}</span>
-                </nav>
+                    ← 返回
+                </a>
 
                 {/* ─── 2. user hero 紫渐变 (跟 terminal hero 视觉对齐) ─── */}
                 <div
