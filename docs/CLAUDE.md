@@ -17,6 +17,8 @@ docs/
 ├── style-guide.md         # 视觉设计规范 v2（design tokens + 组件视觉规则）⚠️ 必读
 ├── components.md          # 组件库规范 v2（核心组件 props + 业务组件视觉规则）⚠️ 必读
 ├── PLAN-ui-refactor.md    # UI 重构执行计划 v2（6 阶段 + commit 拆分 + 验证）
+├── PRD-v3-hybrid-redesign.md  # v3 hybrid 设计需求文档
+├── dev-login.md           # 试用模式 dev-login API 说明（/api/dev-login）
 ├── assets/
 │   └── hybrid-design-2-3.html   # 视觉稿（5 屏 + 移动端 + token 代码）⚠️ 必看
 └── archive/
