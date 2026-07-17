@@ -11,6 +11,7 @@ import {
     EyeOutlined, DeleteOutlined, MessageOutlined,
     CloudSyncOutlined, UserAddOutlined, TeamOutlined,
     FireOutlined, ThunderboltOutlined, CrownOutlined, WechatOutlined,
+    MailOutlined, PhoneOutlined,
 } from "@ant-design/icons";
 import { MigrateUserResourcesModal } from "@/components/admin/MigrateUserResourcesModal";
 import {
@@ -75,7 +76,7 @@ export const User: React.FC = () => {
     }, { items: [], pagination: {} }, [JSON.stringify(apiQuery)])
 
     // === Server-side 全量统计 (runingState + getUserDetailedStats) ===
-    // data 字段: total / rgType[] / userGroup[] / activeUsers{last7Days,last30Days}
+    // data 字段: total / rgType[] / userGroup[] / activeUsers{7d,30d} / wxBound / withMail / withTel / newUsers{7d,30d}
     // 跟 hero / PageSummary 共享, 全量不依赖当前页
     const { data: serverStats } = usePromise(async () => {
         const [s, d] = await Promise.all([runingState(), getUserDetailedStats()])
@@ -105,11 +106,18 @@ export const User: React.FC = () => {
                 web: rgMap['web'] ?? 0,
                 app: rgMap['app'] ?? 0,
             },
+            // === PR #76 新增 5 字段 (server PR #76 / e3dd670 / deploy eb769492c64d) ===
+            wxBound: det?.wxBound ?? 0,
+            withMail: det?.withMail ?? 0,
+            withTel: det?.withTel ?? 0,
+            newUsers7d: det?.newUsers?.last7Days ?? 0,
+            newUsers30d: det?.newUsers?.last30Days ?? 0,
         }
     }, {
         all: 0, online: 0, active7d: 0, active30d: 0,
         group: { user: 0, root: 0, admin: 0, other: 0 },
         rgType: { pesiv: 0, wx: 0, web: 0, app: 0 },
+        wxBound: 0, withMail: 0, withTel: 0, newUsers7d: 0, newUsers30d: 0,
     })
 
     const users = useMemo(
@@ -265,13 +273,6 @@ export const User: React.FC = () => {
                         active: false,
                     },
                     {
-                        label: '30d 活跃',
-                        value: serverStats.active30d,
-                        variant: 'info',
-                        icon: <ThunderboltOutlined />,
-                        active: false,
-                    },
-                    {
                         label: '普通用户',
                         value: serverStats.group.user,
                         variant: 'success',
@@ -292,8 +293,51 @@ export const User: React.FC = () => {
                             }
                         },
                     },
+                    {
+                        label: '微信绑定',
+                        value: serverStats.wxBound,
+                        variant: 'info',
+                        icon: <WechatOutlined />,
+                        extra: serverStats.all > 0 ? `${Math.round((serverStats.wxBound / serverStats.all) * 100)}% 绑定率` : undefined,
+                        active: wxFilter === 'wx' || wxFilter === 'wp',
+                        onClick: () => toggleWx(wxFilter === 'wx' || wxFilter === 'wp' ? 'all' : 'wx'),
+                    },
                 ]}
             />
+
+            {/* 用户档案 secondary stats (4 卡, server 全量) */}
+            <div
+                style={{
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
+                    gap: 12,
+                    marginBottom: 20,
+                }}
+            >
+                {([
+                    { label: '已留邮箱', value: serverStats.withMail, color: '#6366f1', icon: <MailOutlined /> },
+                    { label: '已留手机', value: serverStats.withTel, color: '#06b6d4', icon: <PhoneOutlined /> },
+                    { label: '7d 新注册', value: serverStats.newUsers7d, color: '#a855f7', icon: <UserAddOutlined /> },
+                    { label: '30d 新注册', value: serverStats.newUsers30d, color: '#7c3aed', icon: <UserAddOutlined /> },
+                ] as { label: string; value: number; color: string; icon: React.ReactNode }[]).map(it => {
+                    const total = serverStats.all || 1
+                    const pct = Math.round((it.value / total) * 100)
+                    return (
+                        <div key={it.label} className="stat-card">
+                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                                <div style={{ minWidth: 0, flex: 1 }}>
+                                    <div className="stat-card-label">{it.label}</div>
+                                    <div className="stat-card-value" style={{ color: it.color, fontSize: 24 }}>{it.value}</div>
+                                    <div className="stat-card-extra">{pct}%</div>
+                                </div>
+                                <div className="stat-card-icon" style={{ background: `${it.color}15`, color: it.color }}>
+                                    {it.icon}
+                                </div>
+                            </div>
+                        </div>
+                    )
+                })}
+            </div>
 
             {/* 注册类型分布: 4-col secondary stats (server 全量, 可点击 toggle filter) */}
             <div

@@ -1087,7 +1087,8 @@ declare namespace Uart {
     }
 
     // ─── v2 admin user detailed stats (server 343/admin-dashboard.controller.ts:399 getUserDetailedStats, 2026-07-17) ───
-    /** GET /api/v2/admin/dashboard/users/detailed-stats */
+    /** GET /api/v2/admin/dashboard/users/detailed-stats
+     *  server PR #76 / commit e3dd670 (squash merged 5e1824e3a, deploy eb769492c64d) */
     interface UserDetailedStatsResp {
         /** 总用户数 (server countDocuments, 不是当前页) */
         total: number;
@@ -1100,6 +1101,20 @@ declare namespace Uart {
             /** 7 天内登录过 */
             last7Days: number;
             /** 30 天内登录过 */
+            last30Days: number;
+        };
+        // === PR #76 新增 5 字段 (2026-07-17) ===
+        /** 微信绑定 (wxId OR wpId 非空) */
+        wxBound: number;
+        /** 有邮箱 */
+        withMail: number;
+        /** 有手机 (tel 非 null) */
+        withTel: number;
+        /** 新注册用户: 按 creatTime 窗口 */
+        newUsers: {
+            /** 7 天内新注册 */
+            last7Days: number;
+            /** 30 天内新注册 */
             last30Days: number;
         };
     }
