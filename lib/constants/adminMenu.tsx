@@ -71,12 +71,12 @@ export const ADMIN_MENU: AdminMenuGroup[] = [
   },
   {
     // 决策 16 + 19 + 20 / 2026-06-24：AI 协议生成器 admin 端入口
+    // PR-1 (2026-07-17): ai-chat / ai-dry-run 已并入协议详情 tab, 暂时只留 ai-generate
+    // PR-2 将进一步把 ai-generate 移到协议 group 下, 删除整个 "AI 工具" group
     title: 'AI 工具',
     ico: <IconFont type="icon-zhire" />,
     child: [
       { key: 'ai-generate', to: '/admin/ai/generate', text: '生成新协议', icon: <IconFont type="icon-zhire" /> },
-      { key: 'ai-chat', to: '/admin/ai/chat', text: 'AI 修改协议', icon: <IconFont type="icon-bianjisekuai" /> },
-      { key: 'ai-dry-run', to: '/admin/ai/dry-run', text: '协议 Dry-run', icon: <IconFont type="icon-tiaoshi" /> },
     ],
   },
 ]
