@@ -129,7 +129,7 @@ function DevInner() {
                         <LiveControls variant="device" mac={terminal.DevMac} pid={mountDev.pid} title="实时数据" />
                     </div>
                     <div style={{ gridColumn: 'span 4' }}>
-                        <DeviceActions mac={terminal.DevMac} title="设备操作" />
+                        <DeviceActions terminal={terminal} title="设备操作" />
                     </div>
                 </div>
                 <Tabs

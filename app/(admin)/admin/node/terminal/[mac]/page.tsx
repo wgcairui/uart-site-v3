@@ -148,9 +148,9 @@ function TerminalDetailPageInner() {
                         <div style={{ gridColumn: 'span 8', minHeight: 360 }}>
                             <TerminalOverview terminal={data} onChange={fecth} />
                         </div>
-                        {/* Device Actions 玻璃卡 (4 列) */}
+                        {/* Device Actions 玻璃卡 (4 列) — 4 区: 状态/操作/链接/危险 */}
                         <div style={{ gridColumn: 'span 4', minHeight: 360 }}>
-                            <DeviceActions mac={data.DevMac} />
+                            <DeviceActions terminal={data} onChange={fecth} />
                         </div>
                     </div>
 
