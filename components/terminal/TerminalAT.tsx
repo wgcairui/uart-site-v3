@@ -75,8 +75,8 @@ export const TerminalAT: React.FC<Props> = ({ mac }) => {
 		message.loading({ content: "正在处理", key });
 		const str = "+++AT+";
 		setMsg((m) => [{ type: true, text: at, time: Date.now() }, ...m]);
-		const { data } = await sendATInstruct(mac, add ? str + at : at);
-		setMsg((m) => [{ type: false, text: `code:${data.ok}  msg:${data.msg}`, time: Date.now() }, ...m]);
+		const { code, message: resMsg, data } = await sendATInstruct(mac, add ? str + at : at);
+		setMsg((m) => [{ type: false, text: `code:${code}  msg:${resMsg}${data != null ? '  data:' + JSON.stringify(data) : ''}`, time: Date.now() }, ...m]);
 		message.info({ content: "查询完成", key });
 	};
 
