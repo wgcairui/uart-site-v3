@@ -9,6 +9,36 @@ interface Props {
 	mac: string;
 }
 
+/**
+ * formatAtReply · AT 指令回包 4 段格式化
+ *
+ * API 返回 universalResult<Array<{ok, msg, upserted: Buffer}>>
+ * - code: HTTP/request 级别
+ * - data[].ok: 4G 模块 AT 级别 ok (1=成功, 0=失败)
+ * - data[].msg: AT 指令返回的文本 (如 GSLQ "1,23")
+ * - data[].upserted: Mongo Buffer 序列化 {type, data: number[]}
+ *   解码后是模块原始回包 (如 "+ok=1,23")
+ *
+ * 4 段都展示, 中间双空格分隔, 任一字段缺失则跳过该段。
+ */
+function formatAtReply(code: number, resMsg: string, data: any): string {
+	const first = Array.isArray(data) ? data[0] : data
+	const atOk = first?.ok
+	const atMsg = first?.msg
+	const buf = first?.upserted
+	const raw =
+		buf && Array.isArray(buf.data) && buf.data.length > 0
+			? String.fromCharCode(...buf.data)
+			: undefined
+	const parts: (string | null)[] = [
+		`code:${code}`,
+		atOk !== undefined ? `at_ok:${atOk}` : null,
+		atMsg ? `msg:"${atMsg}"` : resMsg ? `msg:"${resMsg}"` : null,
+		raw ? `raw:"${raw}"` : null,
+	]
+	return parts.filter(Boolean).join('  ')
+}
+
 export const TerminalAT: React.FC<Props> = ({ mac }) => {
 	const content = {
 		get: {
@@ -76,7 +106,7 @@ export const TerminalAT: React.FC<Props> = ({ mac }) => {
 		const str = "+++AT+";
 		setMsg((m) => [{ type: true, text: at, time: Date.now() }, ...m]);
 		const { code, message: resMsg, data } = await sendATInstruct(mac, add ? str + at : at);
-		setMsg((m) => [{ type: false, text: `code:${code}  msg:${resMsg}${data != null ? '  data:' + JSON.stringify(data) : ''}`, time: Date.now() }, ...m]);
+		setMsg((m) => [{ type: false, text: formatAtReply(code, resMsg, data), time: Date.now() }, ...m]);
 		message.info({ content: "查询完成", key });
 	};
 
