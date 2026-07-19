@@ -35,6 +35,8 @@ interface DeviceLiveStreamProps {
   topOffset?: number
   /** 高度限制, 默认 220px */
   maxHeight?: number
+  /** 是否 sticky 顶部 (页面级) — 默认 true; 调试 tab 内部用传 false */
+  sticky?: boolean
 }
 
 const KIND_LABELS: Record<DeviceEventKind, string> = {
@@ -72,7 +74,7 @@ function matchesFilter(e: DeviceEvent, f: FilterKey): boolean {
   return true
 }
 
-export function DeviceLiveStream({ mac, topOffset = 64, maxHeight = 220 }: DeviceLiveStreamProps) {
+export function DeviceLiveStream({ mac, topOffset = 64, maxHeight = 220, sticky = true }: DeviceLiveStreamProps) {
   const events = useDeviceEvents((s) => s.events)
   const filter = useDeviceEvents((s) => s.filter)
   const setFilter = useDeviceEvents((s) => s.setFilter)
@@ -137,9 +139,9 @@ export function DeviceLiveStream({ mac, topOffset = 64, maxHeight = 220 }: Devic
     <div
       className="bento-card device-live-stream"
       style={{
-        position: 'sticky',
-        top: topOffset,
-        zIndex: 10,
+        position: sticky ? 'sticky' : 'relative',
+        top: sticky ? topOffset : undefined,
+        zIndex: sticky ? 10 : undefined,
         padding: '12px 16px',
         background: 'rgba(255, 255, 255, 0.85)',
         backdropFilter: 'blur(16px)',

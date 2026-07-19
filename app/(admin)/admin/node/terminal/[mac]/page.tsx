@@ -1,8 +1,13 @@
 'use client'
 
-import { Suspense, useState, useEffect, useCallback } from "react";
+import { Suspense, useEffect, useCallback, useState } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { Spin, Tabs } from "antd";
+import {
+  ThunderboltOutlined,
+  AlertOutlined,
+  ScheduleOutlined,
+} from '@ant-design/icons'
 import { usePromise } from "@/lib/hooks/usePromise";
 import { getTerminal } from "@/lib/api/fetch";
 import { TerminalDevPage } from "@/components/terminal/TerminalDevPage";
@@ -12,15 +17,44 @@ import { DeviceActions } from "@/components/common/DeviceActions";
 import { TerminalOverview } from "@/components/terminal/TerminalOverview";
 import { MountDevicesStrip } from "@/components/terminal/MountDevicesStrip";
 import { BindUsersSection } from "@/components/terminal/BindUsersSection";
-import { DeviceLiveStream } from "@/components/common/DeviceLiveStream";
 import { DebugConsole } from "@/components/terminal/DebugConsole";
 import { MonitorCenter } from "@/components/log/MonitorCenter";
 import { AutomationCenter } from "@/components/terminal/AutomationCenter";
 
+type TabKey = 'debug' | 'monitor' | 'automation'
+
 function TerminalDetailPageInner() {
     const params = useParams();
     const router = useRouter();
+    const searchParams = useSearchParams();
     const mac = params.mac as string;
+
+    // 兼容老 URL (?tab=at|query|alarm|...) — 映射到新 tab
+    const initTab = (() => {
+        const t = searchParams.get('tab')
+        if (t === 'monitor' || t === 'alarm' || t === 'terminalLog' || t === 'log' || t === 'timeline') return 'monitor'
+        if (t === 'scheduled-op') return 'automation'
+        return 'debug'
+    })()
+    const [tab, setTab] = useState<TabKey>(initTab as TabKey)
+
+    useEffect(() => {
+        const t = searchParams.get('tab')
+        if (!t) return
+        const mapped: TabKey =
+            t === 'monitor' || t === 'alarm' || t === 'terminalLog' || t === 'log' || t === 'timeline' ? 'monitor'
+            : t === 'scheduled-op' ? 'automation'
+            : 'debug'
+        // eslint-disable-next-line react-hooks/set-state-in-effect
+        setTab(mapped)
+    }, [searchParams])
+
+    const handleTabChange = useCallback((key: string) => {
+        setTab(key as TabKey)
+        const url = new URL(window.location.href)
+        url.searchParams.set('tab', key)
+        window.history.pushState({}, '', url.toString())
+    }, [])
 
     const { data, loading, fecth } = usePromise(async () => {
         const { data } = await getTerminal(mac);
@@ -56,7 +90,7 @@ function TerminalDetailPageInner() {
                 </div>
             ) : (
                 <div className="bg-bento-canvas" style={{ position: 'relative', zIndex: 0 }}>
-                    {/* 单个 ← 返回 link (面包屑由 layout AdminHeader 顶栏提供, 避免重复) */}
+                    {/* ← 返回 */}
                     <a
                         onClick={() => router.back()}
                         style={{
@@ -69,7 +103,7 @@ function TerminalDetailPageInner() {
                         ← 返回
                     </a>
 
-                    {/* ─── device hero 紫渐变 ─── */}
+                    {/* §1 device hero 紫渐变 */}
                     <div
                         className="bento-card v3-device-hero"
                         style={{
@@ -114,7 +148,7 @@ function TerminalDetailPageInner() {
                         </div>
                     </div>
 
-                    {/* ─── 2. Overview + Actions ─── */}
+                    {/* §2 Overview + Actions (12-col grid, 首屏 section) */}
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(12, 1fr)', gap: 20, marginBottom: 20 }}>
                         <div style={{ gridColumn: 'span 8', minHeight: 360 }}>
                             <TerminalOverview terminal={data} onChange={fecth} />
@@ -124,10 +158,12 @@ function TerminalDetailPageInner() {
                         </div>
                     </div>
 
-                    {/* Mount Devices + Bind Users (保持不变) */}
+                    {/* §3 Mount Devices strip (首屏 section, 跟 mount device Tabs 联动) */}
                     <div style={{ marginBottom: 20 }}>
                         <MountDevicesStrip mac={data.DevMac} mountDevs={data.mountDevs || []} onChange={fecth} />
                     </div>
+
+                    {/* §4 Bind Users (首屏 section) */}
                     <div style={{ marginBottom: 20 }}>
                         <BindUsersSection
                             mac={data.DevMac}
@@ -137,25 +173,32 @@ function TerminalDetailPageInner() {
                         />
                     </div>
 
-                    {/* ─── 3. 实时回包流 (sticky 顶部, 共享所有操作) ─── */}
-                    <DeviceLiveStream key={data.DevMac} mac={data.DevMac} />
-
-                    {/* ─── 4. 调试中心 (AT + 指令) ─── */}
-                    <div style={{ marginBottom: 20 }}>
-                        <DebugConsole mac={data.DevMac} />
+                    {/* §5 Tabs: 调试 (默认) / 监控 / 自动化 */}
+                    <div className="bento-card" style={{ padding: 24, marginBottom: 20 }}>
+                        <Tabs
+                            activeKey={tab}
+                            onChange={handleTabChange}
+                            items={[
+                                {
+                                    key: 'debug',
+                                    label: <span><ThunderboltOutlined /> 调试</span>,
+                                    children: <DebugConsole mac={data.DevMac} />,
+                                },
+                                {
+                                    key: 'monitor',
+                                    label: <span><AlertOutlined /> 监控</span>,
+                                    children: <MonitorCenter mac={data.DevMac} />,
+                                },
+                                {
+                                    key: 'automation',
+                                    label: <span><ScheduleOutlined /> 自动化</span>,
+                                    children: <AutomationCenter mac={data.DevMac} />,
+                                },
+                            ]}
+                        />
                     </div>
 
-                    {/* ─── 5. 监控中心 (告警 + 通信 + 时间线 + 日志) ─── */}
-                    <div style={{ marginBottom: 20 }}>
-                        <MonitorCenter mac={data.DevMac} />
-                    </div>
-
-                    {/* ─── 6. 自动化中心 (定时操作) ─── */}
-                    <div style={{ marginBottom: 20 }}>
-                        <AutomationCenter mac={data.DevMac} />
-                    </div>
-
-                    {/* ─── 7. Mount Device Tabs (设备详情/当前数据/历史数据) ─── */}
+                    {/* §6 Mount Device Tabs (底部独立, 跟 mount strip 联动 — 设备详情/当前数据/历史数据) */}
                     {mountDevTabs.length > 0 && (
                         <div className="bento-card" style={{ padding: 24, marginBottom: 20 }}>
                             <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 12, color: 'var(--ink-700)' }}>
