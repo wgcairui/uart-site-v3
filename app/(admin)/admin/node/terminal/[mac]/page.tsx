@@ -10,13 +10,10 @@ import {
 } from '@ant-design/icons'
 import { usePromise } from "@/lib/hooks/usePromise";
 import { getTerminal } from "@/lib/api/fetch";
-import { TerminalDevPage } from "@/components/terminal/TerminalDevPage";
 import { useTerminalUpdate } from "@/lib/hooks/useTerminalData";
-import { TerminalCurData, TerminalHistoryData } from "./TerminalDataTab";
 import { DeviceActions } from "@/components/common/DeviceActions";
 import { TerminalOverview } from "@/components/terminal/TerminalOverview";
-import { MountDevicesStrip } from "@/components/terminal/MountDevicesStrip";
-import { BindUsersSection } from "@/components/terminal/BindUsersSection";
+import { RelatedAssetsSection } from "@/components/terminal/RelatedAssetsSection";
 import { DebugConsole } from "@/components/terminal/DebugConsole";
 import { MonitorCenter } from "@/components/log/MonitorCenter";
 import { AutomationCenter } from "@/components/terminal/AutomationCenter";
@@ -29,7 +26,7 @@ function TerminalDetailPageInner() {
     const searchParams = useSearchParams();
     const mac = params.mac as string;
 
-    // 兼容老 URL (?tab=at|query|alarm|...) — 映射到新 tab
+    // 兼容老 URL
     const initTab = (() => {
         const t = searchParams.get('tab')
         if (t === 'monitor' || t === 'alarm' || t === 'terminalLog' || t === 'log' || t === 'timeline') return 'monitor'
@@ -66,17 +63,6 @@ function TerminalDetailPageInner() {
     useEffect(() => {
         if (ter.data) fecth();
     }, [ter.data]);
-
-    // mount device sub-tabs (设备详情/当前数据/历史数据)
-    const mountDevTabs = data ? (data.mountDevs || []).map((dev: any) => ({
-        key: String(dev.pid),
-        label: `${dev.mountDev} (${dev.pid})`,
-        children: <Tabs items={[
-            { key: 'detail', label: '设备详情', children: <TerminalDevPage mac={data.DevMac} pid={dev.pid} /> },
-            { key: 'cur', label: '当前数据', children: <TerminalCurData mac={data.DevMac} pid={dev.pid} /> },
-            { key: 'his', label: '历史数据', children: <TerminalHistoryData mac={data.DevMac} pid={dev.pid} /> },
-        ]} />,
-    })) : [];
 
     return (
         <>
@@ -148,7 +134,7 @@ function TerminalDetailPageInner() {
                         </div>
                     </div>
 
-                    {/* §2 Overview + Actions (12-col grid, 首屏 section) */}
+                    {/* §2 Overview + Actions (12-col grid) */}
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(12, 1fr)', gap: 20, marginBottom: 20 }}>
                         <div style={{ gridColumn: 'span 8', minHeight: 360 }}>
                             <TerminalOverview terminal={data} onChange={fecth} />
@@ -158,22 +144,18 @@ function TerminalDetailPageInner() {
                         </div>
                     </div>
 
-                    {/* §3 Mount Devices strip (首屏 section, 跟 mount device Tabs 联动) */}
+                    {/* §3 关联资产 (合并挂载设备 + 绑定用户, 6+6 col) */}
                     <div style={{ marginBottom: 20 }}>
-                        <MountDevicesStrip mac={data.DevMac} mountDevs={data.mountDevs || []} onChange={fecth} />
-                    </div>
-
-                    {/* §4 Bind Users (首屏 section) */}
-                    <div style={{ marginBottom: 20 }}>
-                        <BindUsersSection
+                        <RelatedAssetsSection
                             mac={data.DevMac}
                             share={!!data.share}
                             ownerId={(data as any)?.ownerId}
+                            mountDevs={data.mountDevs || []}
                             onChange={fecth}
                         />
                     </div>
 
-                    {/* §5 Tabs: 调试 (默认) / 监控 / 自动化 */}
+                    {/* §4 Tabs: 调试 (默认) / 监控 / 自动化 */}
                     <div className="bento-card" style={{ padding: 24, marginBottom: 20 }}>
                         <Tabs
                             activeKey={tab}
@@ -197,16 +179,6 @@ function TerminalDetailPageInner() {
                             ]}
                         />
                     </div>
-
-                    {/* §6 Mount Device Tabs (底部独立, 跟 mount strip 联动 — 设备详情/当前数据/历史数据) */}
-                    {mountDevTabs.length > 0 && (
-                        <div className="bento-card" style={{ padding: 24, marginBottom: 20 }}>
-                            <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 12, color: 'var(--ink-700)' }}>
-                                挂载设备详情
-                            </div>
-                            <Tabs items={mountDevTabs} />
-                        </div>
-                    )}
                 </div>
             )}
         </>
