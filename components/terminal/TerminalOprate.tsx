@@ -1,11 +1,10 @@
 'use client'
-import { Button, Card, Checkbox, Col, Divider, Form, Input, Row, Select, Timeline, message } from "antd";
-import dayjs from "dayjs";
+import { Button, Checkbox, Col, Divider, Form, Input, Row, Select, message } from "antd";
 import React, { useEffect, useState } from "react";
 import { getTerminal, SendProcotolInstructSet } from "@/lib/api/fetch";
 import { usePromise } from "@/lib/hooks/usePromise";
 import { ScheduleOpModal } from "@/components/scheduled-op/ScheduleOpModal";
-import { buildInstructItem } from "@/lib/utils/sendInstruct";
+import { pushDeviceEvent } from "@/lib/store/deviceEvents";
 
 interface Props {
 	mac: string;
@@ -13,10 +12,7 @@ interface Props {
 
 export const TerminalOprate: React.FC<Props> = ({ mac }) => {
 	const [dev, setDev] = useState("");
-
 	const [oprate, setOprate] = useState("");
-
-	const [msg, setMsg] = useState<{ type: boolean; text: string; time: number }[]>([]);
 
 	// 「定时发送」checkbox (2026-06-30 决策 18)
 	const [scheduleOpen, setScheduleOpen] = useState(false);
@@ -29,10 +25,24 @@ export const TerminalOprate: React.FC<Props> = ({ mac }) => {
 		return data.mountDevs || [];
 	}, []);
 
+	// 默认选中第一个 mount dev
+	useEffect(() => {
+		if (!dev && data.length > 0) {
+			const first = data[0]
+			if (first) {
+				// eslint-disable-next-line react-hooks/set-state-in-effect
+				setDev(first.mountDev)
+			}
+		}
+	}, [data, dev])
+
 	// dev 变化时, 默认 protocol = 当前选中 mountDev.protocol
 	useEffect(() => {
 		const found = data.find((el) => el.mountDev === dev);
-		if (found?.protocol) setPendingProtocol(found.protocol);
+		if (found?.protocol) {
+			// eslint-disable-next-line react-hooks/set-state-in-effect
+			setPendingProtocol(found.protocol);
+		}
 	}, [dev, data]);
 
 	const buildItem = async (): Promise<Uart.OprateInstruct | null> => {
@@ -45,7 +55,6 @@ export const TerminalOprate: React.FC<Props> = ({ mac }) => {
 			message.error("未找到设备配置");
 			return null;
 		}
-		// 直接组装一个最小 OprateInstruct, 不走 server fillInstructTemplate
 		return {
 			name: oprate,
 			value: oprate,
@@ -58,11 +67,11 @@ export const TerminalOprate: React.FC<Props> = ({ mac }) => {
 	// 立即发送 (admin 端走 admin/terminals SendProcotolInstructSet)
 	const sendNow = async (item: Uart.OprateInstruct) => {
 		const md = data.find((el) => el.mountDev === dev)!;
-		const { data: r } = await SendProcotolInstructSet(
+		const { data: r, code, message: m } = await SendProcotolInstructSet(
 			{ DevMac: mac, protocol: pendingProtocol, pid: md.pid, mountDev: dev },
 			item
 		);
-		return r;
+		return { code, message: m, data: r }
 	};
 
 	const onSendClick = async () => {
@@ -73,10 +82,34 @@ export const TerminalOprate: React.FC<Props> = ({ mac }) => {
 			message.destroy(key);
 			return;
 		}
-		setMsg((m) => [{ type: true, text: `${dev}/${pendingProtocol}/${item.value}`, time: Date.now() }, ...m]);
-		const r = await sendNow(item);
-		setMsg((m) => [{ type: false, text: `code:${r?.ok}  msg:${r?.msg}`, time: Date.now() }, ...m]);
-		message.info({ content: "查询完成", key });
+		const sentText = `${dev}/${pendingProtocol}/${item.value}`
+		pushDeviceEvent({
+			kind: 'instruct_send',
+			source: '指令',
+			status: 'pending',
+			text: sentText,
+		});
+		try {
+			const r = await sendNow(item);
+			const replyText = `code:${r.code}${r.message ? `  msg:"${r.message}"` : ''}${r.data != null ? '  data:' + JSON.stringify(r.data) : ''}`
+			pushDeviceEvent({
+				kind: 'instruct_reply',
+				source: '指令',
+				status: r.code === 200 ? 'success' : 'error',
+				text: replyText,
+				meta: r,
+			});
+			message.info({ content: "查询完成", key });
+		} catch (e: any) {
+			pushDeviceEvent({
+				kind: 'instruct_reply',
+				source: '指令',
+				status: 'error',
+				text: `异常: ${e?.message || e}`,
+				meta: { error: String(e) },
+			});
+			message.error({ content: `异常: ${e?.message || e}`, key });
+		}
 	};
 
 	// 勾上「定时」时, 「发送」按钮文案 + 行为切到 "定时发送"
@@ -94,54 +127,53 @@ export const TerminalOprate: React.FC<Props> = ({ mac }) => {
 	};
 
 	return (
-		<Row gutter={36}>
-			<Col span={8}>
-				<Divider plain>操作</Divider>
-				<Form>
-					<Form.Item label="设备ID">{mac}</Form.Item>
-					<Form.Item label="设备">
-						<Select onSelect={(v: any) => setDev(v as any)} loading={loading}>
-							{data.map((dev) => (
-								<Select.Option value={dev.mountDev} key={dev.mountDev}>
-									{dev.mountDev}
-								</Select.Option>
-							))}
-						</Select>
-					</Form.Item>
-					<Form.Item label="指令">
-						<Input value={oprate} onChange={(e) => setOprate(e.target.value)} placeholder="输入受支持的指令,modbus无需输地址和校验码" />
-					</Form.Item>
-					<Form.Item>
-						<Checkbox
-							checked={scheduleChecked}
-							onChange={(e) => setScheduleChecked(e.target.checked)}
-						>
-							定时发送
-						</Checkbox>
-					</Form.Item>
-					<Form.Item>
-						<Button
-							onClick={onSendButtonClick}
-							type="primary"
-							disabled={!oprate}
-						>
-							{scheduleChecked ? '定时发送' : '立即发送'}
-						</Button>
-					</Form.Item>
-				</Form>
-			</Col>
-			<Col span={16}>
-				<Divider plain> 消息</Divider>
-				{msg.length > 0 && (
-					<Card>
-						<Timeline mode="left" items={msg.map(({ type, text, time }) => ({
-							label: dayjs(time).format("H:mm:ss") + (type ? "发送" : "接收"),
-							color: type ? "green" : "red",
-							children: text,
-						}))} />
-					</Card>
-				)}
-			</Col>
+		<div>
+			<Divider plain>操作</Divider>
+			<Form layout="inline">
+				<Form.Item label="设备ID" style={{ marginBottom: 8 }}>
+					<span style={{ fontFamily: 'var(--font-mono)' }}>{mac}</span>
+				</Form.Item>
+				<Form.Item label="设备" style={{ marginBottom: 8 }}>
+					<Select
+						value={dev || undefined}
+						onChange={(v: any) => setDev(v as any)}
+						loading={loading}
+						style={{ minWidth: 160 }}
+						placeholder="选择挂载设备"
+					>
+						{data.map((d) => (
+							<Select.Option value={d.mountDev} key={d.mountDev}>
+								{d.mountDev}
+							</Select.Option>
+						))}
+					</Select>
+				</Form.Item>
+				<Form.Item label="指令" style={{ marginBottom: 8 }}>
+					<Input
+						value={oprate}
+						onChange={(e) => setOprate(e.target.value)}
+						placeholder="输入指令 (modbus无需输地址和校验码)"
+						style={{ minWidth: 280 }}
+					/>
+				</Form.Item>
+				<Form.Item style={{ marginBottom: 8 }}>
+					<Checkbox
+						checked={scheduleChecked}
+						onChange={(e) => setScheduleChecked(e.target.checked)}
+					>
+						定时发送
+					</Checkbox>
+				</Form.Item>
+				<Form.Item style={{ marginBottom: 8 }}>
+					<Button
+						onClick={onSendButtonClick}
+						type="primary"
+						disabled={!oprate}
+					>
+						{scheduleChecked ? '定时发送' : '立即发送'}
+					</Button>
+				</Form.Item>
+			</Form>
 			{pendingItem && (
 				<ScheduleOpModal
 					open={scheduleOpen}
@@ -155,10 +187,15 @@ export const TerminalOprate: React.FC<Props> = ({ mac }) => {
 						setPendingItem(null)
 					}}
 					onSuccess={() => {
-						setMsg((m) => [{ type: true, text: `${dev}/${pendingProtocol}/${pendingItem.value} (定时)`, time: Date.now() }, ...m])
+						pushDeviceEvent({
+							kind: 'action',
+							source: '指令',
+							status: 'success',
+							text: `定时任务已创建: ${dev}/${pendingProtocol}/${pendingItem.value}`,
+						})
 					}}
 				/>
 			)}
-		</Row>
+		</div>
 	);
 };

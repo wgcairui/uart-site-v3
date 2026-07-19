@@ -1,9 +1,9 @@
 'use client'
-import { LinkOutlined } from "@ant-design/icons";
-import { Button, Card, Checkbox, Col, Collapse, Divider, Form, Input, Row, Space, Timeline, message } from "antd";
-import dayjs from "dayjs";
-import React, { useState } from "react";
+import { LinkOutlined, SearchOutlined } from "@ant-design/icons";
+import { Button, Checkbox, Col, Collapse, Divider, Form, Input, Row, Space, Tag, message } from "antd";
+import React, { useMemo, useState } from "react";
 import { sendATInstruct } from "@/lib/api/fetchRoot";
+import { pushDeviceEvent } from "@/lib/store/deviceEvents";
 
 interface Props {
 	mac: string;
@@ -95,74 +95,129 @@ export const TerminalAT: React.FC<Props> = ({ mac }) => {
 	};
 
 	const [at, setAt] = useState("");
-
 	const [add, setAdd] = useState(true);
-
-	const [msg, setMsg] = useState<{ type: boolean; text: string; time: number }[]>([]);
+	const [search, setSearch] = useState("");
 
 	const query = async () => {
 		const key = "queryAt";
 		message.loading({ content: "正在处理", key });
 		const str = "+++AT+";
-		setMsg((m) => [{ type: true, text: at, time: Date.now() }, ...m]);
-		const { code, message: resMsg, data } = await sendATInstruct(mac, add ? str + at : at);
-		setMsg((m) => [{ type: false, text: formatAtReply(code, resMsg, data), time: Date.now() }, ...m]);
-		message.info({ content: "查询完成", key });
+		const sentText = add ? str + at : at;
+		pushDeviceEvent({
+			kind: 'at_send',
+			source: 'AT',
+			status: 'pending',
+			text: sentText,
+		});
+		try {
+			const { code, message: resMsg, data } = await sendATInstruct(mac, sentText);
+			const replyText = formatAtReply(code, resMsg, data);
+			pushDeviceEvent({
+				kind: 'at_reply',
+				source: 'AT',
+				status: code === 200 ? 'success' : 'error',
+				text: replyText,
+				meta: { code, resMsg, data },
+			});
+			message.info({ content: "查询完成", key });
+		} catch (e: any) {
+			pushDeviceEvent({
+				kind: 'at_reply',
+				source: 'AT',
+				status: 'error',
+				text: `异常: ${e?.message || e}`,
+				meta: { error: String(e) },
+			});
+			message.error({ content: `异常: ${e?.message || e}`, key });
+		}
 	};
 
-	return (
-		<Row gutter={36}>
-			<Col span={12}>
-				<Divider plain>
-					<a href="https://besiv-uart.oss-cn-hangzhou.aliyuncs.com/pdf/48c5f8ca3d5eb514bbf9ca06220577af.pdf" target="_blank">
-						<LinkOutlined />
-						调试指令文档(仅支持4G版本)
-					</a>
-				</Divider>
-				<Collapse defaultActiveKey={["get"]} ghost accordion items={Object.entries(content).map(([key, val]) => ({
-					key,
-					label: val.title,
-					children: <>
-						<Space wrap size="middle">
-							{val.instructs.map((el, i) => (
-								<Button shape="round" type="primary" key={i} onClick={() => setAt(el.value)}>
-									{el.text}
-								</Button>
-							))}
-						</Space>
-						<Divider></Divider>
-					</>,
-				}))} />
-			</Col>
-			<Col span={12}>
-				<Divider plain>操作</Divider>
-				<Form>
-					<Form.Item label="设备ID">{mac}</Form.Item>
-					<Form.Item label="指令">
-						<Input value={at} onChange={(e) => setAt(e.target.value)} placeholder="输入受支持的AT指令" />
-					</Form.Item>
-					<Form.Item label="Set">
-						<Checkbox checked={add} onChange={(e) => setAdd(e.target.checked)}>
-							添加[+++AT+]前辍
-						</Checkbox>
-					</Form.Item>
-					<Form.Item>
-						<Button onClick={() => query()} type="primary" disabled={!at}>
-							发送
-						</Button>
-					</Form.Item>
-				</Form>
+	// 过滤 AT 指令 (按 search 模糊匹配 text 或 value)
+	const filterInstructs = (instructs: typeof content.get.instructs) => {
+		if (!search.trim()) return instructs
+		const q = search.toLowerCase()
+		return instructs.filter(
+			(it) => it.text.toLowerCase().includes(q) || it.value.toLowerCase().includes(q)
+		)
+	}
 
-				{msg.length > 0 && (
-					<Card>
-						<Timeline mode="left" items={msg.map(({ type, text, time }) => ({
-								label: dayjs(time).format("H:mm:ss") + (type ? "发送" : "接收"),
-								color: type ? "green" : "red",
-								children: text,
-							}))} />
-					</Card>
-				)}
-			</Col>
-		</Row>
+	const totalCount = content.get.instructs.length + content.set.instructs.length + content.control.instructs.length
+
+	return (
+		<div>
+			<Row gutter={12} align="middle" style={{ marginBottom: 8 }}>
+				<Col flex="auto">
+					<Input
+						prefix={<SearchOutlined />}
+						placeholder={`搜索 ${totalCount} 个 AT 指令 (按名称或指令内容)`}
+						value={search}
+						onChange={(e) => setSearch(e.target.value)}
+						allowClear
+					/>
+				</Col>
+				<Col>
+					<Tag style={{ margin: 0 }}>{totalCount} 指令</Tag>
+				</Col>
+			</Row>
+			<Collapse
+				defaultActiveKey={["get"]}
+				ghost
+				accordion
+				items={Object.entries(content).map(([key, val]) => {
+					const filtered = filterInstructs(val.instructs)
+					return {
+						key,
+						label: (
+							<span>
+								{val.title} ({filtered.length}/{val.instructs.length})
+							</span>
+						),
+						children: filtered.length === 0 ? (
+							<div style={{ color: 'var(--ink-500)', fontSize: 12, padding: 8 }}>无匹配</div>
+						) : (
+							<>
+								<Space wrap size="middle">
+									{filtered.map((el, i) => (
+										<Button shape="round" type="primary" key={i} onClick={() => setAt(el.value)}>
+											{el.text}
+										</Button>
+									))}
+								</Space>
+								<Divider />
+							</>
+						),
+					}
+				})}
+			/>
+			<Divider plain>
+				<a href="https://besiv-uart.oss-cn-hangzhou.aliyuncs.com/pdf/48c5f8ca3d5eb514bbf9ca06220577af.pdf" target="_blank">
+					<LinkOutlined />
+					调试指令文档(仅支持4G版本)
+				</a>
+			</Divider>
+			<Form layout="inline">
+				<Form.Item label="设备ID" style={{ marginBottom: 8 }}>
+					<span style={{ fontFamily: 'var(--font-mono)' }}>{mac}</span>
+				</Form.Item>
+				<Form.Item label="指令" style={{ marginBottom: 8 }}>
+					<Input
+						value={at}
+						onChange={(e) => setAt(e.target.value)}
+						placeholder="输入受支持的AT指令"
+						style={{ minWidth: 200 }}
+					/>
+				</Form.Item>
+				<Form.Item label="Set" style={{ marginBottom: 8 }}>
+					<Checkbox checked={add} onChange={(e) => setAdd(e.target.checked)}>
+						添加[+++AT+]前辍
+					</Checkbox>
+				</Form.Item>
+				<Form.Item style={{ marginBottom: 8 }}>
+					<Button onClick={() => query()} type="primary" disabled={!at}>
+						发送
+					</Button>
+				</Form.Item>
+			</Form>
+		</div>
 	);
 };
