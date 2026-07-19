@@ -168,7 +168,7 @@ export function MountDevDetailDrawer({ mac, dev, open, onClose }: MountDevDetail
                 column={2}
                 bordered
                 items={[
-                  { key: 'name', label: '设备名', children: mountDev.name || dev.mountDev || '-' },
+                  { key: 'name', label: '设备名', children: dev.mountDev || '-' },
                   { key: 'type', label: '类型', children: dev.Type || '-' },
                   { key: 'protocol', label: '协议', children: dev.protocol || '-' },
                   { key: 'pid', label: 'PID', children: dev.pid },
