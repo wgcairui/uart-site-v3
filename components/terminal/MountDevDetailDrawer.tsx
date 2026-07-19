@@ -1,26 +1,27 @@
 'use client'
 
 /**
- * MountDevDetailDrawer · 挂载设备详情 Drawer
+ * MountDevDetailDrawer · 挂载设备快速预览 Drawer (720px)
  *
- * 替代原"mount device tab 嵌套 sub-tab"三层结构, 改成:
- * - 点击挂载设备卡 → Drawer 720px 弹出 (上下文不丢, 卡列表仍在左侧)
- * - Drawer 内分 3 段: 基本信息 / 实时数据 / 历史数据 (Segmented 切换)
- * - "设备详情" 段: 复用 TerminalDevPage (按设备类型分: 温湿度/IO/空调/UPS)
+ * 跟原"设备详情" 3 段 (详情/实时/历史) 区分 — 这里是"快速瞥一眼"场景,
+ * 完整看 → 跳独立页 /admin/node/terminal/[mac]/mount-dev/[pid]
  *
- * 视觉: 紫光 header · Segmented 切换 · 滚动承载长内容
+ * 内容精简:
+ * - Hero strip: 图标 + 名称 + PID + 协议 + 在线状态
+ * - Meta: 设备ID/PID/上行/采集
+ * - Descriptions: 6 行 (名称/类型/协议/PID/终端MAC/在线状态)
+ * - 实时数据: TerminalCurData (单条最新, TerminalCurData 自身只显示 1 条)
+ * - 右上"完整详情"链接 → 独立页
+ *
+ * 视觉: 紫光 header · 玻璃 bento · 720px 适合不退出当前页 quick peek
  */
 
-import { useState } from 'react'
-import { Drawer, Segmented, Tag, Descriptions, Spin, Button } from 'antd'
-import {
-  AppstoreOutlined,
-  ExportOutlined,
-} from '@ant-design/icons'
+import { Drawer, Tag, Descriptions, Button, Spin } from 'antd'
+import { AppstoreOutlined, ExportOutlined } from '@ant-design/icons'
+import { useRouter } from 'next/navigation'
 import { getTerminalPidProtocol } from '@/lib/api/fetch'
 import { usePromise } from '@/lib/hooks/usePromise'
-import { TerminalDevPage } from './TerminalDevPage'
-import { TerminalCurData, TerminalHistoryData } from '@/app/(admin)/admin/node/terminal/[mac]/TerminalDataTab'
+import { TerminalCurData } from '@/app/(admin)/admin/node/terminal/[mac]/TerminalDataTab'
 import { devType } from '@/lib/utils/devImgSource'
 import { devTypeIcon } from '@/components/common/IconFont'
 
@@ -31,10 +32,8 @@ interface MountDevDetailDrawerProps {
   onClose: () => void
 }
 
-type Segment = 'detail' | 'cur' | 'history'
-
 export function MountDevDetailDrawer({ mac, dev, open, onClose }: MountDevDetailDrawerProps) {
-  const [seg, setSeg] = useState<Segment>('detail')
+  const router = useRouter()
 
   const { data: mountDev, loading } = usePromise(async () => {
     if (!dev) return null
@@ -46,7 +45,6 @@ export function MountDevDetailDrawer({ mac, dev, open, onClose }: MountDevDetail
 
   const online = !!dev.online
   const iconEl = devTypeIcon[dev.Type] || <AppstoreOutlined />
-  const imgSrc = (devType as Record<string, string>)[dev.Type]
   const lastEmit = (dev as any).lastEmit
   const lastRecord = (dev as any).lastRecord
 
@@ -100,19 +98,19 @@ export function MountDevDetailDrawer({ mac, dev, open, onClose }: MountDevDetail
       }}
       extra={
         <Button
-          type="text"
+          type="primary"
           size="small"
           icon={<ExportOutlined />}
           onClick={() => {
-            // 跳到独立 mount device page 兜底
-            window.open(`/admin/node/terminal/${mac}?tab=${dev.pid}`, '_blank')
+            onClose()
+            router.push(`/admin/node/terminal/${mac}/mount-dev/${dev.pid}`)
           }}
         >
-          全屏查看
+          完整详情
         </Button>
       }
     >
-      {/* 顶部 meta strip */}
+      {/* Meta strip */}
       <div
         style={{
           padding: '12px 20px',
@@ -139,53 +137,30 @@ export function MountDevDetailDrawer({ mac, dev, open, onClose }: MountDevDetail
         ) : null}
       </div>
 
-      {/* Segmented 切换 */}
-      <div
-        style={{
-          padding: '12px 20px 0',
-          background: 'rgba(255, 255, 255, 0.7)',
-          borderBottom: '1px solid var(--ink-100)',
-        }}
-      >
-        <Segmented
-          value={seg}
-          onChange={(v) => setSeg(v as Segment)}
-          options={[
-            { label: '设备详情', value: 'detail' },
-            { label: '实时数据', value: 'cur' },
-            { label: '历史数据', value: 'history' },
-          ]}
-        />
-      </div>
-
-      {/* 内容区 */}
+      {/* 内容区: Descriptions + 实时数据 (单条) */}
       <div style={{ padding: 20 }}>
-        {seg === 'detail' && (
-          <Spin spinning={loading}>
-            {mountDev ? (
-              <Descriptions
-                size="small"
-                column={2}
-                bordered
-                items={[
-                  { key: 'name', label: '设备名', children: dev.mountDev || '-' },
-                  { key: 'type', label: '类型', children: dev.Type || '-' },
-                  { key: 'protocol', label: '协议', children: dev.protocol || '-' },
-                  { key: 'pid', label: 'PID', children: dev.pid },
-                  { key: 'mac', label: '终端 MAC', children: mac },
-                  { key: 'status', label: '在线状态', children: online ? '在线' : '离线' },
-                  ...(mountDev as any).remark ? [{ key: 'remark', label: '备注', children: (mountDev as any).remark }] : [],
-                ]}
-              />
-            ) : null}
-            {/* 设备类型特定组件 (温湿度/IO/空调/UPS) */}
-            <div style={{ marginTop: 16 }}>
-              <TerminalDevPage mac={mac} pid={dev.pid} />
-            </div>
-          </Spin>
-        )}
-        {seg === 'cur' && <TerminalCurData mac={mac} pid={dev.pid} />}
-        {seg === 'history' && <TerminalHistoryData mac={mac} pid={dev.pid} />}
+        <Spin spinning={loading}>
+          {mountDev ? (
+            <Descriptions
+              size="small"
+              column={2}
+              bordered
+              style={{ marginBottom: 20 }}
+              items={[
+                { key: 'name', label: '设备名', children: dev.mountDev || '-' },
+                { key: 'type', label: '类型', children: dev.Type || '-' },
+                { key: 'protocol', label: '协议', children: dev.protocol || '-' },
+                { key: 'pid', label: 'PID', children: dev.pid },
+                { key: 'mac', label: '终端 MAC', children: mac },
+                { key: 'status', label: '在线状态', children: online ? '在线' : '离线' },
+                ...(mountDev as any).remark ? [{ key: 'remark', label: '备注', children: (mountDev as any).remark }] : [],
+              ]}
+            />
+          ) : null}
+        </Spin>
+
+        <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--ink-700)', marginBottom: 8 }}>实时数据</div>
+        <TerminalCurData mac={mac} pid={dev.pid} />
       </div>
     </Drawer>
   )

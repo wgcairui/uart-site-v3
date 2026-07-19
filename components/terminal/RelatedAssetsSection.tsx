@@ -35,7 +35,6 @@ import { MyCopy } from '@/components/common/MyCopy'
 import { devType } from '@/lib/utils/devImgSource'
 import { devTypeIcon } from '@/components/common/IconFont'
 import { TerminalAddMountDev } from './TerminalAddMountDev'
-import { MountDevDetailDrawer } from './MountDevDetailDrawer'
 import { delTerminalMountDev } from '@/lib/api/fetch'
 import { message as antdMessage } from 'antd'
 
@@ -52,7 +51,6 @@ export function RelatedAssetsSection({
 }: RelatedAssetsSectionProps) {
   const router = useRouter()
   const [addOpen, setAddOpen] = useState(false)
-  const [drawerDev, setDrawerDev] = useState<Uart.TerminalMountDevs | null>(null)
   const list = Array.isArray(mountDevs) ? mountDevs : []
 
   // 绑定用户
@@ -185,8 +183,8 @@ export function RelatedAssetsSection({
                 {list.map((d) => (
                   <MountDevMiniCard
                     key={`${mac}-${d.pid}`}
+                    mac={mac}
                     dev={d}
-                    onView={() => setDrawerDev(d)}
                     onDelete={() => delMountDev(d)}
                   />
                 ))}
@@ -237,13 +235,7 @@ export function RelatedAssetsSection({
         </div>
       </div>
 
-      {/* Drawer 详情 */}
-      <MountDevDetailDrawer
-        mac={mac}
-        dev={drawerDev}
-        open={!!drawerDev}
-        onClose={() => setDrawerDev(null)}
-      />
+      {/* Drawer 详情 (保留组件, 暂不主动使用, 留作 quick peek 备用) */}
 
       {/* 添加挂载设备 modal */}
       <TerminalAddMountDev
@@ -270,12 +262,13 @@ function SubHeader({ icon, title, count, action }: { icon: React.ReactNode; titl
 }
 
 function MountDevMiniCard({
-  dev, onView, onDelete,
+  mac, dev, onDelete,
 }: {
+  mac: string
   dev: Uart.TerminalMountDevs
-  onView: () => void
   onDelete: () => void
 }) {
+  const router = useRouter()
   const online = !!dev.online
   const iconEl = devTypeIcon[dev.Type] || <AppstoreOutlined />
   const lastEmit = (dev as any).lastEmit
@@ -283,7 +276,7 @@ function MountDevMiniCard({
 
   return (
     <div
-      onClick={onView}
+      onClick={() => router.push(`/admin/node/terminal/${mac}/mount-dev/${dev.pid}`)}
       style={{
         background: online
           ? 'linear-gradient(135deg, rgba(16, 185, 129, 0.04) 0%, rgba(139, 92, 246, 0.04) 100%)'
@@ -338,8 +331,17 @@ function MountDevMiniCard({
           fontSize: 12,
         }}
       >
-        <Tooltip title="查看详情 (Drawer)">
-          <Button size="small" type="text" onClick={onView}>查看</Button>
+        <Tooltip title="查看完整详情 (新页)">
+          <Button
+            size="small"
+            type="text"
+            onClick={(e) => {
+              e.stopPropagation()
+              router.push(`/admin/node/terminal/${mac}/mount-dev/${dev.pid}`)
+            }}
+          >
+            查看
+          </Button>
         </Tooltip>
         <Popconfirm
           title={`确认删除 [${dev.mountDev}] ?`}
