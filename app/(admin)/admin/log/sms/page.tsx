@@ -14,14 +14,19 @@
  *    - 主 Table (短信日志) 在筛选条下
  *    - 短信消耗分布 (用户/次数) 在主 Table 下, 用 logsmssendsCountInfo + getUserAlarmSetups
  *
+ * cairui 21:40 追加精简:
+ *  - 列表移除"结果"列 (截断看不清 / 列表不需要)
+ *  - 单击行弹 Modal 详情 (sendParams / Success / Error 全展示)
+ *  - 沿用 components/chart/MailStatsChart.tsx 的 onRow.click + Modal 模式
+ *
  * 视觉 (跟 alarm / server-errors 一致):
  * - 顶部 PageSummary 5 卡
- * - 4 维筛选条 + 5 列 Table
+ * - 4 维筛选条 + 3 列 Table (收件人 / 发送参数 / 时间)
  * - 短信消耗分布表 (页底, 折叠可考虑, 暂不折)
  */
 
 import {
-    Button, Divider, Input, Select, Space, Spin, Table, Tag, Tabs,
+    Button, Divider, Input, Modal, Select, Space, Spin, Table, Tag, Tabs,
 } from 'antd'
 import type { ColumnsType } from 'antd/es/table'
 import dayjs from 'dayjs'
@@ -45,6 +50,7 @@ import { PageHeader } from '@/components/common/PageHeader'
 import { PageSummary } from '@/components/common/PageSummary'
 import { EmptyState } from '@/components/common/EmptyState'
 import { UserDes } from '@/components/data/UserDes'
+import { DesList } from '@/components/data/DesList'
 import { PaginationReq, V2ListResponse } from '@/types'
 
 // server MAX_PAGE_SIZE = 200 (from midwayuartserver pagination.helper.ts)
@@ -89,16 +95,6 @@ const SMS_TABLE_COLUMNS: ColumnsType<Uart.logSmsSend> = [
             } catch { /* fallthrough */ }
             return val?.TemplateParam || '—'
         },
-    },
-    {
-        key: 'result',
-        title: '结果',
-        width: 220,
-        render: (_, r: Uart.logSmsSend) => r?.Success ? (
-            <Tag color="success" style={{ margin: 0 }}>成功</Tag>
-        ) : (
-            <Tag color="error" style={{ margin: 0 }}>{r?.Error?.message || '失败'}</Tag>
-        ),
     },
     {
         dataIndex: 'timeStamp',
@@ -147,6 +143,12 @@ export const LogSms: React.FC = () => {
     // 筛选 state
     const [filters, setFilters] = useState<SmsFilters>(EMPTY_FILTERS)
     const [fetchKey, setFetchKey] = useState(0)
+
+    // 详情 Modal (cairui 21:40 拍: 列表移出"结果"列, 点击行弹窗)
+    const [detailModal, setDetailModal] = useState<{ open: boolean; record: Uart.logSmsSend | null }>({
+        open: false,
+        record: null,
+    })
 
     // 短信消耗分布 (cairui 20:13 拍合并, 保留原 tab 的 3 卡 + 用户表)
     const [userPage, setUserPage] = useState(1)
@@ -460,6 +462,11 @@ export const LogSms: React.FC = () => {
                                 setPageSize(ps)
                             },
                         }}
+                        // cairui 21:40: 列表移出"结果"列, 改点击行弹窗
+                        onRow={(record) => ({
+                            onClick: () => setDetailModal({ open: true, record }),
+                            style: { cursor: 'pointer' },
+                        })}
                     />
                 )}
             </div>
@@ -574,6 +581,37 @@ export const LogSms: React.FC = () => {
                     />
                 )}
             </div>
+
+            {/* cairui 21:40: 点击行弹 Modal 详情 (sendParams / Success / Error) */}
+            <Modal
+                title="短信详情"
+                open={detailModal.open}
+                onCancel={() => setDetailModal({ open: false, record: null })}
+                footer={null}
+                width={720}
+            >
+                {detailModal.record && (
+                    <>
+                        <DesList title="收件人" data={{ tels: detailModal.record.tels }} />
+                        <DesList title="发送参数" data={detailModal.record.sendParams} />
+                        <DesList
+                            title="结果"
+                            data={{
+                                Success: detailModal.record.Success ?? null,
+                                Error: detailModal.record.Error ?? null,
+                            }}
+                        />
+                        <DesList
+                            title="时间"
+                            data={{
+                                timeStamp: detailModal.record.timeStamp
+                                    ? dayjs(detailModal.record.timeStamp).format('YYYY-MM-DD HH:mm:ss')
+                                    : null,
+                            }}
+                        />
+                    </>
+                )}
+            </Modal>
         </div>
     )
 }

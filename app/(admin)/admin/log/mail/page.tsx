@@ -10,13 +10,18 @@
  *    (server feat/mail-sms-filter-ui, buildMongoFilter 模式 + isOk 重写 Success 字段)
  * 4) 自渲染 antd Table (跟 alarm 一致, 不用共享 Log 组件)
  *
+ * cairui 21:40 追加精简:
+ *  - 列表移除"结果"列 (截断看不清 / 列表不需要)
+ *  - 单击行弹 Modal 详情 (sendParams / Success / Error 全展示)
+ *  - 沿用 components/chart/MailStatsChart.tsx 的 onRow.click + Modal 模式
+ *
  * 视觉 (跟 alarm / server-errors 一致):
  * - 顶部 PageSummary 4 卡 (总数/月/周/日)
- * - 6 维筛选条 + 5 列 Table
+ * - 4 维筛选条 + 3 列 Table (收件人 / 主题 / 时间)
  * - flex:1 + scroll.y 撑开 main.scroll-area
  */
 
-import { Button, Input, Select, Space, Spin, Table, Tag } from 'antd'
+import { Button, Input, Modal, Select, Space, Spin, Table, Tag } from 'antd'
 import type { ColumnsType } from 'antd/es/table'
 import dayjs from 'dayjs'
 import {
@@ -34,6 +39,7 @@ import { MyDatePickerRange } from '@/components/common/MyDatePickerRange'
 import { PageHeader } from '@/components/common/PageHeader'
 import { PageSummary } from '@/components/common/PageSummary'
 import { EmptyState } from '@/components/common/EmptyState'
+import { DesList } from '@/components/data/DesList'
 
 // server MAX_PAGE_SIZE = 200 (from midwayuartserver pagination.helper.ts)
 const MAX_ITEMS = 200
@@ -87,16 +93,6 @@ const TABLE_COLUMNS: ColumnsType<Uart.logMailSend> = [
         render: (val: any) => val?.subject || '—',
     },
     {
-        key: 'result',
-        title: '结果',
-        width: 200,
-        render: (_, r: Uart.logMailSend) => r?.Success ? (
-            <Tag color="success" style={{ margin: 0 }}>成功</Tag>
-        ) : (
-            <Tag color="error" style={{ margin: 0 }}>{r?.Error?.message || '失败'}</Tag>
-        ),
-    },
-    {
         dataIndex: 'timeStamp',
         title: '时间',
         width: 170,
@@ -127,6 +123,12 @@ export const LogMail: React.FC = () => {
     const [filters, setFilters] = useState<MailFilters>(EMPTY_FILTERS)
     /** 触发 fetch 的签名 */
     const [fetchKey, setFetchKey] = useState(0)
+
+    // 详情 Modal (cairui 21:40 拍: 列表移出"结果"列, 点击行弹窗)
+    const [detailModal, setDetailModal] = useState<{ open: boolean; record: Uart.logMailSend | null }>({
+        open: false,
+        record: null,
+    })
 
     // 数据: items (≤200) + realTotal (server 真实) + bucket (4 卡时间分桶) + loading
     const [items, setItems] = useState<Uart.logMailSend[]>([])
@@ -394,9 +396,45 @@ export const LogMail: React.FC = () => {
                                 setPageSize(ps)
                             },
                         }}
+                        // cairui 21:40: 列表移出"结果"列, 改点击行弹窗
+                        onRow={(record) => ({
+                            onClick: () => setDetailModal({ open: true, record }),
+                            style: { cursor: 'pointer' },
+                        })}
                     />
                 )}
             </div>
+
+            {/* cairui 21:40: 点击行弹 Modal 详情 (mails / sendParams / Success / Error) */}
+            <Modal
+                title="邮件详情"
+                open={detailModal.open}
+                onCancel={() => setDetailModal({ open: false, record: null })}
+                footer={null}
+                width={720}
+            >
+                {detailModal.record && (
+                    <>
+                        <DesList title="收件人" data={{ mails: detailModal.record.mails }} />
+                        <DesList title="发送参数" data={detailModal.record.sendParams} />
+                        <DesList
+                            title="结果"
+                            data={{
+                                Success: detailModal.record.Success ?? null,
+                                Error: detailModal.record.Error ?? null,
+                            }}
+                        />
+                        <DesList
+                            title="时间"
+                            data={{
+                                timeStamp: detailModal.record.timeStamp
+                                    ? dayjs(detailModal.record.timeStamp).format('YYYY-MM-DD HH:mm:ss')
+                                    : null,
+                            }}
+                        />
+                    </>
+                )}
+            </Modal>
         </div>
     )
 }
