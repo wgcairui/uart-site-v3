@@ -13,8 +13,27 @@ export const logsmssends = (start: string, end: string, phone?: string, query?: 
 export const logsmssendsCountInfo = () => Post<universalResult<{ _id: string, sum: number }[]>>('/api/v2/admin/logs/sms/count-info', {})
 export const logmailsends = (start: string, end: string, query?: PaginationReq) =>
   Post<universalResult<V2ListResponse<Uart.logMailSend>>>('/api/v2/admin/logs/mail', { startTs: new Date(start).getTime(), endTs: new Date(end).getTime(), ...query })
-export const loguartterminaldatatransfinites = (start: string, end: string, query?: PaginationReq) =>
+export const loguartterminaldatatransfinites = (start: string, end: string, query?: Uart.UartAlarmListReq) =>
   Post<universalResult<V2ListResponse<Uart.uartAlarmObject>>>('/api/v2/admin/logs/transfinite', { startTs: new Date(start).getTime(), endTs: new Date(end).getTime(), ...query })
+/**
+ * 告警时间分桶统计 (server feat/alarm-time-bucket)
+ * - total: 当前时间窗内真实总数
+ * - month: 自然月 1号 → endTs (cairui 拍 "自然周" 13:48, 月同口径)
+ * - week:  自然周 周一 → endTs
+ * - day:   今天 00:00 → endTs
+ * - tags:  当前时间窗内 tag 分布 [{ type, value }], 跟前 PageSummary tag 分布卡联动
+ *
+ * 注: 之前 client 端用 items (≤200) 算"月/周/日"偏低, 这次 server 端
+ *     走 countDocuments, 准确率跟时间窗内真实数量一致
+ */
+export const logAlarmTimeBucket = (start: string | number, end: string | number) =>
+  Post<universalResult<Uart.UartAlarmTimeBucket>>(
+    '/api/v2/admin/logs/transfinite/count-by-bucket',
+    {
+      startTs: typeof start === 'string' ? new Date(start).getTime() : start,
+      endTs: typeof end === 'string' ? new Date(end).getTime() : end,
+    },
+  )
 export const loguserlogins = (start: string, end: string, query?: PaginationReq) =>
   Post<universalResult<V2ListResponse<Uart.logUserLogins>>>('/api/v2/admin/logs/user-logins', { startTs: new Date(start).getTime(), endTs: new Date(end).getTime(), ...query })
 export const loguserrequsts = (start: string, end: string, query?: PaginationReq) =>
