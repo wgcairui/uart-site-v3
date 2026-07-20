@@ -8,11 +8,35 @@ export const lognodes = (start: string, end: string, query?: PaginationReq) =>
   Post<universalResult<V2ListResponse<Uart.logNodes>>>('/api/v2/admin/logs/nodes', { startTs: new Date(start).getTime(), endTs: new Date(end).getTime(), ...query })
 export const logterminals = (start: string, end: string, mac?: string, query?: PaginationReq) =>
   Post<universalResult<V2ListResponse<Uart.logTerminals>>>('/api/v2/admin/logs/terminals', { startTs: new Date(start).getTime(), endTs: new Date(end).getTime(), mac, ...query })
-export const logsmssends = (start: string, end: string, phone?: string, query?: PaginationReq) =>
+export const logsmssends = (start: string, end: string, phone?: string, query?: Uart.SmsSendListReq) =>
   Post<universalResult<V2ListResponse<Uart.logSmsSend>>>('/api/v2/admin/logs/sms', { startTs: new Date(start).getTime(), endTs: new Date(end).getTime(), phone, ...query })
 export const logsmssendsCountInfo = () => Post<universalResult<{ _id: string, sum: number }[]>>('/api/v2/admin/logs/sms/count-info', {})
-export const logmailsends = (start: string, end: string, query?: PaginationReq) =>
+/**
+ * 短信时间分桶统计 (server feat/mail-sms-filter-ui)
+ * 出参: { total, month, week, day, tags: [] }
+ */
+export const logSmsTimeBucket = (start: string | number, end: string | number) =>
+  Post<universalResult<Uart.UartAlarmTimeBucket>>(
+    '/api/v2/admin/logs/sms/count-by-bucket',
+    {
+      startTs: typeof start === 'string' ? new Date(start).getTime() : start,
+      endTs: typeof end === 'string' ? new Date(end).getTime() : end,
+    },
+  )
+export const logmailsends = (start: string, end: string, query?: Uart.MailSendListReq) =>
   Post<universalResult<V2ListResponse<Uart.logMailSend>>>('/api/v2/admin/logs/mail', { startTs: new Date(start).getTime(), endTs: new Date(end).getTime(), ...query })
+/**
+ * 邮件时间分桶统计 (server feat/mail-sms-filter-ui)
+ * 出参: { total, month, week, day, tags: [] } (mail/sms 不返 tag 分布)
+ */
+export const logMailTimeBucket = (start: string | number, end: string | number) =>
+  Post<universalResult<Uart.UartAlarmTimeBucket>>(
+    '/api/v2/admin/logs/mail/count-by-bucket',
+    {
+      startTs: typeof start === 'string' ? new Date(start).getTime() : start,
+      endTs: typeof end === 'string' ? new Date(end).getTime() : end,
+    },
+  )
 export const loguartterminaldatatransfinites = (start: string, end: string, query?: Uart.UartAlarmListReq) =>
   Post<universalResult<V2ListResponse<Uart.uartAlarmObject>>>('/api/v2/admin/logs/transfinite', { startTs: new Date(start).getTime(), endTs: new Date(end).getTime(), ...query })
 /**

@@ -441,6 +441,59 @@ declare namespace Uart {
         /** tag 分布 (跟 PageSummary 顶部 tag 分布卡联动) */
         tags: { type: string; value: number }[];
     }
+
+    /**
+     * 邮件日志列表请求 (server feat/mail-sms-filter-ui 20:13)
+     * 字段名权威源: midwayuartserver/src/module/log/controller/admin-log.controller.ts listMailLogs
+     * server 端 search/filters 白名单 (cairui 20:13 拍 4 维筛选):
+     *   - search  (regex 模糊, 支持 nested path):
+     *       mails / sendParams.subject / sendParams.html / sendParams.from / sendParams.to
+     *   - filters: isOk (server 端重写为 Success 字段 $exists 条件, 见 controller rewriteIsOkToSuccess)
+     */
+    interface MailSendListReq {
+        page?: number;
+        pageSize?: number;
+        sortBy?: 'timeStamp' | 'createdAt';
+        sortOrder?: 'asc' | 'desc';
+        needTotal?: boolean;
+        search?: {
+            mails?: string;
+            'sendParams.subject'?: string;
+            'sendParams.html'?: string;
+            'sendParams.from'?: string;
+            'sendParams.to'?: string;
+        };
+        filters?: {
+            isOk?: ('true' | 'false')[];
+        };
+    }
+
+    /**
+     * 短信日志列表请求 (server feat/mail-sms-filter-ui 20:13)
+     * 字段名权威源: midwayuartserver/src/module/log/controller/admin-log.controller.ts listSmsLogs
+     * server 端 search/filters 白名单 (cairui 20:13 拍 4 维筛选):
+     *   - search  (regex 模糊, 支持 nested path):
+     *       tels / sendParams.TemplateParam / sendParams.PhoneNumbers
+     *   - filters: isOk (重写为 Success 字段 $exists)
+     *
+     * 注: SmsLogReqDto.phone 字段保留兼容老 caller, server 端忽略 (改走 search.tels 模糊)
+     */
+    interface SmsSendListReq {
+        page?: number;
+        pageSize?: number;
+        sortBy?: 'timeStamp' | 'createdAt';
+        sortOrder?: 'asc' | 'desc';
+        needTotal?: boolean;
+        phone?: string;  // DEPRECATED, server 端忽略, 改用 search.tels
+        search?: {
+            tels?: string;
+            'sendParams.TemplateParam'?: string;
+            'sendParams.PhoneNumbers'?: string;
+        };
+        filters?: {
+            isOk?: ('true' | 'false')[];
+        };
+    }
     type UartAlarmType = "透传设备下线提醒" | "透传设备上线提醒" | '透传设备告警';
     interface smsUartAlarm {
         parentId?: string;
@@ -462,6 +515,9 @@ declare namespace Uart {
         message: string;
     }
     interface logSmsSend extends id {
+        // feat/mail-sms-filter-ui (cairui 20:13): 上游类型遗漏 timeStamp, 业务数据实际有
+        // (server mongo_entity/log.ts:49-87 SmsSend.timeStamp, server 端 time range filter 用)
+        timeStamp?: number;
         tels: string[];
         sendParams: {
             RegionId: string;
@@ -492,6 +548,9 @@ declare namespace Uart {
         messageId: string;
     }
     interface logMailSend extends id {
+        // feat/mail-sms-filter-ui (cairui 20:13): 上游类型遗漏 timeStamp, 业务数据实际有
+        // (server mongo_entity/log.ts:108-135 MailSend.timeStamp, server 端 time range filter 用)
+        timeStamp?: number;
         mails: string[];
         sendParams: {
             from: string;
