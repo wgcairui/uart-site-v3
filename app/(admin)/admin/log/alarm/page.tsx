@@ -639,7 +639,10 @@ export const LogAlarm: React.FC = () => {
                         loading={loading}
                         columns={TABLE_COLUMNS}
                         dataSource={generateTableKey(pagedItems as any, '_id')}
-                        scroll={{ x: 900, y: 'calc(100vh - 600px)' }}
+                        // 动态 scroll.y: 装下当前页实际行数 + 头, 不留空白
+                        // 兜底 min 280 避免空 table / loading 状态太挤
+                        // (cairui 14:15 反馈: 老 calc(100vh - 600px) 在小视口只显示 3-4 行 + 大量空白)
+                        scroll={{ x: 900, y: `${Math.max(280, pagedItems.length * 54 + 54)}px` }}
                         pagination={{
                             current: page,
                             pageSize,
