@@ -397,6 +397,50 @@ declare namespace Uart {
          *  跟 PagerDuty/Datadog 3 级对齐: critical (红) / warning (黄) / info (蓝) */
         severity?: AlarmSeverity;
     }
+
+    /**
+     * 告警日志列表请求 (server feat/alarm-filter-ui 13:48)
+     * 字段名权威源: midwayuartserver/src/module/log/controller/admin-log.controller.ts listTransfiniteLogs
+     * server 端 search/filters 白名单 (cairui 拍 server+client 都改):
+     *   - search  (regex 模糊, buildMongoFilter): devName / mac / msg
+     *   - filters (exact $in):                    isOk / severity / protocol / tag
+     * 注: isOk 在 mongo 里是 boolean, server 端 search helper 会按 string ('true'/'false') 转
+     */
+    interface UartAlarmListReq {
+        page?: number;
+        pageSize?: number;
+        sortBy?: 'timeStamp' | 'mac' | 'severity';
+        sortOrder?: 'asc' | 'desc';
+        needTotal?: boolean;
+        search?: {
+            devName?: string;
+            mac?: string;
+            msg?: string;
+        };
+        filters?: {
+            isOk?: ('true' | 'false')[];
+            severity?: AlarmSeverity[];
+            protocol?: string[];
+            tag?: string[];
+        };
+    }
+
+    /**
+     * 告警时间分桶统计 (server feat/alarm-time-bucket)
+     * 由 /api/v2/admin/logs/transfinite/count-by-bucket 返
+     */
+    interface UartAlarmTimeBucket {
+        /** 当前时间窗内真实总数 */
+        total: number;
+        /** 自然月 (1号 → endTs) */
+        month: number;
+        /** 自然周 (周一 → endTs, cairui 13:48 拍) */
+        week: number;
+        /** 今天 (00:00 → endTs) */
+        day: number;
+        /** tag 分布 (跟 PageSummary 顶部 tag 分布卡联动) */
+        tags: { type: string; value: number }[];
+    }
     type UartAlarmType = "透传设备下线提醒" | "透传设备上线提醒" | '透传设备告警';
     interface smsUartAlarm {
         parentId?: string;
