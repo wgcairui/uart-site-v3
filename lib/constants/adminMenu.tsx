@@ -38,6 +38,8 @@ export const ADMIN_MENU: AdminMenuGroup[] = [
       { key: 'protocols', to: '/admin/node/protocols', text: '协议', icon: <IconFont type="icon-jichuguanli" /> },
       // PR-2 (2026-07-17): AI 生成从 /admin/ai/generate 搬到 /admin/node/protocols/generate, 收编进「协议」group
       { key: 'protocols-generate', to: '/admin/node/protocols/generate', text: 'AI 生成', icon: <IconFont type="icon-zhire" /> },
+      // feat/feature-flag-platform 2026-07-21: Feature Flag 平台 (alert.dispatch.mode 等)
+      { key: 'feature-flags', to: '/admin/feature-flags', text: 'Feature Flags', icon: <IconFont type="icon-jichuguanli" /> },
       { key: 'devmodel', to: '/admin/node/devmodel', text: '设备类型', icon: <IconFont type="icon-fenzuguanli" /> },
       { key: 'nodes', to: '/admin/node/nodes', text: '节点', icon: <IconFont type="icon-shebeizhuangtai" /> },
       { key: 'terminal', to: '/admin/node/terminal', text: '终端', icon: <IconFont type="icon-shebeiguanli" /> },
@@ -65,6 +67,8 @@ export const ADMIN_MENU: AdminMenuGroup[] = [
     ico: <IconFont type="icon-xiaoxitongzhi" />,
     child: [
       { key: 'log-alarm', to: '/admin/log/alarm', text: '告警日志', icon: <IconFont type="icon-jinggao" /> },
+      // feat/feature-flag-platform 2026-07-21: 告警审批跟踪 (killSwitch + manual/delayed_auto 队列)
+      { key: 'alert-queue', to: '/admin/alerts/queue', text: '告警审批', icon: <IconFont type="icon-jinggao" /> },
       { key: 'log-mail', to: '/admin/log/mail', text: '邮件日志', icon: <IconFont type="icon-xiaoxitongzhi" /> },
       { key: 'log-sms', to: '/admin/log/sms', text: '短信日志', icon: <IconFont type="icon-xiaoxitongzhi" /> },
       { key: 'log-wxsubscribe', to: '/admin/log/wxsubscribe', text: '微信告警事件日志', icon: <IconFont type="icon-xiaoxitongzhi" /> },

@@ -10,5 +10,8 @@ export * from '@/lib/api/endpoints/admin/logs'
 export * from '@/lib/api/endpoints/admin/system'
 export * from '@/lib/api/endpoints/admin/scheduledOps'
 export * from '@/lib/api/endpoints/admin/ai'
+// feat/feature-flag-platform 2026-07-21
+export * from '@/lib/api/endpoints/admin/featureFlags'
+export * from '@/lib/api/endpoints/admin/alertApprovals'
 
 export type { PaginationReq, V2ListResponse } from '@/types'
