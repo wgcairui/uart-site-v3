@@ -15,13 +15,21 @@
  *  - 单击行弹 Modal 详情 (sendParams / Success / Error 全展示)
  *  - 沿用 components/chart/MailStatsChart.tsx 的 onRow.click + Modal 模式
  *
+ * cairui 2026-07-21 拍板: 整个 modal 重设计
+ *  - HTML 用 <iframe sandbox srcdoc> 渲染 (CSS 隔离 + 禁脚本 + 允许图片 + 允许外链弹窗)
+ *  - Success 拆字段 KV 网格 (response/messageId/envelopeTime/messageTime + accepted/rejected 对比 + envelope 嵌套)
+ *  - Error 拆 code/message + stack 折叠 + 原始 payload 兜底
+ *  - 顶部 5 列状态条 (状态 Tag / 主题 / 时间 / 收件人数 / 邮件大小)
+ *  - 邮件正文 Tab: 渲染预览 (默认) / HTML 源码
+ *  - 实现: ./MailDetailModal  (page.tsx 不再写 modal 内联)
+ *
  * 视觉 (跟 alarm / server-errors 一致):
  * - 顶部 PageSummary 4 卡 (总数/月/周/日)
  * - 4 维筛选条 + 3 列 Table (收件人 / 主题 / 时间)
  * - flex:1 + scroll.y 撑开 main.scroll-area
  */
 
-import { Button, Input, Modal, Select, Space, Spin, Table, Tag } from 'antd'
+import { Button, Input, Select, Space, Table, Tag } from 'antd'
 import type { ColumnsType } from 'antd/es/table'
 import dayjs from 'dayjs'
 import {
@@ -39,7 +47,7 @@ import { MyDatePickerRange } from '@/components/common/MyDatePickerRange'
 import { PageHeader } from '@/components/common/PageHeader'
 import { PageSummary } from '@/components/common/PageSummary'
 import { EmptyState } from '@/components/common/EmptyState'
-import { DesList } from '@/components/data/DesList'
+import { MailDetailModal } from './_components/MailDetailModal'
 
 // server MAX_PAGE_SIZE = 200 (from midwayuartserver pagination.helper.ts)
 const MAX_ITEMS = 200
@@ -405,36 +413,12 @@ export const LogMail: React.FC = () => {
                 )}
             </div>
 
-            {/* cairui 21:40: 点击行弹 Modal 详情 (mails / sendParams / Success / Error) */}
-            <Modal
-                title="邮件详情"
+            {/* cairui 2026-07-21: 整个 modal 重设计, 改用 MailDetailModal (5 section + iframe HTML 渲染) */}
+            <MailDetailModal
                 open={detailModal.open}
-                onCancel={() => setDetailModal({ open: false, record: null })}
-                footer={null}
-                width={720}
-            >
-                {detailModal.record && (
-                    <>
-                        <DesList title="收件人" data={{ mails: detailModal.record.mails }} />
-                        <DesList title="发送参数" data={detailModal.record.sendParams} />
-                        <DesList
-                            title="结果"
-                            data={{
-                                Success: detailModal.record.Success ?? null,
-                                Error: detailModal.record.Error ?? null,
-                            }}
-                        />
-                        <DesList
-                            title="时间"
-                            data={{
-                                timeStamp: detailModal.record.timeStamp
-                                    ? dayjs(detailModal.record.timeStamp).format('YYYY-MM-DD HH:mm:ss')
-                                    : null,
-                            }}
-                        />
-                    </>
-                )}
-            </Modal>
+                record={detailModal.record}
+                onClose={() => setDetailModal({ open: false, record: null })}
+            />
         </div>
     )
 }
