@@ -185,6 +185,18 @@ redirect('/login')
 - ⚠️ **路由组不能有同级 `page.tsx`**：`(user)/page.tsx` 和 `(admin)/page.tsx` 都解析到 `/` 会报冲突，必须在路由组内加一层真实路径（如 `main/`、`admin/`）
 - **浏览器日志转终端**：`next.config.ts` 中 `logging.browserToTerminal: true` 将所有 `console.*` 转发到终端，调试无需开浏览器
 
+## Next.js 16.3 + cacheComponents 限制（2026-07-21 决策）
+
+- **当前 16.3 已部署** (`next: 16.3.0-preview.6`)，但 `cacheComponents` **故意关闭**（PR #56 注释掉）
+- 原因：**antd v5 内部用了 `Math.random()`** (在 `node_modules/@rc-component/util/lib/getScrollBarSize.js` 等 3 个文件里), 16.3 cacheComponents prerender Client Component 时穿透到 antd 内部, build 报 sync-IO blocker
+- 触发 page: `app/(admin)/admin/feature-flags/page.tsx` (3 个 Modal) + `app/(admin)/admin/node/user/page.tsx` (MigrateUserResourcesModal + Modal.info)
+- **项目代码 0 处 `Math.random` / `Date.now` / module 顶层 `new Date()`** — 都在 event handler / useEffect 内, 合规
+- ⚠️ `export const instant = false` **救不了**这种 sync-IO blocker (skill 文档 §background class 2)
+- ⚠️ Client Component page (`'use client'` 在 page 顶部) **不能 export `instant`** (build error E1344)
+- 拿到的 16.3 baseline (不影响): AGENTS.md agent-rules 自动维护 / Actionable Errors / agent-browser 0.27 / 三个官方 Skills (next-dev-loop / next-cache-components-adoption / next-cache-components-optimizer)
+- **未来解锁 cacheComponents 路线** (3 选 1): 等 antd v6 / 换 shadcn-ui (大工程) / 重构 2 个 page 成 server+client split (4-8h, 副作用是首屏 data 变 client fetch)
+- 重开 cacheComponents 前必看: `next-cache-components-adoption` skill + `references/per-page-decisions.md`
+
 ## 部署 5 步验证链（2026-07-17 标准化）
 
 每次 ship 1 PR 走完 5 步，**任何一步不通过都不放过**：
