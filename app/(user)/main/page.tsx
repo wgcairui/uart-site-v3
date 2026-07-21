@@ -2,14 +2,16 @@
 
 import React, { Suspense, useMemo, useState } from "react";
 import './user.css'
-import { Col, Row, Tabs, Space, Tooltip, Popconfirm, message, Button, Dropdown } from 'antd'
+import { Col, Row, Tabs, Space, Tooltip, Popconfirm, message, Dropdown } from 'antd'
+import { Button } from '@/components/common/Button'
 import { useUserStore } from "@/lib/store/userStore";
 import { devTypeIcon, IconFont } from "@/components/common/IconFont";
-import { CheckCircleFilled, WarningFilled, EyeFilled, EditFilled, DeleteFilled, DownOutlined } from "@ant-design/icons";
+import { EyeFilled, EditFilled, DeleteFilled, DownOutlined } from "@ant-design/icons";
 import { DevCard } from "@/components/data/devCard";
 import { PageSummary } from "@/components/common/PageSummary";
 import { PageHeader } from "@/components/common/PageHeader";
 import { StaggerList } from "@/components/common/StaggerList";
+import { StatusTag } from '@/components/common/StatusTag'
 import Link from "next/link";
 import { useSearchParams, useRouter } from "next/navigation";
 import dayjs from "dayjs";
@@ -116,9 +118,7 @@ const UserIndex: React.FC = (props) => {
                                             <DevCard
                                                 img={devType[el.Type]}
                                                 title={<Space>
-                                                    <Tooltip title={el.online ? '在线' : '离线'}>
-                                                        {el.online ? <CheckCircleFilled style={{ color: "#10b981" }} /> : <WarningFilled style={{ color: "#f59e0b" }} />}
-                                                    </Tooltip>
+                                                    <StatusTag variant={el.online ? 'online' : 'warning'} size="sm" />
                                                     {el.mountDev}
                                                 </Space>}
                                                 avatar={devTypeIcon[el.Type]}
@@ -132,7 +132,7 @@ const UserIndex: React.FC = (props) => {
                             }
                             </StaggerList>
                             <Col span={24} md={12} lg={8} xl={6} xxl={4} key='addDev' className="center">
-                                {/* <Button shape="round" type="primary" onClick={() => setDefalutKey("module")}>添加设备</Button> */}
+                                {/* <Button shape="round" variant="primary" onClick={() => setDefalutKey("module")}>添加设备</Button> */}
                                 <Dropdown menu={{
                                     items: [
                                         { key: "1", label: <Link href="/main/addterminal">透传网关/百事服卡</Link> },
@@ -159,18 +159,16 @@ const UserIndex: React.FC = (props) => {
                                             <DevCard
                                                 img={devDTU[el.PID || 'null']}
                                                 title={<Space>
-                                                    <Tooltip title={el.online ? '在线' : '离线'}>
-                                                        {el.online ? <CheckCircleFilled style={{ color: "#10b981" }} /> : <WarningFilled style={{ color: "#f59e0b" }} />}
-                                                    </Tooltip>
+                                                    <StatusTag variant={el.online ? 'online' : 'warning'} size="sm" />
                                                     {el.name}
                                                 </Space>}
                                                 subtitle={dayjs(el.uptime).format("YY/M/D H:m:s")}
                                                 actions={[
                                                     <Tooltip title="编辑查看">
-                                                        <EyeFilled style={{ color: "#67C23B" }} onClick={() => nav("/main/terminal/" + el.DevMac)} />
+                                                        <EyeFilled style={{ color: 'var(--color-success)' }} onClick={() => nav("/main/terminal/" + el.DevMac)} />
                                                     </Tooltip>,
                                                     <Tooltip title="重命名">
-                                                        <EditFilled style={{ color: "#8b5cf6" }} onClick={() => renameTerminal(el)} />
+                                                        <EditFilled style={{ color: 'var(--color-primary)' }} onClick={() => renameTerminal(el)} />
                                                     </Tooltip>,
                                                     <Tooltip title="删除" >
                                                         <Popconfirm
@@ -178,7 +176,7 @@ const UserIndex: React.FC = (props) => {
                                                             onConfirm={() => delTermianl(el)}
                                                             onCancel={() => message.info('cancel')}
                                                         >
-                                                            <DeleteFilled style={{ color: "#E6A23B" }} />
+                                                            <DeleteFilled style={{ color: 'var(--color-warning)' }} />
                                                         </Popconfirm>
                                                     </Tooltip>
                                                 ]}
@@ -189,7 +187,7 @@ const UserIndex: React.FC = (props) => {
                                 })
                             }
                             <Col span={24} md={12} lg={8} xl={6} xxl={4} key="addModule" className="center">
-                                <Button shape="round" type="primary" size="large" href="/main/addterminal">添加网关</Button>
+                                <Button shape="round" variant="primary" size="large" href="/main/addterminal">添加网关</Button>
                             </Col>
                         </Row>
                     ),

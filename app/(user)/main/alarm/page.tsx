@@ -19,7 +19,6 @@
 
 import React, { useEffect, useMemo, useState } from "react";
 import {
-    Button,
     DatePicker,
     Form,
     Popconfirm,
@@ -27,6 +26,7 @@ import {
     Spin,
     Table,
 } from "antd"
+import { Button } from '@/components/common/Button'
 import {
     BellOutlined,
     CheckCircleOutlined,
@@ -407,8 +407,7 @@ const Alarm: React.FC = () => {
                         onConfirm={confirmAll}
                     >
                         <Button
-                            type="primary"
-                            size="small"
+                            variant="primary"
                             icon={<CheckCircleOutlined />}
                         >
                             确认全部告警
@@ -511,9 +510,7 @@ const Alarm: React.FC = () => {
                                         </span>
                                     ) : !isValidAlarmId(a._id) ? (
                                         <Button
-                                            type="primary"
-                                            danger
-                                            size="small"
+                                            variant="primary"
                                             disabled
                                             title="告警 id 不合法"
                                         >
@@ -521,9 +518,7 @@ const Alarm: React.FC = () => {
                                         </Button>
                                     ) : (
                                         <Button
-                                            type="primary"
-                                            danger
-                                            size="small"
+                                            variant="primary"
                                             onClick={() => confirm(a._id)}
                                         >
                                             确认
@@ -537,7 +532,6 @@ const Alarm: React.FC = () => {
                     <Table
                         className="v3-table"
                         dataSource={generateTableKey(alarms, '_id')}
-                        size="small"
                         pagination={{
                             current: pageReq.page ?? 1,
                             pageSize: pageReq.pageSize ?? 20,
@@ -591,7 +585,7 @@ const Alarm: React.FC = () => {
                                         {val}
                                     </Popconfirm>
                                 ) : (
-                                    <span style={{ color: '#999' }}>{val}</span>
+                                    <span style={{ color: 'var(--ink-400)' }}>{val}</span>
                                 )
                             }
                         />
@@ -633,9 +627,7 @@ const Alarm: React.FC = () => {
                                 if (!isValidAlarmId(record._id)) {
                                     return (
                                         <Button
-                                            type="primary"
-                                            danger
-                                            size="small"
+                                            variant="primary"
                                             disabled
                                             title="告警 id 不合法"
                                         >
@@ -645,9 +637,7 @@ const Alarm: React.FC = () => {
                                 }
                                 return (
                                     <Button
-                                        type="primary"
-                                        danger
-                                        size="small"
+                                        variant="primary"
                                         onClick={() => confirm(record._id)}
                                     >
                                         确认

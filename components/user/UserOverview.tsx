@@ -205,7 +205,7 @@ export function UserOverview({ user, onChange }: UserOverviewProps) {
             width: 32, height: 32, borderRadius: 10,
             background: 'linear-gradient(135deg, var(--brand-500) 0%, var(--accent-500) 100%)',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
-            color: '#fff', fontSize: 16,
+            color: 'var(--bg-panel)', fontSize: 16,
           }}
         >
           <InfoCircleOutlined />

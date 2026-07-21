@@ -1,7 +1,9 @@
 'use client'
 
 import { PlusSquareFilled } from "@ant-design/icons";
-import { Avatar, Button, Col, Descriptions, Divider, Modal, Row, Tag, Image, message, Space, Form } from "antd";
+import { Avatar, Col, Descriptions, Divider, Modal, Row, Tag, Image, message, Space, Form } from "antd";
+import { Button } from '@/components/common/Button'
+import { StatusTag } from '@/components/common/StatusTag'
 import dayjs from "dayjs";
 import React, { useEffect, useState } from "react";
 import { useUserStore } from "@/lib/store/userStore";
@@ -115,13 +117,13 @@ const UserInfo: React.FC = props => {
                             <Descriptions.Item label="组织">{user.company}</Descriptions.Item>
                             <Descriptions.Item label="小程序">{
                                 user.wpId ?
-                                    <Tag color="green">已绑定</Tag>
-                                    : <Button size="small" type="primary" shape="round" onClick={() => showQR("wp")}>点击绑定小程序</Button>
+                                    <StatusTag variant="online" text="已绑定" showDot={false} />
+                                    : <Button variant="primary" shape="round" onClick={() => showQR("wp")}>点击绑定小程序</Button>
                             }</Descriptions.Item>
                             <Descriptions.Item label="公众号">{
                                 user.wxId ?
-                                    <Tag color="green">已绑定</Tag>
-                                    : <Button size="small" type="primary" shape="round" onClick={() => showQR("wx")}>点击绑定公众号</Button>
+                                    <StatusTag variant="online" text="已绑定" showDot={false} />
+                                    : <Button variant="primary" shape="round" onClick={() => showQR("wx")}>点击绑定公众号</Button>
                             }</Descriptions.Item>
                         </Descriptions>
 
@@ -140,7 +142,7 @@ const UserInfo: React.FC = props => {
                                 <PlusSquareFilled style={{ color: "green" }} onClick={addMail} />
                             </Form.Item>
                             <Form.Item >
-                                <Button type="primary" onClick={saveAlarm}>保存配置</Button>
+                                <Button variant="primary" onClick={saveAlarm}>保存配置</Button>
                             </Form.Item>
                         </Form>
                     </Space>
