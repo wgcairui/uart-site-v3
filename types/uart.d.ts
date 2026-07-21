@@ -1484,4 +1484,45 @@ declare namespace Uart {
         by: string;
         at: string;
     }
+
+    /**
+     * 设备心跳 3 层数据 (server 端 src/module/terminal/controller/admin-terminal.controller.ts:138-191)
+     * - realtime: redis `heartbeat:<mac>` 实时 (5min TTL 自动过期)
+     * - transitions: log.terminalEvents kind=TERMINAL_CONNECT/OFFLINE 状态翻转 (30d TTL)
+     * - samples: log.heartbeats 5min 降频采样 (7d TTL)
+     */
+    interface HeartbeatRealtime {
+        online: boolean;
+        /** number|null, redis 存的是 epoch ms (parseInt), TTL 过期为 null */
+        lastHeartbeatAt: number | null;
+        /** redis TTL 倒计时 (秒), 0 = 已过期/无 key */
+        ttlSeconds: number;
+    }
+
+    /** 状态翻转历史 (CONNECT/OFFLINE 实时事件) */
+    interface HeartbeatTransition {
+        kind: 'TERMINAL_CONNECT' | 'TERMINAL_OFFLINE';
+        /** ISO 字符串, mongoose toJSON 默认序列化 */
+        at: string;
+        nodeName?: string;
+        /** TERMINAL_OFFLINE payload 关键字段: lastSeen + reason; CONNECT 含 protocol/pid/mountDev */
+        payload: Record<string, unknown>;
+    }
+
+    /** log.heartbeats 5min 降频采样 */
+    interface HeartbeatSample {
+        at: string;
+        nodeName?: string;
+        /** epoch ms, 心跳原始时间戳 (sampler 写库时的 now) */
+        heartbeatAt: number;
+        /** redis TTL 在 sampler 写库时的剩余秒数 */
+        ttlSeconds: number;
+    }
+
+    interface HeartbeatResponse {
+        mac: string;
+        realtime: HeartbeatRealtime;
+        transitions: HeartbeatTransition[];
+        samples: HeartbeatSample[];
+    }
 }
