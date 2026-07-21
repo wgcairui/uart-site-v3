@@ -79,7 +79,7 @@ function TerminalInner() {
         </a>
         <span style={{ color: 'var(--ink-300)' }}>/</span>
         <a
-          onClick={() => router.push('/main/terminal')}
+          onClick={() => router.push('/main')}
           style={{ cursor: 'pointer', color: 'var(--ink-500)' }}
         >
           终端

@@ -102,7 +102,7 @@ function DevInner() {
                         <Dropdown menu={{
                             items: terminal.mountDevs.map(({ mountDev, pid }) => ({
                                 key: String(pid),
-                                label: <Button type="link" onClick={() => nav('/main/dev/' + terminal.DevMac + pid)}>{mountDev}</Button>
+                                label: <Button type="link" onClick={() => nav('/main/dev/' + encodeURIComponent(terminal.DevMac) + '/' + pid)}>{mountDev}</Button>
                             }))
                         }}>
                             <Button>
