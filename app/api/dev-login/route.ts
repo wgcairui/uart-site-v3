@@ -19,8 +19,9 @@ import CryptoJS from 'crypto-js'
  * 前端点击「开发登录」按钮 → POST /api/dev-login → setCookie + redirect
  */
 
-export const dynamic = 'force-dynamic' // 每次读最新 env
-export const runtime = 'nodejs' // crypto-js 需要 node runtime
+// 注: 16.2 默认就是 nodejs runtime + API route 始终 dynamic, 不需要显式声明
+// 这两行 legacy route segment config 在 16.3 + cacheComponents 下会被拒绝
+// (本 PR 顺手清理, 为 16.3 stable 做准备)
 
 export async function POST(_req: NextRequest) {
   if (process.env.NODE_ENV === 'production') {
