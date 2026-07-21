@@ -443,6 +443,205 @@ declare namespace Uart {
     }
 
     /**
+     * Feature Flag 平台 (server feat/feature-flag-platform 2026-07-21)
+     * 字段名权威源: midwayuartserver/src/module/feature-flag/entity/feature-flag.entity.ts
+     * server 端 search/filters 白名单:
+     *   - search  (regex 模糊, buildMongoFilter): key / description
+     *   - filters (exact $in):                    type / enabled / killSwitch
+     * 评估器内存 LRU cache (TTL 5min), killSwitch 优先级最高
+     * 升级到双发: 加 variants 字段 + evaluator ~80 行, 公共 API 不变
+     */
+    interface UartApprovalRecipient {
+        channel: 'email' | 'sms' | 'feishu_bot';
+        target: string;
+        enabled: boolean;
+    }
+
+    interface UartFeatureFlagDeviceOverride {
+        value: any;
+        until?: number;
+        note?: string;
+    }
+
+    interface UartFeatureFlag {
+        id: string;
+        key: string;
+        description: string;
+        type: 'string' | 'number' | 'boolean';
+        defaultValue: any;
+        killSwitch: boolean;
+        killSwitchReason?: string;
+        perDeviceOverrides: Record<string, UartFeatureFlagDeviceOverride>;
+        severityDurationMap?: {
+            critical: number;
+            warning: number;
+            info: number;
+        };
+        recipients: UartApprovalRecipient[];
+        enabled: boolean;
+        createdBy: string;
+        updatedBy: string;
+        createdAt: number;
+        updatedAt: number;
+    }
+
+    interface UartFeatureFlagListReq {
+        page?: number;
+        pageSize?: number;
+        sortBy?: 'key' | 'updatedAt' | 'createdAt';
+        sortOrder?: 'asc' | 'desc';
+        needTotal?: boolean;
+        search?: {
+            key?: string;
+            description?: string;
+        };
+        filters?: {
+            type?: ('string' | 'number' | 'boolean')[];
+            enabled?: ('true' | 'false')[];
+            killSwitch?: ('true' | 'false')[];
+        };
+    }
+
+    interface UartFeatureFlagCreateDto {
+        key: string;
+        description: string;
+        type: 'string' | 'number' | 'boolean';
+        defaultValue: any;
+        killSwitch?: boolean;
+        killSwitchReason?: string;
+        perDeviceOverrides?: Record<string, UartFeatureFlagDeviceOverride>;
+        severityDurationMap?: {
+            critical: number;
+            warning: number;
+            info: number;
+        };
+        recipients?: UartApprovalRecipient[];
+        enabled?: boolean;
+    }
+
+    interface UartFeatureFlagUpdateDto {
+        description?: string;
+        defaultValue?: any;
+        killSwitch?: boolean;
+        killSwitchReason?: string;
+        perDeviceOverrides?: Record<string, UartFeatureFlagDeviceOverride>;
+        severityDurationMap?: {
+            critical?: number;
+            warning?: number;
+            info?: number;
+        };
+        recipients?: UartApprovalRecipient[];
+        enabled?: boolean;
+    }
+
+    /**
+     * 评估器内部响应 (server evaluateFlag() 返回, 不暴露 HTTP)
+     */
+    interface UartFeatureFlagEvaluation {
+        value: any;
+        killSwitch: boolean;
+        ffSnapshot: {
+            key: string;
+            mode?: 'auto' | 'manual' | 'delayed_auto';
+            value: any;
+            killSwitch: boolean;
+            ts: number;
+        };
+        evaluatedAt: number;
+    }
+
+    /**
+     * 告警审批队列 (server feat/feature-flag-platform 2026-07-21)
+     * 字段名权威源: midwayuartserver/src/module/alert-approval/entity/alert-approval-queue.entity.ts
+     * server 端 search/filters 白名单:
+     *   - search  (regex 模糊): mac / devName (从 alertEvent.devName) / msg (从 alertEvent.msg)
+     *   - filters (exact $in):   mode / status / severity
+     * 状态机: pending → approved/rejected/cancelled/timed_out/auto_sent
+     * killSwitch=true 时 mode=rejected_via_kill_switch + 通知运维
+     */
+    interface UartAlertApprovalNotifiedResult {
+        channel: 'email' | 'sms' | 'feishu_bot';
+        target: string;
+        sentAt: number;
+        success: boolean;
+        errorMessage?: string;
+    }
+
+    interface UartAlertApprovalQueue {
+        id: string;
+        alertEvent: uartAlarmObject;
+        mac: string;
+        pid: number;
+        severity: AlarmSeverity;
+        mode: 'auto' | 'manual' | 'delayed_auto' | 'rejected_via_kill_switch';
+        status: 'pending' | 'approved' | 'rejected' | 'auto_sent' | 'cancelled' | 'timed_out';
+        scheduledAt?: number;
+        approver?: string;
+        approvedAt?: number;
+        rejectReason?: string;
+        cancelReason?: string;
+        recipientsNotified: UartAlertApprovalNotifiedResult[];
+        ffSnapshot: {
+            key: string;
+            mode: 'auto' | 'manual' | 'delayed_auto';
+            value: any;
+            killSwitch: boolean;
+            ts: number;
+        };
+        notifiedAt?: number;
+        createdAt: number;
+        updatedAt: number;
+    }
+
+    interface UartAlertApprovalQueueListReq {
+        page?: number;
+        pageSize?: number;
+        sortBy?: 'createdAt' | 'updatedAt' | 'severity' | 'mac';
+        sortOrder?: 'asc' | 'desc';
+        needTotal?: boolean;
+        search?: {
+            mac?: string;
+            devName?: string;
+            msg?: string;
+        };
+        filters?: {
+            mode?: ('auto' | 'manual' | 'delayed_auto' | 'rejected_via_kill_switch')[];
+            status?: ('pending' | 'approved' | 'rejected' | 'auto_sent' | 'cancelled' | 'timed_out')[];
+            severity?: AlarmSeverity[];
+        };
+    }
+
+    interface UartAlertApprovalDecisionDto {
+        reason?: string;
+    }
+
+    interface UartAlertApprovalBatchDecisionDto {
+        ids: string[];
+        reason?: string;
+    }
+
+    /**
+     * 审批统计 (server GET /api/v2/admin/alert-approvals/stats)
+     */
+    interface UartAlertApprovalStats {
+        pending: number;
+        approved: number;
+        rejected: number;
+        autoSent: number;
+        cancelled: number;
+        timedOut: number;
+        bySeverity: {
+            critical: number;
+            warning: number;
+            info: number;
+        };
+        last24h: {
+            created: number;
+            decided: number;
+        };
+    }
+
+    /**
      * 邮件日志列表请求 (server feat/mail-sms-filter-ui 20:13)
      * 字段名权威源: midwayuartserver/src/module/log/controller/admin-log.controller.ts listMailLogs
      * server 端 search/filters 白名单 (cairui 20:13 拍 4 维筛选):
