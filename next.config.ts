@@ -2,6 +2,11 @@ import type { NextConfig } from 'next'
 
 const nextConfig: NextConfig = {
   output: 'standalone',
+  // 16.3 AI tooling baseline 已就位 (AGENTS.md auto-update / Actionable Errors / Skills)
+  // cacheComponents 暂不开启: 路由级收编需要 next-cache-components-adoption skill 逐 feature 推进
+  // 当前 2 个 page 用了 Math.random() 在 Client Component 顶层 (feature-flags + node/user),
+  // 后续跑 adoption skill 单独处理
+  // cacheComponents: true,
   logging: {
     browserToTerminal: true,
   },
