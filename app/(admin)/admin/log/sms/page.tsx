@@ -42,6 +42,7 @@ import {
     logsmssendsCountInfo,
     logSmsTimeBucket,
     getUserAlarmSetups,
+    BindDev,
 } from '@/lib/api/fetchRoot'
 import { generateTableKey } from '@/lib/utils/tableCommon'
 import { usePromise } from '@/lib/hooks/usePromise'
@@ -249,8 +250,42 @@ export const LogSms: React.FC = () => {
             return { user: el.user, map, count }
         })
     }, [users, smsMap])
-    const enrichedTotal = enriched.reduce((p, c) => p + c.count, 0)
-    const enrichedAvg = enriched.length > 0 ? Math.round(enrichedTotal / enriched.length) : 0
+
+    // cairui 22:07: 短信消耗分布重设计
+    //   1) 过滤掉 count=0 的用户 (没消耗不显示)
+    //   2) 按 count 降序排 (消耗多在前)
+    //   3) 列出设备 (用 BindDev 接口拿)
+    const enrichedFiltered = useMemo(() => {
+        return enriched
+            .filter((u) => u.count > 0)
+            .sort((a, b) => b.count - a.count)
+    }, [enriched])
+
+    // 预拉所有用户绑定的设备 (并行 BindDev, 1 次 N+1 拉取)
+    // Map<user, Terminal[]>, 主表"设备数"列 + 展开行设备列表都用
+    const [userDevices, setUserDevices] = useState<Map<string, Uart.Terminal[]>>(new Map())
+    useEffect(() => {
+        let cancelled = false
+        const targets = enrichedFiltered.map((u) => u.user)
+        if (targets.length === 0) {
+            setUserDevices(new Map())
+            return () => { cancelled = true }
+        }
+        Promise.all(
+            targets.map((u) =>
+                BindDev(u)
+                    .then((res) => [u, (res.data as any)?.UTs || []] as [string, Uart.Terminal[]])
+                    .catch(() => [u, []] as [string, Uart.Terminal[]])
+            )
+        ).then((entries) => {
+            if (cancelled) return
+            setUserDevices(new Map(entries))
+        })
+        return () => { cancelled = true }
+    }, [enrichedFiltered])
+
+    const enrichedTotal = enrichedFiltered.reduce((p, c) => p + c.count, 0)
+    const enrichedAvg = enrichedFiltered.length > 0 ? Math.round(enrichedTotal / enrichedFiltered.length) : 0
 
     // 桌面分页切片 (短信日志 Table)
     const pagedItems = useMemo(() => {
@@ -520,23 +555,24 @@ export const LogSms: React.FC = () => {
                     </Button>
                 </Space>
 
-                {enriched.length === 0 && !userLoading ? (
+                {enrichedFiltered.length === 0 && !userLoading ? (
                     <EmptyState
-                        description="暂无用户短信消耗数据"
+                        description={enriched.length > 0 ? '当前页用户均无短信消耗' : '暂无用户短信消耗数据'}
                         secondaryLabel="刷新"
                         onSecondary={() => refetchUsers()}
                     />
                 ) : (
                     <Table
                         className="v3-table"
-                        dataSource={generateTableKey(enriched, 'user')}
+                        dataSource={generateTableKey(enrichedFiltered, 'user')}
                         loading={userLoading}
                         pagination={{
                             current: userPage,
                             pageSize: userPageSize,
-                            total: userPagination.total,
-                            showTotal: (t) => `共 ${t} 个用户`,
+                            total: enrichedFiltered.length,
+                            showTotal: (t) => `共 ${t} 个有消耗用户 (已过滤无消耗)`,
                             showSizeChanger: true,
+                            pageSizeOptions: [20, 30, 50, 100],
                             onChange: (pag: any) => {
                                 setUserPage(pag.current ?? 1)
                                 setUserPageSize(pag.pageSize ?? 20)
@@ -550,33 +586,72 @@ export const LogSms: React.FC = () => {
                             },
                             {
                                 dataIndex: 'count',
-                                title: '合计',
-                                width: 100,
+                                title: '短信消耗',
+                                width: 110,
                                 defaultSortOrder: 'descend',
                                 sorter: (a: any, b: any) => a.count - b.count,
+                                render: (v: number) => (
+                                    <span style={{ color: 'var(--brand-500)', fontWeight: 600 }}>{v}</span>
+                                ),
+                            },
+                            {
+                                key: 'devices',
+                                title: '设备',
+                                width: 90,
+                                render: (_, r: any) => {
+                                    const devs = userDevices.get(r.user) || []
+                                    if (devs.length === 0) return <span style={{ color: 'var(--ink-500)' }}>—</span>
+                                    return <Tag color="blue" style={{ margin: 0 }}>{devs.length} 台</Tag>
+                                },
+                            },
+                            {
+                                key: 'tels',
+                                title: '告警手机',
+                                width: 100,
+                                render: (_, r: any) => (
+                                    <Tag color="purple" style={{ margin: 0 }}>{r.map.length} 个</Tag>
+                                ),
                             },
                         ]}
                         expandable={{
-                            expandedRowRender: (re: any) => (
-                                <div className="bento-card" style={{ padding: 16 }}>
-                                    <Divider plain>用户信息</Divider>
-                                    <UserDes user={re.user}></UserDes>
-                                    <Divider plain>使用情况</Divider>
-                                    <Table
-                                        className="v3-table"
-                                        dataSource={generateTableKey(re.map, 'tel')}
-                                        columns={[
-                                            { dataIndex: 'tel', title: '告警手机', width: 200 },
-                                            {
-                                                dataIndex: 'count',
-                                                title: '次数',
-                                                defaultSortOrder: 'descend',
-                                                sorter: (a: any, b: any) => a.count - b.count,
-                                            },
-                                        ]}
-                                    />
-                                </div>
-                            ),
+                            expandedRowRender: (re: any) => {
+                                const devs = userDevices.get(re.user) || []
+                                return (
+                                    <div className="bento-card" style={{ padding: 16 }}>
+                                        <Divider plain>用户信息</Divider>
+                                        <UserDes user={re.user}></UserDes>
+                                        <Divider plain>设备列表 ({devs.length} 台)</Divider>
+                                        {devs.length === 0 ? (
+                                            <EmptyState description="该用户未绑定设备" />
+                                        ) : (
+                                            <Table
+                                                className="v3-table"
+                                                rowKey="DevMac"
+                                                dataSource={generateTableKey(devs as any, 'DevMac')}
+                                                columns={[
+                                                    { dataIndex: 'name', title: '设备名', width: 200, render: (v: string, r: any) => v || r.DevMac },
+                                                    { dataIndex: 'DevMac', title: 'MAC', width: 160, render: (v: string) => <code style={{ fontSize: 12 }}>{v}</code> },
+                                                    { dataIndex: 'mountNode', title: '挂载节点', width: 140 },
+                                                ]}
+                                            />
+                                        )}
+                                        <Divider plain>告警手机使用情况</Divider>
+                                        <Table
+                                            className="v3-table"
+                                            dataSource={generateTableKey(re.map, 'tel')}
+                                            columns={[
+                                                { dataIndex: 'tel', title: '告警手机', width: 200 },
+                                                {
+                                                    dataIndex: 'count',
+                                                    title: '次数',
+                                                    defaultSortOrder: 'descend',
+                                                    sorter: (a: any, b: any) => a.count - b.count,
+                                                },
+                                            ]}
+                                        />
+                                    </div>
+                                )
+                            },
                         }}
                     />
                 )}
