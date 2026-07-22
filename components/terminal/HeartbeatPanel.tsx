@@ -130,6 +130,53 @@ export function HeartbeatPanel({ mac }: Props) {
         : '—'
     const ttlColor = !online ? '#ef4444' : ttlRemain < 60 ? '#f59e0b' : '#10b981'
 
+    // 设备协议: 从 transitions 最新一条 TERMINAL_CONNECT 的 payload.protocol 推断
+    // (server 端 mongo log.terminalEvents.kind=TERMINAL_CONNECT 注入 protocol 字段)
+    // - "reline"     → DTU 直连 (走 socket/HTTP 到 mid, 不触发 PESIV 5min heartbeat 通道)
+    // - "Pesiv卡"    → PESIV 网设备 (5min heartbeat 通道触发)
+    // - 其他/无      → 协议未知 (展示为默认 PESIV 网语义, 等 server 补字段)
+    const lastProtocol = useMemo<string | null>(() => {
+        if (!data?.transitions?.length) return null
+        for (const t of data.transitions) {
+            if (t.kind === 'TERMINAL_CONNECT' && t.payload) {
+                const p = (t.payload as Record<string, unknown>).protocol
+                if (typeof p === 'string' && p) return p
+            }
+        }
+        return null
+    }, [data?.transitions])
+
+    // protocol badge 渲染配置: 文案 / 颜色 / tooltip
+    const protocolBadge = useMemo(() => {
+        if (lastProtocol === 'reline') {
+            return {
+                text: 'DTU 直连',
+                color: 'blue',
+                tooltip:
+                    '设备通过 DTU 直连协议 (reline) 上发数据,经节点 socket 转发到 mid。\n' +
+                    '此通道**不触发** PESIV 5min heartbeat sampler,所以"实时连接"字段始终为离线。\n' +
+                    '设备实际在线情况请参考 §2 状态历史 (CONNECT 记录) 与设备数据上报。',
+            }
+        }
+        if (lastProtocol === 'Pesiv卡' || lastProtocol === 'pesiv') {
+            return {
+                text: 'PESIV 卡',
+                color: 'green',
+                tooltip:
+                    '设备通过 PESIV 网卡 (UDP heartbeat) 上发,5min 周期触发 sampler 写 redis key + log.heartbeats。\n' +
+                    '"实时连接"字段反映 PESIV 心跳是否在 5min TTL 内。',
+            }
+        }
+        if (lastProtocol) {
+            return {
+                text: lastProtocol,
+                color: 'default',
+                tooltip: `设备协议 ${lastProtocol} (非 reline / 非 PESIV 卡,见 §2 CONNECT 记录详情)`,
+            }
+        }
+        return null
+    }, [lastProtocol])
+
     // samples 衍生: 距今秒数 (越小越新)
     const samplesSorted = useMemo(() => {
         if (!data?.samples) return []
@@ -196,6 +243,23 @@ export function HeartbeatPanel({ mac }: Props) {
                             <span style={{ fontSize: 11, color: 'var(--ink-500)', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
                                 Realtime · Redis
                             </span>
+                            {protocolBadge && (
+                                <Tooltip
+                                    title={<div style={{ whiteSpace: 'pre-line', lineHeight: 1.55 }}>{protocolBadge.tooltip}</div>}
+                                    placement="bottomLeft"
+                                >
+                                    <Tag
+                                        color={protocolBadge.color}
+                                        style={{
+                                            margin: 0, marginLeft: 4, fontSize: 10,
+                                            padding: '0 6px', lineHeight: '18px',
+                                            cursor: 'help',
+                                        }}
+                                    >
+                                        {protocolBadge.text}
+                                    </Tag>
+                                </Tooltip>
+                            )}
                         </div>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
                             <span
@@ -228,7 +292,7 @@ export function HeartbeatPanel({ mac }: Props) {
                                 </div>
                             </div>
                         </div>
-                        {/* 空状态说明: redis 无 heartbeat key (PESIV 实时未上报) 时, 给用户解释根因 */}
+                        {/* 空状态说明: redis 无 heartbeat key 时, 按 protocol 区分文案 */}
                         {!online && !realtime?.lastHeartbeatAt && (
                             <div style={{
                                 marginTop: 10,
@@ -240,7 +304,22 @@ export function HeartbeatPanel({ mac }: Props) {
                                 color: 'var(--ink-500)',
                                 lineHeight: 1.5,
                             }}>
-                                设备未上 PESIV 网,无实时心跳 (redis 无 <code style={{ fontSize: 10 }}>heartbeat:{mac}</code> key)
+                                {lastProtocol === 'reline' ? (
+                                    <>
+                                        DTU 直连设备不走 PESIV 5min heartbeat 通道,
+                                        <code style={{ fontSize: 10 }}>heartbeat:{mac}</code> 永不存在 (预期行为)。
+                                        设备实际在线情况请看 §2 状态历史 + 设备数据上报。
+                                    </>
+                                ) : lastProtocol === 'Pesiv卡' || lastProtocol === 'pesiv' ? (
+                                    <>
+                                        PESIV 设备未上 PESIV 网,redis 无 <code style={{ fontSize: 10 }}>heartbeat:{mac}</code> key。
+                                        检查设备网卡 / SIM 卡 / PESIV 节点覆盖。
+                                    </>
+                                ) : (
+                                    <>
+                                        设备未上 PESIV 网,无实时心跳 (redis 无 <code style={{ fontSize: 10 }}>heartbeat:{mac}</code> key)
+                                    </>
+                                )}
                             </div>
                         )}
                     </div>
