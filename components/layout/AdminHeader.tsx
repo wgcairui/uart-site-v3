@@ -50,7 +50,8 @@ export function AdminHeader() {
   }, [pathname])
 
   // 当前页 (面包屑最后一段) — mobile 端用, desktop 隐藏
-  const currentTitle = crumbs.length > 0 ? crumbs[crumbs.length - 1].label : ''
+  // 用 at(-1)?.label 避开 noUncheckedIndexedAccess 模式下 array[idx] 可能 undefined 的类型报错
+  const currentTitle = crumbs.at(-1)?.label ?? ''
 
   return (
     <header className="app-topbar">
