@@ -98,7 +98,10 @@ export function HeartbeatPanel({ mac }: Props) {
         }
     }
 
-    // 初次 + realtime 5s poll + transitions/samples 30s poll
+    // 初次 + 5s poll (server 1 个 endpoint 返所有 3 层数据, 不需要双 interval)
+    // 之前有 fast(5s realtime) + slow(30s transitions/samples) 双 interval,
+    // 但 endpoint 一次返回 realtime+transitions+samples 全量, 30s slow 冗余
+    // 简化后: 1 小时 720 req (5s 间隔) vs 之前 840 req (5s+30s 混合) = 减少 14%
     useEffect(() => {
         let cancelled = false
         const initial = async () => {
@@ -106,12 +109,10 @@ export function HeartbeatPanel({ mac }: Props) {
             if (cancelled) return
         }
         initial()
-        const fast = setInterval(() => fetchData(false), 5000)
-        const slow = setInterval(() => fetchData(false), 30000)
+        const poll = setInterval(() => fetchData(false), 5000)
         return () => {
             cancelled = true
-            clearInterval(fast)
-            clearInterval(slow)
+            clearInterval(poll)
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [mac])
