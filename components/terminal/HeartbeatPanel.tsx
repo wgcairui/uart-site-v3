@@ -228,6 +228,21 @@ export function HeartbeatPanel({ mac }: Props) {
                                 </div>
                             </div>
                         </div>
+                        {/* 空状态说明: redis 无 heartbeat key (PESIV 实时未上报) 时, 给用户解释根因 */}
+                        {!online && !realtime?.lastHeartbeatAt && (
+                            <div style={{
+                                marginTop: 10,
+                                padding: '8px 10px',
+                                borderRadius: 8,
+                                background: 'rgba(100, 116, 139, 0.08)',
+                                border: '1px solid rgba(100, 116, 139, 0.15)',
+                                fontSize: 11,
+                                color: 'var(--ink-500)',
+                                lineHeight: 1.5,
+                            }}>
+                                设备未上 PESIV 网,无实时心跳 (redis 无 <code style={{ fontSize: 10 }}>heartbeat:{mac}</code> key)
+                            </div>
+                        )}
                     </div>
                 </div>
 
