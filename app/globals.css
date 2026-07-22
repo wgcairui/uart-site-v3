@@ -1338,6 +1338,42 @@ html, body {
 }
 
 /* =============================================================
+ * user detail page (admin/node/user/info/[user]) 移动端响应式
+ * 2026-07-17 · fix/user-page-mobile
+ * - 8+4 grid (UserOverview + UserActions) 在 < 1024px stack
+ * - UserOverview 内部 3-col KV 在窄屏降为 2-col 或 1-col, 避免截断
+ * ============================================================= */
+
+.user-detail-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 20px;
+  margin-bottom: 20px;
+}
+@media (min-width: 1024px) {
+  .user-detail-grid {
+    grid-template-columns: 2fr 1fr;
+  }
+}
+
+.user-overview-kv {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 4px 0;
+}
+@media (min-width: 640px) {
+  .user-overview-kv {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 4px 18px;
+  }
+}
+@media (min-width: 1024px) {
+  .user-overview-kv {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+/* =============================================================
  * TrendChart v3 · 24h area chart (hybrid Page B)
  * ============================================================= */
 
