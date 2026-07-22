@@ -17,6 +17,7 @@ import { RelatedAssetsSection } from "@/components/terminal/RelatedAssetsSection
 import { DebugConsole } from "@/components/terminal/DebugConsole";
 import { MonitorCenter } from "@/components/log/MonitorCenter";
 import { AutomationCenter } from "@/components/terminal/AutomationCenter";
+import { HeartbeatPanel } from "@/components/terminal/HeartbeatPanel";
 
 type TabKey = 'debug' | 'monitor' | 'automation'
 
@@ -134,7 +135,12 @@ function TerminalDetailPageInner() {
                         </div>
                     </div>
 
-                    {/* §2 Overview + Actions (12-col grid) */}
+                    {/* §2 Heartbeat 3 层 (实时 / 状态历史 / 长期心跳) — feat/terminal-heartbeat-ui 2026-07-21 ship */}
+                    <div style={{ marginBottom: 20 }}>
+                        <HeartbeatPanel mac={data.DevMac} />
+                    </div>
+
+                    {/* §3 Overview + Actions (12-col grid) */}
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(12, 1fr)', gap: 20, marginBottom: 20 }}>
                         <div style={{ gridColumn: 'span 8', minHeight: 360 }}>
                             <TerminalOverview terminal={data} onChange={fecth} />
@@ -144,7 +150,7 @@ function TerminalDetailPageInner() {
                         </div>
                     </div>
 
-                    {/* §3 关联资产 (合并挂载设备 + 绑定用户, 6+6 col) */}
+                    {/* §4 关联资产 (合并挂载设备 + 绑定用户, 6+6 col) */}
                     <div style={{ marginBottom: 20 }}>
                         <RelatedAssetsSection
                             mac={data.DevMac}
@@ -155,7 +161,7 @@ function TerminalDetailPageInner() {
                         />
                     </div>
 
-                    {/* §4 Tabs: 调试 (默认) / 监控 / 自动化 */}
+                    {/* §5 Tabs: 调试 (默认) / 监控 / 自动化 */}
                     <div className="bento-card" style={{ padding: 24, marginBottom: 20 }}>
                         <Tabs
                             activeKey={tab}
