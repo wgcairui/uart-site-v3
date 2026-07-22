@@ -486,6 +486,49 @@ interface KVListProps {
 | `devUseTime` | 使用时长统计 |
 | **新组件**（v2）：`UserProfileHero` | user 端"我的"页面顶部 hero（Bento 风格） |
 
+### 3.7 AI 域（PR #44 整合 / 2026-07-17）
+
+AI 工具（生成 / 修改 / Dry-run）全部整合进 `admin/node/protocols/*` 域。**不要再创建 `/admin/ai/*` 独立页面或菜单 group**（已 308 永久重定向）。
+
+#### 共享组件（`components/ai/*`）
+
+| 组件 | 用途 | 备注 |
+|---|---|---|
+| `AiWorkspace` | 上下分栏布局容器（topBar + left + right） | 协议详情页的 chat / generate tab 用 |
+| `ChatPane` | **消息 + 内置 Sender**（@ant-design/x `Sender`） | **Sender 是 ChatPane 一部分，不要在外层再塞 inputForm**（PR #45 踩坑） |
+| `ProtocolPreviewForm` | 协议 JSON 预览 form（`mode="chat" \| "generate"`） | 跟右侧 chat 流同步 |
+| `StatsPane` | 顶部紫渐变 hero（实时仪表 / Token / 延迟 / 指令 / 工具计数） | `waiting stream 启动…` 是 stream 未启动初始态 |
+
+#### 业务 tab 组件（`components/protocol/*`）
+
+| 组件 | 用途 | 挂载位置 |
+|---|---|---|
+| `ProtocolAiChatTab` | 「AI 修改」tab：chat 流式编辑协议 | 协议详情页第 8 tab |
+| `ProtocolAiDryRunTab` | 「Dry-run」tab：参数化 dry-run + 3 KPI | 协议详情页第 9 tab |
+| ~~`/admin/ai/chat/[name]`~~ | **已删**（重定向到协议详情 aiChat tab） | — |
+| ~~`/admin/ai/dry-run`~~ | **已删**（重定向到协议详情 tab 默认） | — |
+| `/admin/node/protocols/generate` | 「AI 生成」独立 page（菜单保留） | admin 端协议 group 菜单 |
+
+#### 视觉规则
+
+```tsx
+// 协议详情页 tab 顺序（改后 9 tab）：
+1. 采集指令 / 2. 操作指令 / 3. 常量配置 / 4. 显示参数 / 5. 阈值配置
+6. 状态配置 / 7. AI 推断 / 8. AI 修改 (NEW) / 9. Dry-run (NEW)
+```
+
+- **TopBar 紫渐变**：从 `#1e1b4b` 0% → `#312e81` 60% → `#6d28d9` 100%（深紫 aurora），加 4 个 KPI 槽（实时仪表 / Token / 延迟 / 指令·工具）
+- **左侧 ChatPane**：消息 + Sender；user/assistant/tool/saved/error/system 6 种 role bubble
+- **右侧 ProtocolPreviewForm**：深色半透明 Bento，串字段实时绑定 LLM tool_delta JSON
+- **`key={protocolName}` 强制 remount**：协议切换时彻底 reset chat 流（避免 A 协议 stream 污染 B 协议 state）
+
+#### 已知陷阱（PR #45 踩坑修复后写入）
+
+- **❌ 不要在 chat tab 外层再写一个 inputForm**（`<Input + 发送按钮>`）。ChatPane 底部已经有 Sender，再塞一个会形成**双 input**且 onSubmit 容易传 `() => undefined` no-op，导致下方按钮永远点不动
+- **❌ ChatPane 的 onSubmit 必须接真 handler**（如 `submitChat`），不能传空函数。Sender 内部会调 `onSubmit(v)`，no-op 等于"按钮坏了"
+- **❌ 不要在 ChatPane 输入框 placeholder 写误导文本**。ChatPane Sender placeholder 是 hardcode `"输入修改诉求后回车提交"`，外层塞的 inputForm placeholder 会被用户误认为 Sender 的提示
+- **✅ ChatPane Sender 没内置 abort 按钮**（跟 generate tab 行为一致）。如要 abort 单独提 PR 给 ChatPane 加 `onAbort` prop
+
 ---
 
 ## 4. 新组件开发规范
@@ -607,6 +650,12 @@ export default MyComponent
 - [ ] 用 Socket.IO → 必须加
 - [ ] 纯展示 + 无交互 → 可以不加（但实际项目里几乎都用 antd，所以默认加）
 
+### 5.3.1 共享 UI 组件的双 input 陷阱（PR #45）
+
+- [ ] **用 `ChatPane` 时不要在外层再塞 inputForm**。`ChatPane` 底部有内置 `<Sender>`，外层再写 `<Input + 发送按钮>` 会出现两个 input，第二个还会因为 `onSubmit={() => undefined}` no-op 永远点不动（PR #45 修法：删外层 inputForm，传 `onSubmit={submitChat}` 给 ChatPane）
+- [ ] **`ChatPane` 的 `onSubmit` 必须接真 handler**。空函数 / `() => undefined` 等于把整个 Sender 弄成"按钮坏了"
+- [ ] **同 design 系统组件复用前必读 §3 对应域**。`components/ai/AiWorkspace / ChatPane / StatsPane / ProtocolPreviewForm` 是 AI 域共享的，不要绕过它们自写一遍
+
 ### 5.4 性能
 
 - [ ] 列表用了 `rowKey`（否则 antd 会用 index 报警告）
@@ -633,6 +682,28 @@ PageHeader
 PageSummary
   ← 几乎所有列表页（KPI 概览）
   → BentoCard（每个 item 一个）
+
+# AI 域（PR #44 起）
+AiWorkspace
+  ← 协议详情页 (info) 的 chat / generate tab 顶层布局
+  → topBar: StatsPane + left: ChatPane + right: ProtocolPreviewForm
+
+ChatPane
+  ← ProtocolAiChatTab（AI 修改 tab）
+  ← /admin/node/protocols/generate（AI 生成 page）
+  → onSubmit 必须接真 handler（PR #45 修复）
+
+ProtocolPreviewForm
+  ← ProtocolAiChatTab / generate page
+  → mode="chat" 时只读预览；mode="generate" 时可编辑
+
+StatsPane
+  ← ProtocolAiChatTab（实时仪表 / Token / 延迟 / 工具计数）
+  ← /admin/node/protocols/generate
+
+ProtocolAiChatTab / ProtocolAiDryRunTab
+  ← 协议详情页 info Tabs（Tab key="aiChat" / "dryRun"）
+  → key={protocolName} 强制协议切换 remount
 
 BentoCard
   ← PageSummary 内部 / 列表页主容器 / 详情页数据区

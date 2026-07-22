@@ -21,6 +21,9 @@ export const SendProcotolInstructSet = (query: Omit<Uart.instructQuery, "type" |
 export const addListenMac = (mac: string) => Post<universalResult<string[]>>(`/api/v2/admin/terminals/${encodeURIComponent(mac)}/listen`, {})
 export const delListenMac = (mac: string) => Del<universalResult<string[]>>(`/api/v2/admin/terminals/${encodeURIComponent(mac)}/listen`)
 export const cleanListenMac = () => Del<universalResult<void>>('/api/v2/admin/terminals/listen/all')
+/** 设备心跳 3 层数据 (realtime + transitions + samples) — server 端 admin-terminal.controller.ts:138-191 */
+export const getTerminalHeartbeat = (mac: string) =>
+  Get<universalResult<Uart.HeartbeatResponse>>(`/api/v2/admin/terminals/${encodeURIComponent(mac)}/heartbeat`)
 
 // ─── Admin: Registered Devices  (/api/v2/admin/register-devs) ─────────────────
 

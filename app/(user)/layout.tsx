@@ -97,8 +97,8 @@ export default function UserLayout({ children }: { children: React.ReactNode }) 
                             <IconFont type="icon-tixingshixin" /> 告警管理
                         </a>
                         <a
-                            onClick={() => nav('/main/user')}
-                            className={`app-topbar-menu-item ${pathname?.startsWith('/main/user') ? 'active' : ''}`}
+                            onClick={() => nav('/main/userinfo')}
+                            className={`app-topbar-menu-item ${pathname?.startsWith('/main/userinfo') ? 'active' : ''}`}
                         >
                             用户信息
                         </a>
@@ -119,7 +119,7 @@ export default function UserLayout({ children }: { children: React.ReactNode }) 
                     >
                         <IconFont type="icon-changjingguanli" />
                     </button>
-                    <UserDropDown userPage="/main/user" />
+                    <UserDropDown userPage="/main/userinfo" />
                 </div>
             </header>
 
@@ -154,8 +154,8 @@ export default function UserLayout({ children }: { children: React.ReactNode }) 
                             <IconFont type="icon-tixingshixin" /> 告警管理
                         </a>
                         <a
-                            onClick={() => { setMobileNavOpen(false); nav('/main/user') }}
-                            className={`app-topbar-menu-item ${pathname?.startsWith('/main/user') ? 'active' : ''}`}
+                            onClick={() => { setMobileNavOpen(false); nav('/main/userinfo') }}
+                            className={`app-topbar-menu-item ${pathname?.startsWith('/main/userinfo') ? 'active' : ''}`}
                             style={{ padding: '12px 14px' }}
                         >
                             用户信息

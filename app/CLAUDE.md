@@ -37,21 +37,50 @@ app/
     ├── rootmain.css        # admin 布局样式（文件名带 root 是历史遗留，不要重命名除非配套 import 一起改）
     └── admin/              # ⚠️ 必须有此层
         ├── page.tsx        # /admin（管理员首页）
-        ├── node/           # /admin/node/...（设备管理，10 个页面）
+        ├── node/           # /admin/node/...（设备管理，11 个页面）
         │   ├── protocols/page.tsx
-        │   ├── protocols/info/page.tsx
+        │   ├── protocols/info/page.tsx          # 协议详情，含 9 tab（含 AI 修改 / Dry-run）
+        │   ├── protocols/generate/page.tsx      # AI 生成（PR-2 / 2026-07-17 整合自 /admin/ai/generate）
         │   ├── devmodel/page.tsx
         │   ├── nodes/page.tsx
         │   ├── terminal/page.tsx
         │   ├── terminal/[mac]/page.tsx
         │   ├── terminal/devline/page.tsx
-        │   ├── terminal/register/page.tsx
+        │   ├── terminal/health/page.tsx
         │   ├── user/page.tsx
         │   └── user/info/page.tsx
         ├── log/            # /admin/log/...（日志管理，12 个页面）
         ├── wx/             # /admin/wx/...（微信管理，2 个页面）
         └── data/           # /admin/data/...（数据管理，4 个页面）
 ```
+
+## AI 域整合（2026-07-17 · PR #44 + #45）
+
+AI 工具 3 个页面（chat / dry-run / generate）全部归并到「协议」域，**`/admin/ai/*` 不再有任何 page.tsx**。5 个老 URL 通过 `next.config.ts` `redirects()` 永久重定向（Next.js 实际返 308，语义跟 301 一致：永久 + 保留 method）：
+
+| 老 URL | 新 URL | 备注 |
+|---|---|---|
+| `/admin/ai` | `/admin/node/protocols/generate` | 索引页 → 生成 |
+| `/admin/ai/generate` | `/admin/node/protocols/generate` | 1:1 整页迁移 |
+| `/admin/ai/chat` | `/admin/node/protocols` | chat 列表 → 协议列表（先选协议） |
+| `/admin/ai/chat/:name` | `/admin/node/protocols/info?Protocol=:name&tab=aiChat` | 直接进协议详情 AI 修改 tab |
+| `/admin/ai/dry-run` | `/admin/node/protocols` | dry-run 列表 → 协议列表（dry-run 需绑协议） |
+
+**新 tab 顺序**（协议详情页 info，9 tab）：
+
+1. 采集指令 · 2. 操作指令 · 3. 常量配置 · 4. 显示参数 · 5. 阈值配置 · 6. 状态配置 · 7. AI 推断 · 8. **AI 修改（NEW）** · 9. **Dry-run（NEW）**
+
+**新增组件**（`components/protocol/*`）：
+- `ProtocolAiChatTab`：AI 修改 tab 容器（chat 流式编辑协议）
+- `ProtocolAiDryRunTab`：Dry-run tab 容器（参数化 dry-run + 3 KPI）
+
+**AI 域共享组件**（`components/ai/*`）：`AiWorkspace` / `ChatPane` / `ProtocolPreviewForm` / `StatsPane`。详见 `docs/components.md` §3.7。
+
+**菜单**：「AI 工具」group 已删，`生成` 入口移到「协议」group 下，指向 `/admin/node/protocols/generate`。
+
+**踩坑 (PR #45)**：`ProtocolAiChatTab` 写时在 ChatPane 外层塞了 `<Input + 发送按钮>`（inputFormNode），跟 ChatPane 底部内置 Sender 形成双 input，且 `onSubmit={() => undefined}` 是 no-op 导致下面那个 Sender 永远点不动。修法：删 inputFormNode，`onSubmit={submitChat}`。详见 `docs/components.md` §5.3.1。
+
+---
 
 ## 渲染策略
 

@@ -13,6 +13,7 @@ import {
 import { getTerminal } from '@/lib/api/fetch'
 import { TerminalMountDevs } from '@/components/terminal/TerminalMountDevs'
 import { TerminalOverview } from '@/components/terminal/TerminalOverview'
+import { StatusTag } from '@/components/common/StatusTag'
 import { usePromise } from '@/lib/hooks/usePromise'
 import { useNav } from '@/lib/hooks/useNav'
 
@@ -43,7 +44,7 @@ function TerminalInner() {
 
   if (!terminal) {
     return (
-      <div className="bg-bento-canvas" style={{ padding: 80, textAlign: 'center', color: '#999' }}>
+      <div className="bg-bento-canvas" style={{ padding: 80, textAlign: 'center', color: 'var(--ink-400)' }}>
         <Empty description="找不到该终端的数据" />
       </div>
     )
@@ -79,7 +80,7 @@ function TerminalInner() {
         </a>
         <span style={{ color: 'var(--ink-300)' }}>/</span>
         <a
-          onClick={() => router.push('/main/terminal')}
+          onClick={() => router.push('/main')}
           style={{ cursor: 'pointer', color: 'var(--ink-500)' }}
         >
           终端
@@ -94,8 +95,8 @@ function TerminalInner() {
         style={{
           marginBottom: 20,
           padding: '20px 28px',
-          background: 'linear-gradient(135deg, #1e1b4b 0%, #312e81 60%, #6d28d9 100%)',
-          color: '#fff',
+          background: 'var(--aurora-gradient, linear-gradient(135deg, #1e1b4b 0%, #312e81 60%, #6d28d9 100%))',
+          color: 'var(--bg-panel)',
           border: 'none',
           position: 'relative',
           overflow: 'hidden',
@@ -111,7 +112,7 @@ function TerminalInner() {
         />
         <div style={{ position: 'relative', zIndex: 1, display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 16 }}>
           <div style={{ minWidth: 0 }}>
-            <h2 style={{ fontSize: 22, fontWeight: 600, letterSpacing: '-0.02em', color: '#fff', margin: 0, lineHeight: 1.3 }}>
+            <h2 style={{ fontSize: 22, fontWeight: 600, letterSpacing: '-0.02em', color: 'var(--bg-panel)', margin: 0, lineHeight: 1.3 }}>
               {terminal.name || terminal.DevMac}
             </h2>
             <div style={{ fontFamily: 'var(--font-mono)', fontSize: 12, color: 'rgba(255,255,255,0.7)', marginTop: 4 }}>
@@ -135,20 +136,11 @@ function TerminalInner() {
               ) : null}
             </div>
           </div>
-          <span
-            style={{
-              display: 'inline-flex', alignItems: 'center', gap: 6,
-              padding: '5px 12px', borderRadius: 999,
-              background: online ? 'rgba(16, 185, 129, 0.2)' : 'rgba(244, 63, 94, 0.2)',
-              border: `1px solid ${online ? 'rgba(16, 185, 129, 0.3)' : 'rgba(244, 63, 94, 0.3)'}`,
-              color: online ? '#86efac' : '#fda4af',
-              fontSize: 12, fontWeight: 600,
-              flexShrink: 0,
-            }}
-          >
-            <span style={{ width: 6, height: 6, borderRadius: '50%', background: online ? '#86efac' : '#fda4af', animation: 'pulse-dot 2s infinite' }} />
-            {online ? '实时连接' : '离线'}
-          </span>
+          <StatusTag
+            variant={online ? 'online' : 'offline'}
+            text={online ? '实时连接' : '离线'}
+            pulse={online}
+          />
         </div>
       </div>
 
@@ -180,7 +172,7 @@ function TerminalInner() {
               width: 32, height: 32, borderRadius: 10,
               background: 'linear-gradient(135deg, #06b6d4 0%, var(--brand-500) 100%)',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
-              color: '#fff', fontSize: 16,
+              color: 'var(--bg-panel)', fontSize: 16,
             }}
           >
             <AppstoreOutlined />

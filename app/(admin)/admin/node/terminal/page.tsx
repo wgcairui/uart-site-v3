@@ -1,6 +1,9 @@
 'use client'
-import { Button, Col, Row, Descriptions, Spin, Tabs, Modal, Divider, Form, Input, Tag, message } from "antd";
+import { Button, Col, Row, Spin, Tabs, Modal, Divider, Form, Input, Tag, message } from "antd";
 import React, { useState, useMemo } from "react";
+import {
+    ApiOutlined, NodeIndexOutlined, AppstoreOutlined, DeploymentUnitOutlined,
+} from '@ant-design/icons'
 import { TerminalsTable } from "@/components/terminal/TerminalsTable";
 import { getTerminalStats, addRegisterTerminal } from "@/lib/api/fetchRoot";
 import { usePromise } from "@/lib/hooks/usePromise";
@@ -91,7 +94,7 @@ export default function Terminals() {
                 <TerminalsTable
                     readyData={setterminals}
                     extraActions={
-                        <Button type="primary" size="small" onClick={() => setRegisterModalOpen(true)}>
+                        <Button type="primary" size="small" onClick={() => setRegisterModalOpen(true)} className="btn-brand">
                             批量注册设备
                         </Button>
                     }
@@ -102,37 +105,29 @@ export default function Terminals() {
             key: 'stats',
             label: '终端统计',
             children: stats ? (
-                <Row gutter={36}>
-                    <Col span={12} key="onlines">
-                        <Descriptions title="在线分布" bordered column={1} size="small">
-                            {stats.onlines.map(item => (
-                                <Descriptions.Item key={item.type} label={item.type}>{item.value}</Descriptions.Item>
-                            ))}
-                        </Descriptions>
+                <Row gutter={[20, 20]}>
+                    <Col xs={24} md={12} key="onlines">
+                        <StatSection title="在线分布" icon={<ApiOutlined />} data={stats.onlines} color="#10b981" />
                     </Col>
-                    <Col span={12} key="nodes">
-                        <Descriptions title="节点分布" bordered column={1} size="small">
-                            {stats.nodes.map(item => (
-                                <Descriptions.Item key={item.type} label={item.type}>{item.value}</Descriptions.Item>
-                            ))}
-                        </Descriptions>
+                    <Col xs={24} md={12} key="nodes">
+                        <StatSection title="节点分布" icon={<NodeIndexOutlined />} data={stats.nodes} color="#6366f1" />
                     </Col>
-                    <Col span={12} key="pids">
-                        <Descriptions title="PID分布" bordered column={1} size="small">
-                            {stats.pids.map(item => (
-                                <Descriptions.Item key={item.type} label={item.type}>{item.value}</Descriptions.Item>
-                            ))}
-                        </Descriptions>
+                    <Col xs={24} md={12} key="pids">
+                        <StatSection title="PID 分布" icon={<AppstoreOutlined />} data={stats.pids} color="#a855f7" />
                     </Col>
-                    <Col span={12} key="devs">
-                        <Descriptions title="设备分布" bordered column={1} size="small">
-                            {stats.devs.map(item => (
-                                <Descriptions.Item key={item.type} label={item.type}>{item.value}</Descriptions.Item>
-                            ))}
-                        </Descriptions>
+                    <Col xs={24} md={12} key="devs">
+                        <StatSection title="设备分布" icon={<DeploymentUnitOutlined />} data={stats.devs} color="#f59e0b" />
                     </Col>
                 </Row>
-            ) : statsLoading ? <Spin /> : <div style={{ color: '#999' }}>暂无统计数据</div>
+            ) : statsLoading ? (
+                <div className="bento-card" style={{ textAlign: 'center', padding: 60 }}>
+                    <Spin />
+                </div>
+            ) : (
+                <div className="bento-card" style={{ textAlign: 'center', padding: 60, color: 'var(--ink-500)' }}>
+                    暂无统计数据
+                </div>
+            )
         }
     ];
 
@@ -177,4 +172,92 @@ export default function Terminals() {
             </Modal>
         </div>
     );
+}
+
+/**
+ * 统计子区: bento-card 包装 + 标题 + KV grid
+ * 跟 user 页注册类型行视觉对齐 (stat-card 风格)
+ */
+const StatSection: React.FC<{
+    title: string
+    icon: React.ReactNode
+    data: { type: string; value: number }[]
+    color: string
+}> = ({ title, icon, data, color }) => {
+    const total = data.reduce((s, x) => s + x.value, 0)
+    return (
+        <div className="bento-card" style={{ padding: 20, height: '100%' }}>
+            <div
+                style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 8,
+                    marginBottom: 16,
+                    paddingBottom: 12,
+                    borderBottom: '1px solid var(--ink-100)',
+                }}
+            >
+                <span
+                    style={{
+                        width: 32,
+                        height: 32,
+                        borderRadius: 8,
+                        background: `${color}1a`,
+                        color,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        fontSize: 16,
+                    }}
+                >
+                    {icon}
+                </span>
+                <h3 style={{ margin: 0, fontSize: 14, fontWeight: 600, color: 'var(--ink-900)' }}>{title}</h3>
+                <span style={{ marginLeft: 'auto', fontSize: 12, color: 'var(--ink-500)' }}>共 {total}</span>
+            </div>
+            <div
+                style={{
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))',
+                    gap: 12,
+                }}
+            >
+                {data.map(item => {
+                    const pct = total > 0 ? Math.round((item.value / total) * 100) : 0
+                    return (
+                        <div
+                            key={item.type}
+                            className="stat-card"
+                            style={{
+                                padding: 14,
+                                background: `${color}08`,
+                                border: `1px solid ${color}1a`,
+                            }}
+                        >
+                            <div style={{ display: 'flex', alignItems: 'baseline', gap: 6, marginBottom: 4 }}>
+                                <span
+                                    className="app-kv-label"
+                                    style={{ fontFamily: 'ui-monospace, monospace', textTransform: 'none', letterSpacing: 0 }}
+                                >
+                                    {item.type}
+                                </span>
+                            </div>
+                            <div
+                                style={{
+                                    fontSize: 24,
+                                    fontWeight: 700,
+                                    color: 'var(--ink-900)',
+                                    fontVariantNumeric: 'tabular-nums',
+                                    lineHeight: 1.1,
+                                }}
+                            >
+                                {item.value}
+                            </div>
+                            <div style={{ fontSize: 11, color: 'var(--ink-500)', marginTop: 4 }}>{pct}%</div>
+                        </div>
+                    )
+                })}
+            </div>
+        </div>
+    )
 }

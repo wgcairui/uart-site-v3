@@ -1,11 +1,12 @@
 'use client'
 
-import { Card, Empty, Spin } from "antd";
+import { Empty, Spin } from "antd";
 import React, { Suspense, useEffect, useState } from "react";
 import { useUserStore } from "@/lib/store/userStore";
 import { useParams, useSearchParams } from "next/navigation";
 import { TerminalMountDevNameLine } from "@/components/terminal/TerminalMountDevNameLine";
 import { PageHeader } from "@/components/common/PageHeader";
+import { BentoCard } from "@/components/common/BentoCard";
 
 function DevLineInner() {
 
@@ -42,12 +43,12 @@ function DevLineInner() {
                         { title: mountDev.mountDev, href: `/main/dev/${mac}${pid}` },
                     ]}
                 />
-                <Card
+                <BentoCard
                     style={{ marginTop: 16 }}
-                    styles={{ body: { padding: 16 } }}
+                    padding="sm"
                 >
                     <TerminalMountDevNameLine mac={terminal.DevMac} pid={mountDev.pid} name={dataName}></TerminalMountDevNameLine>
-                </Card>
+                </BentoCard>
             </>
     )
 }

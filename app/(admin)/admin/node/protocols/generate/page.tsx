@@ -44,7 +44,10 @@ interface FileSourceInfo {
 }
 
 /**
- * /admin/ai/generate — AI 生成新协议（决策 16 + 19 / 2026-06-24，决策 13 阶段 1 / 2026-06-25）
+ * /admin/node/protocols/generate — AI 生成新协议（决策 16 + 19 / 2026-06-24，决策 13 阶段 1 / 2026-06-25）
+ *
+ * 2026-07-17 PR-2：从 /admin/ai/generate 迁移过来，菜单 group 收编到「协议」下。
+ * 历史 URL /admin/ai/generate 通过 next.config.ts redirects 301 跳转过来。
  *
  * 流程：
  * 1. admin 填写 protocolType + 选择 Source（text/upload/url）+ 建议协议名
@@ -546,7 +549,8 @@ export default function AiGeneratePage() {
 
   const goChat = () => {
     if (protocol?.Protocol) {
-      router.push(`/admin/ai/chat/${encodeURIComponent(protocol.Protocol)}`)
+      // 2026-07-17 PR-2: AI chat 已合并到协议详情 aiChat tab, 跳到对应 tab 而不是独立页
+      router.push(`/admin/node/protocols/info?Protocol=${encodeURIComponent(protocol.Protocol)}&tab=aiChat`)
     }
   }
 

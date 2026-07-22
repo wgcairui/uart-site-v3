@@ -75,20 +75,33 @@ export const AdminScheduledOpTab: React.FC<AdminScheduledOpTabProps> = ({ mac })
     }
 
     return (
-        <Space orientation="vertical" style={{ width: '100%' }}>
-            <Space wrap>
-                <span style={{ color: 'var(--ink-500)' }}>快速新建 (按协议指令名):</span>
-                {loading && <Spin size="small" />}
-                {(quickList ?? []).slice(0, 16).map((q) => (
-                    <Button
-                        key={`${q.protocol}:${q.pid}:${q.name}`}
-                        size="small"
-                        onClick={() => handlePick(q)}
-                    >
-                        {q.pid}:{q.name}
-                    </Button>
-                ))}
-            </Space>
+        <Space orientation="vertical" style={{ width: '100%' }} size="middle">
+            <div>
+                <div style={{ color: 'var(--ink-500)', fontSize: 12, marginBottom: 8 }}>
+                    快速新建 (按挂载设备 + 协议指令名):
+                </div>
+                <Space wrap>
+                    {loading && <Spin size="small" />}
+                    {(quickList ?? []).slice(0, 16).map((q) => (
+                        <Button
+                            key={`${q.protocol}:${q.pid}:${q.name}`}
+                            size="small"
+                            onClick={() => handlePick(q)}
+                            title={`${q.protocol} / pid=${q.pid} / ${q.name}`}
+                        >
+                            <span style={{ fontFamily: 'var(--font-mono)', fontSize: 11 }}>
+                                pid{q.pid}
+                            </span>
+                            <span style={{ marginLeft: 4 }}>{q.name}</span>
+                        </Button>
+                    ))}
+                    {!(loading) && (quickList ?? []).length === 0 && (
+                        <span style={{ color: 'var(--ink-400)', fontSize: 12 }}>
+                            (暂无协议指令, 确认终端已挂载设备 + 协议已配置)
+                        </span>
+                    )}
+                </Space>
+            </div>
             <ScheduledOpTable api="admin" fixedMac={mac} />
             {pendingItem && (
                 <ScheduleOpModal

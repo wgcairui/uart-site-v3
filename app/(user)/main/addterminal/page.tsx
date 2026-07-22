@@ -25,7 +25,6 @@
 
 import React, { useEffect, useState } from 'react'
 import {
-    Button,
     Form,
     Input,
     InputNumber,
@@ -35,6 +34,7 @@ import {
     Space,
     Spin,
 } from 'antd'
+import { Button } from '@/components/common/Button'
 import {
     SearchOutlined,
     LinkOutlined,
@@ -335,7 +335,7 @@ const AddTerminal: React.FC = () => {
                             />
                             <Button
                                 size="large"
-                                type="primary"
+                                variant="primary"
                                 icon={<SearchOutlined />}
                                 loading={seachLoading}
                                 onClick={seachTerminal}
@@ -394,8 +394,7 @@ const AddTerminal: React.FC = () => {
                                 Step 2 · 设备信息
                             </h3>
                             <Button
-                                type="primary"
-                                size="small"
+                                variant="primary"
                                 onClick={bindTer}
                                 loading={bindLoading}
                             >
@@ -552,7 +551,7 @@ const AddTerminal: React.FC = () => {
                             </div>
                             <Form.Item style={{ marginBottom: 0 }}>
                                 <Button
-                                    type="primary"
+                                    variant="primary"
                                     size="large"
                                     icon={<PlusOutlined />}
                                     onClick={submitMountDev}

@@ -33,16 +33,19 @@ components/
 │   ├── TerminalRunLog.tsx
 │   ├── TerminalMountDevNameLine.tsx
 │   └── TerminalOprate.tsx
-├── protocol/                   # 协议域（14 个）
+├── protocol/                   # 协议域（16 个，PR #44 加 2 个 AI tab）
 │   ├── Protocol{Instruct,ShowTag,Threshold,AlarmStat}{,User}.tsx
 │   ├── ProtocolContant.tsx     # 常量配置
 │   ├── ProtocolOprate.tsx      # 操作指令
+│   ├── ProtocolSourceTag.tsx   # 协议来源徽章（admin / ai-generate / ai-chat）
 │   ├── ProtocolsCascader.tsx   # 协议级联选择
 │   ├── DevTypesCascader.tsx    # 设备类型级联
 │   ├── ProtocolInstructSelect.tsx
 │   ├── ProtocolInstructForm.tsx     # 协议指令修改表单（从 protocols/info 抽出）
 │   ├── ProtocolInstructParamList.tsx # 协议指令参数列表
-│   └── ProtocolInstructParamInput.tsx # 单个参数表单
+│   ├── ProtocolInstructParamInput.tsx # 单个参数表单
+│   ├── ProtocolAiChatTab.tsx   # AI 修改 tab（PR #44 / PR #45 修复后稳定）
+│   └── ProtocolAiDryRunTab.tsx # Dry-run tab（参数化 dry-run + 3 KPI）
 ├── node/                       # 节点域
 │   ├── NodesSelects.tsx
 │   └── RotateTokenModal.tsx    # 节点 token 重置/配 token 弹窗
@@ -56,6 +59,11 @@ components/
 ├── chart/                      # 图表
 │   ├── MailStatsChart.tsx
 │   └── SmsStatsChart.tsx
+├── ai/                         # AI 域（PR #44 / 2026-07-17 新建）
+│   ├── AiWorkspace.tsx         # 上下分栏布局（topBar + left + right）
+│   ├── ChatPane.tsx            # 消息 + 内置 Sender（@ant-design/x）— 注意：Sender 是一部分
+│   ├── ProtocolPreviewForm.tsx # 协议 JSON 预览 form（mode: chat | generate）
+│   └── StatsPane.tsx           # 顶部紫渐变 hero + 4 KPI 槽
 └── data/                       # 数据展示（11 个）
     ├── DesList.tsx
     ├── UserDes.tsx
@@ -133,6 +141,26 @@ layout/AdminSider.tsx
 protocol/ProtocolInstructForm.tsx
   └─ 依赖 protocol/ProtocolInstructParamList.tsx
      └─ 依赖 protocol/ProtocolInstructParamInput.tsx
+
+# AI 域（PR #44 起）
+ai/AiWorkspace.tsx
+  └─ 协议详情 info Tabs 的 chat / generate tab 顶层布局
+     └─ topBar: ai/StatsPane.tsx
+     └─ left:   ai/ChatPane.tsx（含内置 Sender）
+     └─ right:  ai/ProtocolPreviewForm.tsx
+
+ai/ChatPane.tsx
+  └─ 唯一用户输入入口：底部 <Sender>，onSubmit 必须接真 handler
+  └─ ProtocolAiChatTab（AI 修改 tab）
+  └─ /admin/node/protocols/generate（AI 生成 page）
+
+protocol/ProtocolAiChatTab.tsx
+  └─ key={protocolName} 强制协议切换 remount
+  └─ onSubmit={submitChat}（PR #45 修法：删冗余 inputFormNode + 改 onSubmit）
+  └─ 依赖 lib/hooks/useAiStream（POST /api/v2/admin/ai/chat-stream SSE）
+
+protocol/ProtocolAiDryRunTab.tsx
+  └─ 依赖 lib/api/endpoints/admin/ai (aiDryRun: POST /api/v2/admin/ai/dry-run)
 ```
 
 ## 新增组件的规范
@@ -170,3 +198,11 @@ export default MyComponent
 - `userData.css` 残留在 `common/` 目录（历史遗留），暂无引用
 - `iconFont` 字体文件未迁移到 `public/`（待清理）
 - `AbsButton` 仅 `(user)/layout.tsx` 引用，是底部弹出式 Sider（极少触发，可考虑删除）
+
+### ChatPane 双 input 陷阱（PR #45 踩坑）
+
+- ❌ **不要在 `ChatPane` 外层再塞 `inputForm`（`<Input + 发送按钮>`）**。`ChatPane` 底部有内置 `<Sender>`，再塞会形成两个 input，第二个还会因为 `onSubmit={() => undefined}` no-op 永远点不动（PR #45 修法：删外层 inputFormNode，`onSubmit={submitChat}`）
+- ❌ **`ChatPane` 的 `onSubmit` 必须接真 handler**，空函数 / `() => undefined` 等于把 Sender 弄成"按钮坏了"
+- ❌ **不要给 `ChatPane` 外层 inputForm 写误导 placeholder**。Sender 的 placeholder 是 hardcode `"输入修改诉求后回车提交"`，外层塞的 placeholder 会被用户误认为 Sender 提示
+- ✅ **`ChatPane` Sender 没内置 abort 按钮**（跟 generate tab 一致）。如要 abort 单独提 PR 给 `ChatPane` 加 `onAbort` prop
+- 详见 `docs/components.md` §3.7 + §5.3.1

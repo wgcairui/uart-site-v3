@@ -20,7 +20,9 @@
  * Stage 2 (P1) 会加 /redis/keys/info 端点（批量 type+ttl+size+value），
  * 那时 TTL/size 列从 "-" 改成真实值。
  */
-import { DeleteOutlined, ReloadOutlined, SearchOutlined } from '@ant-design/icons'
+import { DeleteOutlined, ReloadOutlined, SearchOutlined, DatabaseOutlined,
+  TagsOutlined, HddOutlined, UnorderedListOutlined,
+} from '@ant-design/icons'
 import { Button, Form, Input, message, Modal, Space, Spin, Table, Tag, Tooltip, Typography } from 'antd'
 import type { ColumnsType, TablePaginationConfig } from 'antd/lib/table'
 import React, { useMemo, useState } from 'react'
@@ -29,6 +31,7 @@ import { generateTableKey } from '@/lib/utils/tableCommon'
 import { usePromise } from '@/lib/hooks/usePromise'
 import { PageHeader } from '@/components/common/PageHeader'
 import { PageSummary } from '@/components/common/PageSummary'
+import { EmptyState } from '@/components/common/EmptyState'
 import { PaginationReq, V2ListResponse } from '@/types'
 
 const { Text } = Typography
@@ -394,15 +397,16 @@ export const Redis: React.FC = () => {
   }, [rows])
 
   return (
-    <>
+    <div className="bg-bento-canvas" style={{ position: 'relative', zIndex: 0 }}>
       <PageHeader
         title="Redis 键管理"
+        subtitle="查看 / 编辑 / 删除 Redis 中的 key-value"
         breadcrumb={[{ title: '首页', href: '/admin' }, { title: '设备数据' }]}
         extra={
           <Space>
-            <Button icon={<ReloadOutlined />} onClick={() => fecth()}>
-              刷新
-            </Button>
+            <Tooltip title="刷新">
+              <Button icon={<ReloadOutlined />} onClick={() => fecth()} shape="circle" />
+            </Tooltip>
             <Button danger onClick={() => setFlushModalOpen(true)}>
               清空 redis
             </Button>
@@ -410,69 +414,87 @@ export const Redis: React.FC = () => {
         }
       />
       <PageSummary
+        column={4}
         items={[
-          { label: '本页 key', value: keys.length, variant: 'primary' },
-          { label: 'string', value: buckets.string, variant: 'info' },
-          { label: 'hash', value: buckets.hash, variant: 'success' },
-          { label: 'list', value: buckets.list, variant: 'warning' },
+          { label: '本页 key', value: keys.length, variant: 'primary', icon: <DatabaseOutlined /> },
+          { label: 'string', value: buckets.string, variant: 'info', icon: <TagsOutlined /> },
+          { label: 'hash', value: buckets.hash, variant: 'success', icon: <HddOutlined /> },
+          { label: 'list', value: buckets.list, variant: 'warning', icon: <UnorderedListOutlined /> },
         ]}
       />
-      <Form layout="inline" style={{ marginBottom: 16 }}>
-        <Form.Item label="pattern">
-          <Input
-            value={pattern}
-            placeholder="输入前缀 (自动加 *, 空 = 全部)"
-            onChange={e => setPattern(e.target.value)}
-            onPressEnter={triggerSearch}
-            style={{ width: 320 }}
-            allowClear
-          />
-        </Form.Item>
-        <Form.Item>
-          <Space>
-            <Button type="primary" icon={<SearchOutlined />} onClick={triggerSearch}>
-              查找
-            </Button>
-            <Button
-              danger
-              disabled={selectedRowKeys.length === 0}
-              onClick={batchDelete}
-            >
-              删除所选 ({selectedRowKeys.length})
-            </Button>
-          </Space>
-        </Form.Item>
-      </Form>
+      <div className="bento-card" style={{ padding: 20, marginBottom: 20 }}>
+        <Form layout="inline" style={{ marginBottom: 16 }}>
+          <Form.Item label="pattern">
+            <Input
+              value={pattern}
+              placeholder="输入前缀 (自动加 *, 空 = 全部)"
+              onChange={e => setPattern(e.target.value)}
+              onPressEnter={triggerSearch}
+              style={{ width: 320 }}
+              allowClear
+            />
+          </Form.Item>
+          <Form.Item>
+            <Space>
+              <Button type="primary" icon={<SearchOutlined />} onClick={triggerSearch} className="btn-brand">
+                查找
+              </Button>
+              <Button
+                danger
+                disabled={selectedRowKeys.length === 0}
+                onClick={batchDelete}
+              >
+                删除所选 ({selectedRowKeys.length})
+              </Button>
+            </Space>
+          </Form.Item>
+        </Form>
 
-      <Table
-        size="small"
-        loading={loading}
-        dataSource={dataSource}
-        rowKey="key"
-        scroll={{ x: 900 }}
-        rowSelection={{
-          selectedRowKeys,
-          onChange: setSelectedRowKeys,
-          preserveSelectedRowKeys: true,
-          columnWidth: 48,
-        }}
-        pagination={{
-          current: query.page ?? 1,
-          pageSize: query.pageSize ?? 50,
-          total: pagination.total ?? 0,
-          showTotal: t =>
-            t > 0
-              ? `共 ${t} 个${pagination.hasNext ? ' (hasNext 模式)' : ''}`
-              : 'hasNext 模式（无 total，server SCAN 不暴露 count）',
-          showSizeChanger: true,
-          pageSizeOptions: ['20', '50', '100', '200'],
-        }}
-        onChange={handleTableChange}
-        columns={columns}
-      />
+        {loading && dataSource.length === 0 ? (
+          <div style={{ padding: 80, textAlign: 'center' }}>
+            <Spin size="large" />
+          </div>
+        ) : dataSource.length === 0 ? (
+          <EmptyState
+            description={pattern ? `pattern "${pattern}*" 无匹配 key` : '当前页无 Redis key'}
+            actionLabel={pattern ? '清除 pattern' : '刷新'}
+            onAction={pattern ? () => setPattern('') : () => fecth()}
+            secondaryLabel="刷新"
+            onSecondary={() => fecth()}
+          />
+        ) : (
+          <Table
+            className="v3-table"
+            size="small"
+            loading={loading}
+            dataSource={dataSource}
+            rowKey="key"
+            scroll={{ x: 900 }}
+            rowSelection={{
+              selectedRowKeys,
+              onChange: setSelectedRowKeys,
+              preserveSelectedRowKeys: true,
+              columnWidth: 48,
+            }}
+            pagination={{
+              current: query.page ?? 1,
+              pageSize: query.pageSize ?? 50,
+              total: pagination.total ?? 0,
+              showTotal: t =>
+                t > 0
+                  ? `共 ${t} 个${pagination.hasNext ? ' (hasNext 模式)' : ''}`
+                  : 'hasNext 模式（无 total，server SCAN 不暴露 count）',
+              showSizeChanger: true,
+              pageSizeOptions: ['20', '50', '100', '200'],
+            }}
+            onChange={handleTableChange}
+            columns={columns}
+          />
+        )}
+      </div>
 
       <FlushDbModal open={flushModalOpen} onCancel={() => setFlushModalOpen(false)} />
-    </>
+    </div>
   )
 }
 

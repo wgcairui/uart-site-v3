@@ -397,6 +397,302 @@ declare namespace Uart {
          *  跟 PagerDuty/Datadog 3 级对齐: critical (红) / warning (黄) / info (蓝) */
         severity?: AlarmSeverity;
     }
+
+    /**
+     * 告警日志列表请求 (server feat/alarm-filter-ui 13:48)
+     * 字段名权威源: midwayuartserver/src/module/log/controller/admin-log.controller.ts listTransfiniteLogs
+     * server 端 search/filters 白名单 (cairui 拍 server+client 都改):
+     *   - search  (regex 模糊, buildMongoFilter): devName / mac / msg
+     *   - filters (exact $in):                    isOk / severity / protocol / tag
+     * 注: isOk 在 mongo 里是 boolean, server 端 search helper 会按 string ('true'/'false') 转
+     */
+    interface UartAlarmListReq {
+        page?: number;
+        pageSize?: number;
+        sortBy?: 'timeStamp' | 'mac' | 'severity';
+        sortOrder?: 'asc' | 'desc';
+        needTotal?: boolean;
+        search?: {
+            devName?: string;
+            mac?: string;
+            msg?: string;
+        };
+        filters?: {
+            isOk?: ('true' | 'false')[];
+            severity?: AlarmSeverity[];
+            protocol?: string[];
+            tag?: string[];
+        };
+    }
+
+    /**
+     * 告警时间分桶统计 (server feat/alarm-time-bucket)
+     * 由 /api/v2/admin/logs/transfinite/count-by-bucket 返
+     */
+    interface UartAlarmTimeBucket {
+        /** 当前时间窗内真实总数 */
+        total: number;
+        /** 自然月 (1号 → endTs) */
+        month: number;
+        /** 自然周 (周一 → endTs, cairui 13:48 拍) */
+        week: number;
+        /** 今天 (00:00 → endTs) */
+        day: number;
+        /** tag 分布 (跟 PageSummary 顶部 tag 分布卡联动) */
+        tags: { type: string; value: number }[];
+    }
+
+    /**
+     * Feature Flag 平台 (server feat/feature-flag-platform 2026-07-21)
+     * 字段名权威源: midwayuartserver/src/module/feature-flag/entity/feature-flag.entity.ts
+     * server 端 search/filters 白名单:
+     *   - search  (regex 模糊, buildMongoFilter): key / description
+     *   - filters (exact $in):                    type / enabled / killSwitch
+     * 评估器内存 LRU cache (TTL 5min), killSwitch 优先级最高
+     * 升级到双发: 加 variants 字段 + evaluator ~80 行, 公共 API 不变
+     */
+    interface UartApprovalRecipient {
+        channel: 'email' | 'sms' | 'feishu_bot';
+        target: string;
+        enabled: boolean;
+    }
+
+    interface UartFeatureFlagDeviceOverride {
+        value: any;
+        until?: number;
+        note?: string;
+    }
+
+    interface UartFeatureFlag {
+        id: string;
+        key: string;
+        description: string;
+        type: 'string' | 'number' | 'boolean';
+        defaultValue: any;
+        killSwitch: boolean;
+        killSwitchReason?: string;
+        perDeviceOverrides: Record<string, UartFeatureFlagDeviceOverride>;
+        severityDurationMap?: {
+            critical: number;
+            warning: number;
+            info: number;
+        };
+        recipients: UartApprovalRecipient[];
+        enabled: boolean;
+        createdBy: string;
+        updatedBy: string;
+        createdAt: number;
+        updatedAt: number;
+    }
+
+    interface UartFeatureFlagListReq {
+        page?: number;
+        pageSize?: number;
+        sortBy?: 'key' | 'updatedAt' | 'createdAt';
+        sortOrder?: 'asc' | 'desc';
+        needTotal?: boolean;
+        search?: {
+            key?: string;
+            description?: string;
+        };
+        filters?: {
+            type?: ('string' | 'number' | 'boolean')[];
+            enabled?: ('true' | 'false')[];
+            killSwitch?: ('true' | 'false')[];
+        };
+    }
+
+    interface UartFeatureFlagCreateDto {
+        key: string;
+        description: string;
+        type: 'string' | 'number' | 'boolean';
+        defaultValue: any;
+        killSwitch?: boolean;
+        killSwitchReason?: string;
+        perDeviceOverrides?: Record<string, UartFeatureFlagDeviceOverride>;
+        severityDurationMap?: {
+            critical: number;
+            warning: number;
+            info: number;
+        };
+        recipients?: UartApprovalRecipient[];
+        enabled?: boolean;
+    }
+
+    interface UartFeatureFlagUpdateDto {
+        description?: string;
+        defaultValue?: any;
+        killSwitch?: boolean;
+        killSwitchReason?: string;
+        perDeviceOverrides?: Record<string, UartFeatureFlagDeviceOverride>;
+        severityDurationMap?: {
+            critical?: number;
+            warning?: number;
+            info?: number;
+        };
+        recipients?: UartApprovalRecipient[];
+        enabled?: boolean;
+    }
+
+    /**
+     * 评估器内部响应 (server evaluateFlag() 返回, 不暴露 HTTP)
+     */
+    interface UartFeatureFlagEvaluation {
+        value: any;
+        killSwitch: boolean;
+        ffSnapshot: {
+            key: string;
+            mode?: 'auto' | 'manual' | 'delayed_auto';
+            value: any;
+            killSwitch: boolean;
+            ts: number;
+        };
+        evaluatedAt: number;
+    }
+
+    /**
+     * 告警审批队列 (server feat/feature-flag-platform 2026-07-21)
+     * 字段名权威源: midwayuartserver/src/module/alert-approval/entity/alert-approval-queue.entity.ts
+     * server 端 search/filters 白名单:
+     *   - search  (regex 模糊): mac / devName (从 alertEvent.devName) / msg (从 alertEvent.msg)
+     *   - filters (exact $in):   mode / status / severity
+     * 状态机: pending → approved/rejected/cancelled/timed_out/auto_sent
+     * killSwitch=true 时 mode=rejected_via_kill_switch + 通知运维
+     */
+    interface UartAlertApprovalNotifiedResult {
+        channel: 'email' | 'sms' | 'feishu_bot';
+        target: string;
+        sentAt: number;
+        success: boolean;
+        errorMessage?: string;
+    }
+
+    interface UartAlertApprovalQueue {
+        id: string;
+        alertEvent: uartAlarmObject;
+        mac: string;
+        pid: number;
+        severity: AlarmSeverity;
+        mode: 'auto' | 'manual' | 'delayed_auto' | 'rejected_via_kill_switch';
+        status: 'pending' | 'approved' | 'rejected' | 'auto_sent' | 'cancelled' | 'timed_out';
+        scheduledAt?: number;
+        approver?: string;
+        approvedAt?: number;
+        rejectReason?: string;
+        cancelReason?: string;
+        recipientsNotified: UartAlertApprovalNotifiedResult[];
+        ffSnapshot: {
+            key: string;
+            mode: 'auto' | 'manual' | 'delayed_auto';
+            value: any;
+            killSwitch: boolean;
+            ts: number;
+        };
+        notifiedAt?: number;
+        createdAt: number;
+        updatedAt: number;
+    }
+
+    interface UartAlertApprovalQueueListReq {
+        page?: number;
+        pageSize?: number;
+        sortBy?: 'createdAt' | 'updatedAt' | 'severity' | 'mac';
+        sortOrder?: 'asc' | 'desc';
+        needTotal?: boolean;
+        search?: {
+            mac?: string;
+            devName?: string;
+            msg?: string;
+        };
+        filters?: {
+            mode?: ('auto' | 'manual' | 'delayed_auto' | 'rejected_via_kill_switch')[];
+            status?: ('pending' | 'approved' | 'rejected' | 'auto_sent' | 'cancelled' | 'timed_out')[];
+            severity?: AlarmSeverity[];
+        };
+    }
+
+    interface UartAlertApprovalDecisionDto {
+        reason?: string;
+    }
+
+    interface UartAlertApprovalBatchDecisionDto {
+        ids: string[];
+        reason?: string;
+    }
+
+    /**
+     * 审批统计 (server GET /api/v2/admin/alert-approvals/stats)
+     */
+    interface UartAlertApprovalStats {
+        pending: number;
+        approved: number;
+        rejected: number;
+        autoSent: number;
+        cancelled: number;
+        timedOut: number;
+        bySeverity: {
+            critical: number;
+            warning: number;
+            info: number;
+        };
+        last24h: {
+            created: number;
+            decided: number;
+        };
+    }
+
+    /**
+     * 邮件日志列表请求 (server feat/mail-sms-filter-ui 20:13)
+     * 字段名权威源: midwayuartserver/src/module/log/controller/admin-log.controller.ts listMailLogs
+     * server 端 search/filters 白名单 (cairui 20:13 拍 4 维筛选):
+     *   - search  (regex 模糊, 支持 nested path):
+     *       mails / sendParams.subject / sendParams.html / sendParams.from / sendParams.to
+     *   - filters: isOk (server 端重写为 Success 字段 $exists 条件, 见 controller rewriteIsOkToSuccess)
+     */
+    interface MailSendListReq {
+        page?: number;
+        pageSize?: number;
+        sortBy?: 'timeStamp' | 'createdAt';
+        sortOrder?: 'asc' | 'desc';
+        needTotal?: boolean;
+        search?: {
+            mails?: string;
+            'sendParams.subject'?: string;
+            'sendParams.html'?: string;
+            'sendParams.from'?: string;
+            'sendParams.to'?: string;
+        };
+        filters?: {
+            isOk?: ('true' | 'false')[];
+        };
+    }
+
+    /**
+     * 短信日志列表请求 (server feat/mail-sms-filter-ui 20:13)
+     * 字段名权威源: midwayuartserver/src/module/log/controller/admin-log.controller.ts listSmsLogs
+     * server 端 search/filters 白名单 (cairui 20:13 拍 4 维筛选):
+     *   - search  (regex 模糊, 支持 nested path):
+     *       tels / sendParams.TemplateParam / sendParams.PhoneNumbers
+     *   - filters: isOk (重写为 Success 字段 $exists)
+     *
+     * 注: SmsLogReqDto.phone 字段保留兼容老 caller, server 端忽略 (改走 search.tels 模糊)
+     */
+    interface SmsSendListReq {
+        page?: number;
+        pageSize?: number;
+        sortBy?: 'timeStamp' | 'createdAt';
+        sortOrder?: 'asc' | 'desc';
+        needTotal?: boolean;
+        phone?: string;  // DEPRECATED, server 端忽略, 改用 search.tels
+        search?: {
+            tels?: string;
+            'sendParams.TemplateParam'?: string;
+            'sendParams.PhoneNumbers'?: string;
+        };
+        filters?: {
+            isOk?: ('true' | 'false')[];
+        };
+    }
     type UartAlarmType = "透传设备下线提醒" | "透传设备上线提醒" | '透传设备告警';
     interface smsUartAlarm {
         parentId?: string;
@@ -418,6 +714,9 @@ declare namespace Uart {
         message: string;
     }
     interface logSmsSend extends id {
+        // feat/mail-sms-filter-ui (cairui 20:13): 上游类型遗漏 timeStamp, 业务数据实际有
+        // (server mongo_entity/log.ts:49-87 SmsSend.timeStamp, server 端 time range filter 用)
+        timeStamp?: number;
         tels: string[];
         sendParams: {
             RegionId: string;
@@ -448,6 +747,9 @@ declare namespace Uart {
         messageId: string;
     }
     interface logMailSend extends id {
+        // feat/mail-sms-filter-ui (cairui 20:13): 上游类型遗漏 timeStamp, 业务数据实际有
+        // (server mongo_entity/log.ts:108-135 MailSend.timeStamp, server 端 time range filter 用)
+        timeStamp?: number;
         mails: string[];
         sendParams: {
             from: string;
@@ -1086,6 +1388,39 @@ declare namespace Uart {
         topDanger: { mac: string; name: string; score: number }[];
     }
 
+    // ─── v2 admin user detailed stats (server 343/admin-dashboard.controller.ts:399 getUserDetailedStats, 2026-07-17) ───
+    /** GET /api/v2/admin/dashboard/users/detailed-stats
+     *  server PR #76 / commit e3dd670 (squash merged 5e1824e3a, deploy eb769492c64d) */
+    interface UserDetailedStatsResp {
+        /** 总用户数 (server countDocuments, 不是当前页) */
+        total: number;
+        /** 按注册类型 (rgtype) 分组: pesiv / wx / web / app */
+        rgType: { label: string; value: number }[];
+        /** 按用户组 (userGroup) 分组: user / root / admin */
+        userGroup: { label: string; value: number }[];
+        /** 活跃用户: 按 logUserLogin.timeStamp distinct user */
+        activeUsers: {
+            /** 7 天内登录过 */
+            last7Days: number;
+            /** 30 天内登录过 */
+            last30Days: number;
+        };
+        // === PR #76 新增 5 字段 (2026-07-17) ===
+        /** 微信绑定 (wxId OR wpId 非空) */
+        wxBound: number;
+        /** 有邮箱 */
+        withMail: number;
+        /** 有手机 (tel 非 null) */
+        withTel: number;
+        /** 新注册用户: 按 creatTime 窗口 */
+        newUsers: {
+            /** 7 天内新注册 */
+            last7Days: number;
+            /** 30 天内新注册 */
+            last30Days: number;
+        };
+    }
+
     // ─── v2 admin user 资源迁移 (server PR #70 / commit 3aacaf1b, 2026-07-13) ───
     // 离职 user 资源迁移到在职 user, 含 dryRun 预览 + 4 类资源选迁
     /** POST /api/v2/admin/users/migrate-resources */
@@ -1148,5 +1483,46 @@ declare namespace Uart {
         reason: string;
         by: string;
         at: string;
+    }
+
+    /**
+     * 设备心跳 3 层数据 (server 端 src/module/terminal/controller/admin-terminal.controller.ts:138-191)
+     * - realtime: redis `heartbeat:<mac>` 实时 (5min TTL 自动过期)
+     * - transitions: log.terminalEvents kind=TERMINAL_CONNECT/OFFLINE 状态翻转 (30d TTL)
+     * - samples: log.heartbeats 5min 降频采样 (7d TTL)
+     */
+    interface HeartbeatRealtime {
+        online: boolean;
+        /** number|null, redis 存的是 epoch ms (parseInt), TTL 过期为 null */
+        lastHeartbeatAt: number | null;
+        /** redis TTL 倒计时 (秒), 0 = 已过期/无 key */
+        ttlSeconds: number;
+    }
+
+    /** 状态翻转历史 (CONNECT/OFFLINE 实时事件) */
+    interface HeartbeatTransition {
+        kind: 'TERMINAL_CONNECT' | 'TERMINAL_OFFLINE';
+        /** ISO 字符串, mongoose toJSON 默认序列化 */
+        at: string;
+        nodeName?: string;
+        /** TERMINAL_OFFLINE payload 关键字段: lastSeen + reason; CONNECT 含 protocol/pid/mountDev */
+        payload: Record<string, unknown>;
+    }
+
+    /** log.heartbeats 5min 降频采样 */
+    interface HeartbeatSample {
+        at: string;
+        nodeName?: string;
+        /** epoch ms, 心跳原始时间戳 (sampler 写库时的 now) */
+        heartbeatAt: number;
+        /** redis TTL 在 sampler 写库时的剩余秒数 */
+        ttlSeconds: number;
+    }
+
+    interface HeartbeatResponse {
+        mac: string;
+        realtime: HeartbeatRealtime;
+        transitions: HeartbeatTransition[];
+        samples: HeartbeatSample[];
     }
 }

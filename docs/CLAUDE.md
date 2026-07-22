@@ -17,6 +17,8 @@ docs/
 ├── style-guide.md         # 视觉设计规范 v2（design tokens + 组件视觉规则）⚠️ 必读
 ├── components.md          # 组件库规范 v2（核心组件 props + 业务组件视觉规则）⚠️ 必读
 ├── PLAN-ui-refactor.md    # UI 重构执行计划 v2（6 阶段 + commit 拆分 + 验证）
+├── PRD-v3-hybrid-redesign.md  # v3 hybrid 设计需求文档
+├── dev-login.md           # 试用模式 dev-login API 说明（/api/dev-login）
 ├── assets/
 │   └── hybrid-design-2-3.html   # 视觉稿（5 屏 + 移动端 + token 代码）⚠️ 必看
 └── archive/
@@ -89,6 +91,16 @@ docs/
 ---
 
 ## 关键决策记录
+
+### 近期 ship PR（2026-07-13 → 2026-07-17）
+
+| PR | 日期 | 主题 | 影响文档 |
+|---|---|---|---|
+| #29 | 2026-07-14 | v4 admin dashboard 首批（HealthScoreBento + 3 优化） | `docs/components.md` §3.1/3.2 |
+| #42 | 2026-07-15 | admin user 资源迁移 UI（v3 hybrid v4 样板） | `app/(admin)/admin/node/user/page.tsx` 视觉参考 |
+| **#43** | 2026-07-15 | 9 admin 列表页 v3 polish（devices / protocols / users / logs / data） | `docs/components.md` §2.5/2.6 |
+| **#44** | 2026-07-17 | 3 AI 工具页整合进协议域（5 个 redirect + 2 新 tab） | `app/CLAUDE.md` 「AI 域整合」+ `docs/components.md` §3.7 |
+| **#45** | 2026-07-17 | AI 修改 tab 发送按钮无响应（删冗余 inputForm + 修 Sender no-op） | `docs/components.md` §5.3.1 + §3.7 |
 
 ### 2026-07-11 · 2+3 混合方案替换方案 C
 

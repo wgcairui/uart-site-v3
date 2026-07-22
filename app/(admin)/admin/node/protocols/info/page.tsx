@@ -18,7 +18,7 @@ import { RcFile } from 'antd/lib/upload'
 import { Suspense, useCallback, useEffect, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import dayjs from 'dayjs'
-import { CopyFilled, DeleteFilled, UploadOutlined } from '@ant-design/icons'
+import { CopyFilled, DeleteFilled, ExperimentOutlined, MessageOutlined, UploadOutlined } from '@ant-design/icons'
 import {
   getProtocols,
   modifyProtocolRemark,
@@ -40,6 +40,8 @@ import { usePromise } from '@/lib/hooks/usePromise'
 import { AiSourceInfoCard } from '@/components/ai/AiSourceInfoCard'
 import { ProtocolSourceTag } from '@/components/protocol/ProtocolSourceTag'
 import { ProtocolAiInferred } from '@/components/protocol/ProtocolAiInferred'
+import { ProtocolAiChatTab } from '@/components/protocol/ProtocolAiChatTab'
+import { ProtocolAiDryRunTab } from '@/components/protocol/ProtocolAiDryRunTab'
 
 interface props {
   Protocol: string
@@ -483,7 +485,30 @@ const ProtocolInfo: React.FC = () => {
               </div>
             )}
           </div>
-          <Space style={{ flexShrink: 0 }}>
+          <Space style={{ flexShrink: 0 }} wrap>
+            {/* AI 工具快捷入口 (决策 PR-1 / 2026-07-17) — 直跳协议详情对应 tab */}
+            <Button
+              icon={<ExperimentOutlined />}
+              onClick={() => {
+                const params = new URLSearchParams(query.toString())
+                params.set('tab', 'aiDryRun')
+                router.replace(`/admin/node/protocols/info?${params.toString()}`)
+              }}
+              style={{ background: 'rgba(255,255,255,0.15)', borderColor: 'rgba(255,255,255,0.3)', color: '#fff' }}
+            >
+              Dry-run
+            </Button>
+            <Button
+              icon={<MessageOutlined />}
+              onClick={() => {
+                const params = new URLSearchParams(query.toString())
+                params.set('tab', 'aiChat')
+                router.replace(`/admin/node/protocols/info?${params.toString()}`)
+              }}
+              style={{ background: 'rgba(255,255,255,0.15)', borderColor: 'rgba(255,255,255,0.3)', color: '#fff' }}
+            >
+              AI 修改
+            </Button>
             <Button
               icon={<UploadOutlined />}
               onClick={() => setUploadModalOpen(true)}
@@ -510,6 +535,9 @@ const ProtocolInfo: React.FC = () => {
           { key: 'Threld', label: `阈值配置 (${counts.Threshold})`, children: <ProtocolThreshold protocolName={Protocol} /> },
           { key: 'stat', label: `状态配置 (${counts.AlarmStat})`, children: <ProtocolAlarmStat protocolName={Protocol} /> },
           { key: 'aiInferred', label: 'AI 推断', children: <ProtocolAiInferred protocolName={Protocol} /> },
+          // PR-1 (2026-07-17) — AI 工具 tab 整合: chat / dry-run 合并到协议详情
+          { key: 'aiChat', label: 'AI 修改', children: <ProtocolAiChatTab protocolName={Protocol} /> },
+          { key: 'aiDryRun', label: 'Dry-run', children: <ProtocolAiDryRunTab protocolName={Protocol} /> },
         ]}
       />
       <ProtocolUploadModal

@@ -37,6 +37,18 @@ export interface ProtocolPreviewFormProps {
   editable?: boolean
   /** 跳转到协议详情页回调（v1 用 router.push，v2 可换 Modal/Drawer） */
   onJumpToDetail?: (protocolName: string) => void
+  /**
+   * AI 暂存版本号（PR #48 新增）：
+   * - 当 value 是 AI 推来的新协议（staged），传 version 显示「应用 / 撤销」按钮
+   * - 不传或 undefined = 当前是已应用版本，隐藏确认 toolbar
+   * （用 `number | undefined` 兼容 exactOptionalPropertyTypes 模式，
+   *   传 undefined 等同不传，toolbar 自动隐藏）
+   */
+  stagedVersion?: number | undefined
+  /** 应用暂存修改（点按钮触发） */
+  onApplyStaged?: (() => void) | undefined
+  /** 撤销暂存修改（点按钮触发） */
+  onDiscardStaged?: (() => void) | undefined
 }
 
 export function ProtocolPreviewForm({
@@ -45,6 +57,9 @@ export function ProtocolPreviewForm({
   mode,
   editable = false,
   onJumpToDetail,
+  stagedVersion,
+  onApplyStaged,
+  onDiscardStaged,
 }: ProtocolPreviewFormProps) {
   const [form] = Form.useForm<Partial<Uart.protocol>>()
 
@@ -67,7 +82,9 @@ export function ProtocolPreviewForm({
     mode === 'generate'
       ? '生成新协议：tool_done 后此处实时绑定 LLM 输出（admin 可检查后保存）'
       : mode === 'chat'
-        ? 'AI 修改协议：每次 chat 后此处实时显示最新 version 的协议'
+        ? stagedVersion !== undefined
+          ? `AI 修改暂存 v${stagedVersion}：已显示新协议，请点上方「应用修改」确认覆盖`
+          : 'AI 修改协议：每次 chat 完成后此处显示新协议，需点「应用修改」才正式覆盖'
         : 'Dry-run 验证：此处仅展示协议快照，不修改'
 
   const protocolName = value?.Protocol
@@ -91,6 +108,26 @@ export function ProtocolPreviewForm({
         <Tag color="blue">指令 {instructCount}</Tag>
         <Tag color="cyan">字段 {formResizeCount}</Tag>
         {protocolName && <Tag color="green">{protocolName}</Tag>}
+
+        {/* PR #48：AI 暂存确认 toolbar（仅 chat 模式且 stagedVersion 存在时显示） */}
+        {mode === 'chat' && stagedVersion !== undefined && onApplyStaged && onDiscardStaged && (
+          <Space size={4} style={{ marginLeft: 8 }}>
+            <Tag color="purple" style={{ fontWeight: 600 }}>
+              AI 暂存 v{stagedVersion}
+            </Tag>
+            <Button
+              type="primary"
+              size="small"
+              icon={<CheckOutlined />}
+              onClick={onApplyStaged}
+            >
+              应用修改
+            </Button>
+            <Button size="small" onClick={onDiscardStaged}>
+              撤销
+            </Button>
+          </Space>
+        )}
 
         {/* 跳转到详情页按钮（仅协议存在时显示） */}
         {protocolName && onJumpToDetail && (

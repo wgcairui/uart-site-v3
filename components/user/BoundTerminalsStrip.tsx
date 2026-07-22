@@ -6,12 +6,12 @@ import {
   Tag,
   Tooltip,
   Empty,
-  Button,
   Popconfirm,
   Modal,
   message,
   Dropdown,
 } from 'antd'
+import { Button } from '@/components/common/Button'
 import {
   AppstoreOutlined,
   CheckCircleFilled,
@@ -114,7 +114,7 @@ export function BoundTerminalsStrip({ user, onChange }: BoundTerminalsStripProps
               width: 32, height: 32, borderRadius: 10,
               background: 'linear-gradient(135deg, #06b6d4 0%, var(--brand-500) 100%)',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
-              color: '#fff', fontSize: 16,
+              color: 'var(--bg-panel)', fontSize: 16,
             }}
           >
             <AppstoreOutlined />
@@ -127,8 +127,7 @@ export function BoundTerminalsStrip({ user, onChange }: BoundTerminalsStripProps
           </div>
           <div style={{ marginLeft: 'auto' }}>
             <Button
-              type="primary"
-              size="small"
+              variant="primary"
               icon={<PlusOutlined />}
               onClick={() => setAddOpen(true)}
               style={{ borderRadius: 8 }}
@@ -150,7 +149,7 @@ export function BoundTerminalsStrip({ user, onChange }: BoundTerminalsStripProps
               style={{ padding: '24px 0' }}
             >
               <Button
-                type="primary"
+                variant="primary"
                 icon={<PlusOutlined />}
                 onClick={() => setAddOpen(true)}
               >
@@ -239,8 +238,8 @@ function TerminalCard({
             width: 44, height: 44, borderRadius: 10,
             background: 'linear-gradient(135deg, var(--brand-500) 0%, var(--accent-500) 100%)',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
-            color: '#fff', fontSize: 20, flexShrink: 0,
-            boxShadow: '0 4px 12px -2px rgba(139, 92, 246, 0.3)',
+            color: 'var(--bg-panel)', fontSize: 20, flexShrink: 0,
+            boxShadow: 'var(--shadow-avatar)',
           }}
         >
           <ApiOutlined />
@@ -336,8 +335,7 @@ function TerminalCard({
       >
         <Tooltip title="查看详情">
           <Button
-            size="small"
-            type="text"
+            variant="ghost"
             icon={<EyeFilled style={{ color: 'var(--brand-500)' }} />}
             onClick={onView}
           />
@@ -350,7 +348,7 @@ function TerminalCard({
             ],
           }}
         >
-          <Button size="small" type="text" icon={<DownOutlined style={{ fontSize: 11 }} />} />
+          <Button variant="ghost" icon={<DownOutlined style={{ fontSize: 11 }} />} />
         </Dropdown>
         <Popconfirm
           title={`解绑 [${t.DevMac}] ?`}
@@ -359,8 +357,7 @@ function TerminalCard({
         >
           <Tooltip title="解绑">
             <Button
-              size="small"
-              type="text"
+              variant="ghost"
               danger
               icon={<DeleteFilled />}
             />

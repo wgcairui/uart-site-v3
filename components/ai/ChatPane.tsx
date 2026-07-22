@@ -3,7 +3,8 @@
 import { Bubble, Prompts, Sender } from '@ant-design/x'
 import { Empty, Space, Tag, Typography } from 'antd'
 import { CheckCircleOutlined, CodeOutlined, RobotOutlined, UserOutlined } from '@ant-design/icons'
-import type { ReactNode } from 'react'
+import type { ReactNode, Ref } from 'react'
+import type { SenderRef } from '@ant-design/x/es/sender/interface'
 import type { AiStreamEvent } from '@/types/ai'
 
 const { Text } = Typography
@@ -45,8 +46,13 @@ export interface ChatPaneProps {
   /** 空状态时显示的 Prompts 引导（首次进入页面） */
   prompts?: { key: string; label: string; description?: string }[]
   onPromptClick?: (key: string, description?: string) => void
-  /** Sender 提交回调 */
+  /** Sender 提交回调（value 是用户输入文本） */
   onSubmit: (value: string) => void
+  /**
+   * Sender ref 转发 — 父组件可调 .clear() 清空 Sender 内部 state
+   * （PR #45 漏修：chat 页 onSubmit 是 no-op，Sender 提交后 input 不清空）
+   */
+  senderRef?: Ref<SenderRef>
   /** 重试按钮（错误时显示在 Sender 上方） */
   retryButton?: ReactNode
 }
@@ -90,6 +96,7 @@ export function ChatPane({
   prompts,
   onPromptClick,
   onSubmit,
+  senderRef,
   retryButton,
 }: ChatPaneProps) {
   const items = messages.map((m) => {
@@ -201,10 +208,13 @@ export function ChatPane({
         }}
       >
         <Sender
+          ref={senderRef as Ref<SenderRef>}
           loading={isStreaming}
           onSubmit={(v) => {
             if (!v.trim()) return
             onSubmit(v)
+            // 父组件负责 .clear()（如果传了 senderRef）— 这里不主动清，
+            // 因为某些 page（如 generate）可能希望保留输入文本
           }}
           placeholder={isStreaming ? '正在流式生成…' : '输入修改诉求后回车提交'}
         />

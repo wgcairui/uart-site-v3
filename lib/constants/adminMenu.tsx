@@ -35,12 +35,16 @@ export const ADMIN_MENU: AdminMenuGroup[] = [
     title: '基础数据',
     ico: <IconFont type="icon-jichuguanli" />,
     child: [
-      { key: 'protocols', to: '/admin/node/protocols', text: '协议', icon: <IconFont type="icon-jichuguanli" /> },
+      { key: 'protocols', to: '/admin/node/protocols', text: '协议管理', icon: <IconFont type="icon-jichuguanli" /> },
+      // PR-2 (2026-07-17): AI 生成从 /admin/ai/generate 搬到 /admin/node/protocols/generate, 收编进「协议」group
+      { key: 'protocols-generate', to: '/admin/node/protocols/generate', text: 'AI 生成', icon: <IconFont type="icon-zhire" /> },
+      // feat/feature-flag-platform 2026-07-21: Feature Flag 平台 (alert.dispatch.mode 等)
+      { key: 'feature-flags', to: '/admin/feature-flags', text: 'Feature Flags', icon: <IconFont type="icon-jichuguanli" /> },
       { key: 'devmodel', to: '/admin/node/devmodel', text: '设备类型', icon: <IconFont type="icon-fenzuguanli" /> },
-      { key: 'nodes', to: '/admin/node/nodes', text: '节点', icon: <IconFont type="icon-shebeizhuangtai" /> },
-      { key: 'terminal', to: '/admin/node/terminal', text: '终端', icon: <IconFont type="icon-shebeiguanli" /> },
+      { key: 'nodes', to: '/admin/node/nodes', text: '节点管理', icon: <IconFont type="icon-shebeizhuangtai" /> },
+      { key: 'terminal', to: '/admin/node/terminal', text: '终端管理', icon: <IconFont type="icon-shebeiguanli" /> },
       { key: 'terminal-health', to: '/admin/node/terminal/health', text: '设备健康度', icon: <HeartFilled style={{ color: '#ec4899' }} /> },
-      { key: 'user', to: '/admin/node/user', text: '用户', icon: <IconFont type="icon-icon_zhanghao" /> },
+      { key: 'user', to: '/admin/node/user', text: '用户管理', icon: <IconFont type="icon-icon_zhanghao" /> },
     ],
   },
   {
@@ -63,22 +67,18 @@ export const ADMIN_MENU: AdminMenuGroup[] = [
     ico: <IconFont type="icon-xiaoxitongzhi" />,
     child: [
       { key: 'log-alarm', to: '/admin/log/alarm', text: '告警日志', icon: <IconFont type="icon-jinggao" /> },
+      // feat/feature-flag-platform 2026-07-21: 告警审批跟踪 (killSwitch + manual/delayed_auto 队列)
+      { key: 'alert-queue', to: '/admin/alerts/queue', text: '告警审批', icon: <IconFont type="icon-jinggao" /> },
       { key: 'log-mail', to: '/admin/log/mail', text: '邮件日志', icon: <IconFont type="icon-xiaoxitongzhi" /> },
       { key: 'log-sms', to: '/admin/log/sms', text: '短信日志', icon: <IconFont type="icon-xiaoxitongzhi" /> },
       { key: 'log-wxsubscribe', to: '/admin/log/wxsubscribe', text: '微信告警事件日志', icon: <IconFont type="icon-xiaoxitongzhi" /> },
       { key: 'log-server-errors', to: '/admin/log/server-errors', text: '服务端错误日志', icon: <IconFont type="icon-bug" /> },
     ],
   },
-  {
-    // 决策 16 + 19 + 20 / 2026-06-24：AI 协议生成器 admin 端入口
-    title: 'AI 工具',
-    ico: <IconFont type="icon-zhire" />,
-    child: [
-      { key: 'ai-generate', to: '/admin/ai/generate', text: '生成新协议', icon: <IconFont type="icon-zhire" /> },
-      { key: 'ai-chat', to: '/admin/ai/chat', text: 'AI 修改协议', icon: <IconFont type="icon-bianjisekuai" /> },
-      { key: 'ai-dry-run', to: '/admin/ai/dry-run', text: '协议 Dry-run', icon: <IconFont type="icon-tiaoshi" /> },
-    ],
-  },
+  // PR-2 (2026-07-17): "AI 工具" group 整体移除
+  //  - AI 生成已并入「协议」group 下
+  //  - AI 修改 / Dry-run 已在 PR-1 合并到协议详情 tab
+  // 历史 group 留 removed-from-2026-07-17 标记, 方便回溯
 ]
 
 /** 默认展开的一级分组 key */

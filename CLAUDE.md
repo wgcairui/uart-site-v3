@@ -185,6 +185,62 @@ redirect('/login')
 - ⚠️ **路由组不能有同级 `page.tsx`**：`(user)/page.tsx` 和 `(admin)/page.tsx` 都解析到 `/` 会报冲突，必须在路由组内加一层真实路径（如 `main/`、`admin/`）
 - **浏览器日志转终端**：`next.config.ts` 中 `logging.browserToTerminal: true` 将所有 `console.*` 转发到终端，调试无需开浏览器
 
+## Next.js 16.3 + cacheComponents 限制（2026-07-21 决策）
+
+- **当前 16.3 已部署** (`next: 16.3.0-preview.6`)，但 `cacheComponents` **故意关闭**（PR #56 注释掉）
+- 原因：**antd v5 内部用了 `Math.random()`** (在 `node_modules/@rc-component/util/lib/getScrollBarSize.js` 等 3 个文件里), 16.3 cacheComponents prerender Client Component 时穿透到 antd 内部, build 报 sync-IO blocker
+- 触发 page: `app/(admin)/admin/feature-flags/page.tsx` (3 个 Modal) + `app/(admin)/admin/node/user/page.tsx` (MigrateUserResourcesModal + Modal.info)
+- **项目代码 0 处 `Math.random` / `Date.now` / module 顶层 `new Date()`** — 都在 event handler / useEffect 内, 合规
+- ⚠️ `export const instant = false` **救不了**这种 sync-IO blocker (skill 文档 §background class 2)
+- ⚠️ Client Component page (`'use client'` 在 page 顶部) **不能 export `instant`** (build error E1344)
+- 拿到的 16.3 baseline (不影响): AGENTS.md agent-rules 自动维护 / Actionable Errors / agent-browser 0.27 / 三个官方 Skills (next-dev-loop / next-cache-components-adoption / next-cache-components-optimizer)
+- **未来解锁 cacheComponents 路线** (3 选 1): 等 antd v6 / 换 shadcn-ui (大工程) / 重构 2 个 page 成 server+client split (4-8h, 副作用是首屏 data 变 client fetch)
+- 重开 cacheComponents 前必看: `next-cache-components-adoption` skill + `references/per-page-decisions.md`
+
+## 部署 5 步验证链（2026-07-17 标准化）
+
+每次 ship 1 PR 走完 5 步，**任何一步不通过都不放过**：
+
+```bash
+# 1. git log 看 prod HEAD = 期望 commit
+ssh cc@uart.ladishb.com "cd /home/cc/Web/uart-site-v3 && git log --oneline -1"
+
+# 2. grep 新关键字在 prod 源码 (防 cache hit 静默 fail)
+ssh cc@uart.ladishb.com "grep <新 keyword> <file>"
+
+# 3. docker build --no-cache (image name: uart-site-v3:latest, 有 dash)
+ssh cc@uart.ladishb.com "nohup docker build --no-cache -t uart-site-v3:latest /home/cc/Web/uart-site-v3 > /tmp/build.log 2>&1 &"
+
+# 4. compose up --force-recreate (service name: uartsite-v3, 无 dash)
+ssh cc@uart.ladishb.com "cd /home/cc/Web/docker && docker compose up -d --force-recreate --no-deps uartsite-v3"
+
+# 5. verify image hash 不同 + 容器 healthy + 接口 200
+ssh cc@uart.ladishb.com "docker images uart-site-v3:latest --format '{{.ID}}'"  # ≠ 老 hash
+ssh cc@uart.ladishb.com "docker ps --format '{{.Names}}\t{{.Image}}' | grep uartsite"
+curl -sS https://uart.ladishb.com/api/health
+```
+
+**关键避坑**:
+- ❌ `docker restart <container>` **不刷 image**（只重启进程，layer 仍是老的）→ 必须 `compose up --force-recreate`
+- ❌ `docker build` 不带 `--no-cache` 时，`git reset --hard` 之后可能全 stage CACHED 但代码已更新 → 必加 `--no-cache`
+- ✅ 拼写区分: image `uart-site-v3:latest` (dash) vs service `uartsite-v3` (no dash)
+- ✅ `git fetch origin` 偶尔 2m timeout, retry 即可（出口到 github.com 不稳）
+- ✅ `git push github.com` SSL timeout 时用 REST API 创建 PR（PR 一旦建好, push 之后 commit 就能进 PR diff）
+
+## 近期 ship 关键 PR
+
+| PR | 日期 | 主题 | 影响 doc |
+|---|---|---|---|
+| #29 | 2026-07-14 | v4 admin dashboard 首批 | `docs/components.md` §3.1/3.2 |
+| #42 | 2026-07-15 | admin user 资源迁移 UI（v3 hybrid v4 样板） | `app/(admin)/admin/node/user/page.tsx` 视觉参考 |
+| #43 | 2026-07-15 | 9 admin 列表页 v3 polish | `docs/components.md` §2.5/2.6 |
+| #44 | 2026-07-17 | 3 AI 工具页整合进协议域 (5 redirect + 2 tab) | `app/CLAUDE.md` AI 域整合 + `docs/components.md` §3.7 |
+| #45 | 2026-07-17 | AI 修改 tab 发送按钮无响应 (Sender no-op) | `docs/components.md` §5.3.1 |
+| #46 | 2026-07-17 | 文档同步 AI 域整合 | `docs/components.md` + `app/CLAUDE.md` + `docs/CLAUDE.md` |
+| #47 | 2026-07-17 | 5 个 CLAUDE.md audit + 同步 (本页) | 全部 6 个 CLAUDE.md |
+
+**完整索引**：`docs/CLAUDE.md` 顶部「近期 ship PR」表（包含历史所有 PR）。
+
 ## 常见问题
 
 **Q：为什么加了 `'use client'` 还报 "React Server Component" 错误？**
@@ -198,6 +254,9 @@ A：检查 `next.config.ts` 中 `/client/:path*` 的 rewrites 配置，确保代
 
 **Q：`useUserStore` 返回初始空值？**
 A：登录后需调用 `useUserStore.getState().setUser(userData)` 写入数据。store 在内存中，页面刷新后需重新从 API 获取（在布局组件的 `useEffect` 中初始化）。
+
+**Q：ChatPane 内置 Sender 点不动？**
+A：99% 是 `onSubmit` 传了 `() => undefined` no-op。Sender 内部调 `onSubmit(v)`，传空函数等于按钮坏了。详见 `components/CLAUDE.md` "ChatPane 双 input 陷阱" + `docs/components.md` §5.3.1。
 
 ## 页面设计规范
 
