@@ -2,6 +2,7 @@
 import { DeleteFilled, WarningFilled, PlusOutlined, AppstoreOutlined, FilterOutlined, ReloadOutlined } from "@ant-design/icons";
 import { Button, Form, Input, message, Modal, Space, Spin, Table, Tooltip } from 'antd'
 import React, { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { addDevType, deleteDevModel, DevTypes, getDevModelStats } from "@/lib/api/fetchRoot";
 import {
     generateTableKey,
@@ -90,6 +91,7 @@ export const DevModel: React.FC = () => {
     const [statFilter, setStatFilter] = useState<string[]>([]);
     const [visible, setVisible] = useState(false);
     const [editingItem, setEditingItem] = useState<Uart.DevsType | null>(null);
+    const router = useRouter();
     const apiQuery: PaginationReq = {
         ...query,
         search: searchFields,
