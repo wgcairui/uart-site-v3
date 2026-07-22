@@ -262,7 +262,11 @@ export function HeartbeatPanel({ mac }: Props) {
                                 Status History · log.terminalEvents (近 20 条 / 30d)
                             </span>
                         </div>
-                        {data && data.transitions.length === 0 ? (
+                        {!data ? (
+                            <div style={{ padding: '24px 0', textAlign: 'center' }}>
+                                <Spin size="small" /> <span style={{ fontSize: 11, color: 'var(--ink-500)', marginLeft: 8 }}>加载状态历史...</span>
+                            </div>
+                        ) : data.transitions.length === 0 ? (
                             <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="近期无状态翻转" style={{ margin: '12px 0' }} />
                         ) : (
                             <div style={{ maxHeight: 200, overflowY: 'auto', margin: '0 -4px' }}>
@@ -333,7 +337,11 @@ export function HeartbeatPanel({ mac }: Props) {
                                 )}
                             </span>
                         </div>
-                        {data && data.samples.length === 0 ? (
+                        {!data ? (
+                            <div style={{ padding: '24px 0', textAlign: 'center' }}>
+                                <Spin size="small" /> <span style={{ fontSize: 11, color: 'var(--ink-500)', marginLeft: 8 }}>加载降频采样...</span>
+                            </div>
+                        ) : data.samples.length === 0 ? (
                             <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="近 7d 无降频采样 (设备未上 PESIV 网)" style={{ margin: '12px 0' }} />
                         ) : (
                             <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 2fr) minmax(0, 1fr)', gap: 16, alignItems: 'center' }}>
