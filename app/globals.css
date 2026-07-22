@@ -809,6 +809,14 @@ html, body {
     padding-left: 60px !important;
   }
 
+  /* admin 端 mobile: 完整面包屑折叠成单段当前页 (避免 "后/台/节/点/..." 被压成单字竖列) */
+  .admin-topbar-breadcrumb {
+    display: none !important;
+  }
+  .admin-topbar-current-title {
+    display: block !important;
+  }
+
   /* device hero 缩 */
   [class*="v3-device-hero"] {
     padding: 20px !important;
@@ -991,6 +999,15 @@ html, body {
   background: linear-gradient(135deg, rgba(139, 92, 246, 0.14) 0%, rgba(244, 114, 182, 0.10) 100%);
   color: var(--brand-600, #8b5cf6);
   font-weight: 600;
+}
+
+/* =============================================================
+ * AdminHeader · mobile 当前页单段标题 (默认 desktop 隐藏, mobile @media 才显示)
+ * - 见 @media (max-width: 768px) 块里的反向规则
+ * ============================================================= */
+
+.admin-topbar-current-title {
+  display: none;
 }
 
 /* =============================================================

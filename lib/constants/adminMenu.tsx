@@ -35,16 +35,16 @@ export const ADMIN_MENU: AdminMenuGroup[] = [
     title: '基础数据',
     ico: <IconFont type="icon-jichuguanli" />,
     child: [
-      { key: 'protocols', to: '/admin/node/protocols', text: '协议', icon: <IconFont type="icon-jichuguanli" /> },
+      { key: 'protocols', to: '/admin/node/protocols', text: '协议管理', icon: <IconFont type="icon-jichuguanli" /> },
       // PR-2 (2026-07-17): AI 生成从 /admin/ai/generate 搬到 /admin/node/protocols/generate, 收编进「协议」group
       { key: 'protocols-generate', to: '/admin/node/protocols/generate', text: 'AI 生成', icon: <IconFont type="icon-zhire" /> },
       // feat/feature-flag-platform 2026-07-21: Feature Flag 平台 (alert.dispatch.mode 等)
       { key: 'feature-flags', to: '/admin/feature-flags', text: 'Feature Flags', icon: <IconFont type="icon-jichuguanli" /> },
       { key: 'devmodel', to: '/admin/node/devmodel', text: '设备类型', icon: <IconFont type="icon-fenzuguanli" /> },
-      { key: 'nodes', to: '/admin/node/nodes', text: '节点', icon: <IconFont type="icon-shebeizhuangtai" /> },
-      { key: 'terminal', to: '/admin/node/terminal', text: '终端', icon: <IconFont type="icon-shebeiguanli" /> },
+      { key: 'nodes', to: '/admin/node/nodes', text: '节点管理', icon: <IconFont type="icon-shebeizhuangtai" /> },
+      { key: 'terminal', to: '/admin/node/terminal', text: '终端管理', icon: <IconFont type="icon-shebeiguanli" /> },
       { key: 'terminal-health', to: '/admin/node/terminal/health', text: '设备健康度', icon: <HeartFilled style={{ color: '#ec4899' }} /> },
-      { key: 'user', to: '/admin/node/user', text: '用户', icon: <IconFont type="icon-icon_zhanghao" /> },
+      { key: 'user', to: '/admin/node/user', text: '用户管理', icon: <IconFont type="icon-icon_zhanghao" /> },
     ],
   },
   {
