@@ -25,9 +25,6 @@ import {
 	delUserTerminal,
 	getTerminals,
 	initTerminal,
-	IotQueryCardFlowInfo,
-	IotQueryCardInfo,
-	IotQueryIotCardOfferDtl,
 	iotRemoteUrl,
 	setTerminalOnline,
 } from '@/lib/api/fetchRoot'
@@ -46,12 +43,6 @@ import { MyCopy } from "@/components/common/MyCopy";
 
 import { TerminalInfo } from "./TerminalInfo";
 import { TerminalMountDevs } from "./TerminalMountDevs";
-
-/**
- * 显示设备查询间隔
- * @param param0
- * @returns
- */
 
 interface infoProps {
 	/**
@@ -100,6 +91,16 @@ interface props {
 	 * 额外的操作按钮（放置在"更新信息"按钮旁）
 	 */
 	extraActions?: React.ReactNode;
+	/**
+	 * 节点列下拉选项（来自 server getTerminalStats().nodes 唯一值）
+	 * 透传给 makeServerFilterProp，列头 funnel 多选
+	 */
+	statsNodes?: string[];
+	/**
+	 * 型号列下拉选项（来自 server getTerminalStats().pids 唯一值）
+	 * 透传给 makeServerFilterProp，列头 funnel 多选
+	 */
+	statsPids?: string[];
 }
 
 /**
@@ -218,17 +219,6 @@ export const TerminalsTable: React.FC<Omit<TableProps<Uart.Terminal>, "dataSourc
 		});
 	};
 
-	const iccdInfo = async (iccid: string, mac: string) => {
-		const key = "iccdInfo" + Math.random();
-		message.loading({ content: '查询中...', key });
-		await IotQueryCardInfo(iccid);
-		await IotQueryCardFlowInfo(iccid);
-		await IotQueryIotCardOfferDtl(iccid);
-		setTimeout(() => {
-			message.info({ content: "ok", key });
-		}, 5000);
-	};
-
 	const unbindDev = (mac: string, user?: string) => {
 		if (user) {
 			Modal.confirm({
@@ -317,24 +307,20 @@ export const TerminalsTable: React.FC<Omit<TableProps<Uart.Terminal>, "dataSourc
 							...getColumnSearchProp<any>("user"),
 						},
 						{
-							dataIndex: "ICCID",
-							title: "ICCID",
-							ellipsis: true,
-							width: 120,
-							...makeServerSearchProp<Uart.Terminal>("ICCID", handleSearch),
-							render: (val: any) => val && <MyCopy value={val}></MyCopy>,
-						},
-						{
+							// 节点列: 列头 funnel 多选 (server-side filter, 数据从 props.statsNodes 注入,
+							// 来自主页 getTerminalStats().nodes 唯一值, server 走 $or regex 子串匹配,
+							// 但 stats 喂的是真实 unique 值, select 选出来必精确)
 							dataIndex: "mountNode",
 							title: "节点",
-							width: 80,
-							...makeServerSearchProp<Uart.Terminal>("mountNode", handleSearch),
+							width: 100,
+							...makeServerFilterProp<Uart.Terminal>("mountNode", props.statsNodes ?? []),
 						},
 						{
+							// 型号列: 同上, 列头 funnel 多选
 							dataIndex: "PID",
 							title: "型号",
 							width: 80,
-							...makeServerSearchProp<Uart.Terminal>("PID", handleSearch),
+							...makeServerFilterProp<Uart.Terminal>("PID", props.statsPids ?? []),
 						},
 						{
 							title: "挂载设备",
@@ -375,7 +361,6 @@ export const TerminalsTable: React.FC<Omit<TableProps<Uart.Terminal>, "dataSourc
 												{ key: "111", label: "切换共享状态", onClick: () => changeShare(t.DevMac) },
 												{ key: "2", label: "delete", onClick: () => deleteRegisterTerminalm(t.DevMac) },
 												{ key: "3", label: "初始化", onClick: () => initTerminalm(t.DevMac) },
-												...(t.ICCID ? [{ key: "4", label: "ICCID更新", onClick: () => iccdInfo(t.ICCID!, t.DevMac) }] : []),
 												...(props.user ? [{ key: "5", label: "解绑设备", onClick: () => unbindDev(t.DevMac, props.user!) }] : [])
 											]
 										}}
