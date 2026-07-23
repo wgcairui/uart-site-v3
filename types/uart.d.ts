@@ -765,6 +765,9 @@ declare namespace Uart {
         userGroup: string;
         type: string;
         argument?: any;
+        // feat/web-ai-ops (cairui 23 11:30): server sortBy='timeStamp' (admin-log.controller.ts listUserRequestLogs),
+        // 业务数据实际有 timeStamp 字段 (跟 logSmsSend / logMailSend 同样的上游类型遗漏), 用于排序 + 审计页时间列
+        timeStamp?: number;
     }
     // ─── UserJourney 业务事件追踪 (cairui 09:09 拍板 #1+2+3+4) ─────────────
     // 跟 logUserRequst per-request 平行, journey 30d TTL 业务事件摘要
@@ -1524,5 +1527,120 @@ declare namespace Uart {
         realtime: HeartbeatRealtime;
         transitions: HeartbeatTransition[];
         samples: HeartbeatSample[];
+    }
+
+    // ─── AI ops (server feat/ai-ops @ PR #106) ───
+    // server 端 RoleType.AI 只读 token + 聚合诊断端点, 字段名权威源:
+    // midwayuartserver/src/module/ai-ops/controller/admin-ai-ops.controller.ts
+    // midwayuartserver/src/module/auth/controller/admin-auth.controller.ts (issue-ai-token)
+
+    /** POST /api/v2/admin/auth/issue-ai-token 入参
+     *  name: 2-32 字符 (server 端 .min(2).max(32))
+     *  expiresInDays: 1-365 (server 端 .min(1).max(365), 默认 30)
+     */
+    interface AiTokenIssueDto {
+        name: string;
+        expiresInDays?: number;
+    }
+
+    /** POST /api/v2/admin/auth/issue-ai-token 出参
+     *  token: JWT (long-lived stateless, payload `user: 'ai:<name>', userGroup: 'ai'`)
+     *  user: 'ai:<name>' (实际 user 字段前缀 + name)
+     *  expiresAt: epoch ms (token 实际过期时间)
+     */
+    interface AiTokenIssueResult {
+        token: string;
+        user: string;
+        name: string;
+        userGroup: 'ai';
+        expiresAt: number;
+        expiresInDays: number;
+    }
+
+    /** POST /api/v2/admin/ai-ops/diagnose 入参
+     *  mac: 必填, 12 字符 hex (大写, server 端 DevMac 字段 unique index)
+     *  include* 开关: 默认 true (server 端默认), 设 false 跳过对应数据源
+     *  limit: 限制 instruct/alarms/transitions 各自条数 (server 端 default 20, max 100)
+     */
+    interface AiDiagnoseReq {
+        mac: string;
+        includeTerminal?: boolean;
+        includeHeartbeat?: boolean;
+        includeInstructHistory?: boolean;
+        includeAlarms?: boolean;
+        includeTerminalEvents?: boolean;
+        limit?: number;
+    }
+
+    /** POST /api/v2/admin/ai-ops/diagnose 出参
+     *  5 维数据, 走 server 端 Promise.all 并行 query, 失败字段 fallback null
+     */
+    interface AiDiagnoseResult {
+        mac: string;
+        ts: number;
+        terminal?: Terminal | null;
+        heartbeat?: HeartbeatResponse | null;
+        instructHistory?: {
+            total: number;
+            items: Array<{
+                mac: string;
+                protocol: string;
+                type: number;
+                events: string;
+                content: string;
+                result?: any;
+                timeStamp: number;
+            }>;
+        } | null;
+        alarms?: {
+            total: number;
+            items: uartAlarmObject[];
+        } | null;
+        transitions?: {
+            total: number;
+            items: Array<{
+                _id: string;
+                mac: string;
+                timeStamp: number;
+                kind: TerminalEventKind;
+                nodeName?: string;
+                payload: TerminalTimelinePayload;
+            }>;
+        } | null;
+    }
+
+    /** GET /api/v2/admin/ai-ops/system/health 出参
+     *  overall: 'healthy' | 'degraded' | 'down'
+     *  - healthy: mongo/redis 都 ok + 5min 5xx < 50
+     *  - degraded: 5min 5xx >= 50
+     *  - down: mongo 或 redis down
+     */
+    interface AiSystemHealthResult {
+        overall: 'healthy' | 'degraded' | 'down';
+        server: {
+            uptime: number;       // seconds
+            nodeVersion: string;
+            pid: number;
+        };
+        mongo: {
+            ok: boolean;
+            latencyMs?: number;
+            error?: string;
+        };
+        redis: {
+            ok: boolean;
+            latencyMs?: number;
+            error?: string;
+        };
+        errors: {
+            last5min5xx: number;
+            last1h5xx: number;
+        };
+        devices: {
+            total: number;
+            online: number;
+            offline: number;
+        };
+        ts: number;
     }
 }
