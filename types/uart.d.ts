@@ -1643,4 +1643,51 @@ declare namespace Uart {
         };
         ts: number;
     }
+
+    /**
+     * 异常设备 (server 端 TerminalService.getAnomalousTerminals, 2026-07-23 ship)
+     *
+     * 4 类根因 + 6 个 terminal 字段 (mac/mountNode/mountDev/protocol/online/lastRecord) +
+     * 数据指标 (docs7d / docs3dDaily) + 严重程度 (severity) + 修复提示 (hint) + 跳转链接
+     *
+     * 鉴权: ADMIN/ROOT/AI (admin 排查用, AI 也可调)
+     * 端点: GET /api/v2/admin/terminals/anomalies?limit=20
+     */
+    type AnomalousRootCause = 'A' | 'B' | 'C' | 'D' | 'recovery' | 'unknown'
+    type AnomalousSeverity = 'critical' | 'warning' | 'info' | 'unknown'
+
+    interface AnomalousTerminal {
+        /** 设备 MAC (12 字符, 大写) */
+        mac: string;
+        /** 挂载节点 (pesiv / pesiv-1) */
+        mountNode: string;
+        /** 挂载设备名 (UPS / 温度 / etc) */
+        mountDev: string;
+        /** 协议名 (Pesiv卡 / P01 / PI36 / etc) */
+        protocol: string;
+        /** 当前 online (mountDevs[0].online) */
+        online: boolean;
+        /** 最近一次 record 时间 (ISO Date string, mongoose toJSON) */
+        lastRecord: string;
+        /** 7d docs 总数 (0 = 完全没数据 = A 类物理层) */
+        docs7d: number;
+        /** 近 3 天 daily docs (顺序: 近→远, 长度固定 3) — 用来判 B 间歇 / recovery */
+        docs3dDaily: number[];
+        /**
+         * 4 类根因 + recovery + unknown
+         * - A: 物理层 (QWS/QMOD/QGS 全返空, 7d docs=0, 现场换卡/重烧录) — critical
+         * - B: 间歇性掉线 (3d daily 有 0-doc 天) — warning
+         * - C: 协议漏配 (PI36/PI38 + 7d < 200) — info
+         * - D: 协议手滑 (P01/P01Modbus 应配 Pesiv卡) — info
+         * - recovery: 正在恢复 (3d 持续有数据, 7d < 200 是历史欠账) — info
+         * - unknown: 7d 略低, 需排查 — unknown
+         */
+        rootCause: AnomalousRootCause;
+        /** 修复建议 (中文, 1 句话) */
+        hint: string;
+        /** 严重程度 Tag 颜色 (critical=red / warning=orange / info=blue / unknown=gray) */
+        severity: AnomalousSeverity;
+        /** admin 跳转链接 (终端详情页) */
+        actionUrl: string;
+    }
 }
