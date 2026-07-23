@@ -25,6 +25,17 @@ export const cleanListenMac = () => Del<universalResult<void>>('/api/v2/admin/te
 export const getTerminalHeartbeat = (mac: string) =>
   Get<universalResult<Uart.HeartbeatResponse>>(`/api/v2/admin/terminals/${encodeURIComponent(mac)}/heartbeat`)
 
+/**
+ * 异常设备列表 (pesiv/pesiv-1 节点"有心跳但上报数据异常", 2026-07-23 ship)
+ * - 4 类根因: A 物理层 / B 间歇 / C 漏配 / D 手滑 / recovery 恢复中 / unknown
+ * - 默认 top 20, server 强制 limit ∈ [1, 100]
+ * - 鉴权 ADMIN/ROOT/AI (admin 排查用, AI 也可调)
+ * - 端点: GET /api/v2/admin/terminals/anomalies?limit=N
+ * - server 端: TerminalService.getAnomalousTerminals() (admin-terminal.controller.ts:148-152)
+ */
+export const getAnomalousTerminals = (limit = 20) =>
+  Get<universalResult<Uart.AnomalousTerminal[]>>('/api/v2/admin/terminals/anomalies', { limit: String(limit) })
+
 // ─── Admin: Registered Devices  (/api/v2/admin/register-devs) ─────────────────
 
 export const RegisterTerminals = (query?: PaginationReq) => Post<universalResult<V2ListResponse<Uart.RegisterTerminal>>>('/api/v2/admin/register-devs/list', { ...query })

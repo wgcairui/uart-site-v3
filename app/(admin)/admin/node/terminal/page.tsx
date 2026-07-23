@@ -12,6 +12,7 @@ import { NodesSelects } from "@/components/node/NodesSelects";
 import { PageHeader } from "@/components/common/PageHeader";
 import { PageSummary } from "@/components/common/PageSummary";
 import { StatusTag } from "@/components/common/StatusTag";
+import { AnomalousDevicesCard } from "@/components/terminal/AnomalousDevicesCard";
 
 const TerminalAddDTU: React.FC = () => {
     const [mac, setMac] = useState<string>("");
@@ -158,6 +159,8 @@ export default function Terminals() {
                     ]}
                 />
             </div>
+            {/* 问题设备卡片 — 2026-07-23 ship, 数据源 server GET /api/v2/admin/terminals/anomalies */}
+            <AnomalousDevicesCard />
             <div className="bento-card" style={{ marginBottom: 20, padding: 24 }}>
                 <Tabs items={items} destroyOnHidden />
             </div>
