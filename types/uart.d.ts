@@ -1393,7 +1393,8 @@ declare namespace Uart {
 
     // ─── v2 admin terminal detailed stats (server admin-dashboard.controller.ts:488 getTerminalDetailedStats, 2026-07-17) ───
     /** GET /api/v2/admin/dashboard/terminals/detailed-stats
-     *  server PR #76 同期 ship (commit e3dd670 / deploy eb769492c64d) */
+     *  server PR #76 同期 ship (commit e3dd670 / deploy eb769492c64d)
+     *  2026-07-23 扩展: PR #108 (server) 加 3 字段 (disable / atEnabled / withJw) */
     interface TerminalDetailedStatsResp {
         /** 总设备数 (server countDocuments) */
         total: number;
@@ -1405,6 +1406,13 @@ declare namespace Uart {
         onlineRate: number;
         /** 共享数 (share === true) */
         shared: number;
+        // === server PR #108 / commit d08886b / image 2b7cad80f0e0 (2026-07-23 ship) ===
+        /** 停用设备数 (disable: true, 运维关注) */
+        disable: number;
+        /** AT 指令启用数 (AT: true, 运维关注) */
+        atEnabled: number;
+        /** 已配经纬度设备数 (jw 非空, 产品关注) */
+        withJw: number;
         /** 超时挂载设备数 (mountDevs.online !== true) */
         timeoutMountDev: number;
         /** 平均挂载数 (mountDevs.length / total, 0.1 精度) */

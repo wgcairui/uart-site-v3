@@ -4,7 +4,7 @@ import React, { useState, useMemo } from "react";
 import {
     ApiOutlined, NodeIndexOutlined, AppstoreOutlined, DeploymentUnitOutlined,
     ShareAltOutlined, PieChartOutlined, ClockCircleOutlined,
-    CalculatorOutlined, DatabaseOutlined,
+    CalculatorOutlined, DatabaseOutlined, StopOutlined, EnvironmentOutlined,
 } from '@ant-design/icons'
 import { TerminalsTable } from "@/components/terminal/TerminalsTable";
 import { getTerminalStats, addRegisterTerminal, getTerminalDetailedStats } from "@/lib/api/fetchRoot";
@@ -107,6 +107,10 @@ export default function Terminals() {
             offline: d?.offline ?? 0,
             onlineRate: d?.onlineRate ?? 0,
             shared: d?.shared ?? 0,
+            // === server PR #108 (2026-07-23 ship) 加 3 字段 ===
+            disable: d?.disable ?? 0,
+            atEnabled: d?.atEnabled ?? 0,
+            withJw: d?.withJw ?? 0,
             timeoutMountDev: d?.timeoutMountDev ?? 0,
             avgMountDevs: d?.avgMountDevs ?? 0,
             totalMountDevs: d?.totalMountDevs ?? 0,
@@ -115,6 +119,7 @@ export default function Terminals() {
     }, {
         onlines: [], nodes: [], pids: [], devs: [],
         total: 0, online: 0, offline: 0, onlineRate: 0, shared: 0,
+        disable: 0, atEnabled: 0, withJw: 0,
         timeoutMountDev: 0, avgMountDevs: 0, totalMountDevs: 0,
         pidDistribution: [],
     })
@@ -191,7 +196,7 @@ export default function Terminals() {
                     { title: '终端' },
                 ]}
             />
-            {/* PageSummary 主卡 5 张: 总数/在线/离线/共享数/在线率 (节点数下移到 2nd row 副卡) */}
+            {/* PageSummary 主卡 6 张: 总数/在线/离线/共享数/在线率/停用 (server PR #108 加 停用, warning variant) */}
             <div style={{ marginBottom: 24 }}>
                 <PageSummary
                     items={[
@@ -211,11 +216,19 @@ export default function Terminals() {
                             icon: <PieChartOutlined />,
                             extra: serverStats.total > 0 ? `${serverStats.online} / ${serverStats.total}` : undefined,
                         },
+                        {
+                            label: '停用',
+                            value: serverStats.disable,
+                            variant: 'warning',
+                            icon: <StopOutlined />,
+                            extra: serverStats.total > 0 ? `${Math.round((serverStats.disable / serverStats.total) * 100)}% 停用率` : undefined,
+                        },
                     ]}
                 />
             </div>
-            {/* 2nd row 副卡 4 张: 节点数(数量)/总挂载/平均挂载/超时挂载
-                模板抽到 components/common/StatCardsRow.tsx (2026-07-23), 跟 user/page.tsx:308-340 共用 */}
+            {/* 2nd row 副卡 6 张: 节点数/总挂载/平均挂载/超时挂载/AT 启用/经纬度
+                模板抽到 components/common/StatCardsRow.tsx (2026-07-23), 跟 user/page.tsx:308-340 共用
+                AT 启用 + 经纬度 2 张是 server PR #108 (2026-07-23) 新加, 跟 1 张 PageSummary 新"停用"卡一起组成运维 3 件套 */}
             <StatCardsRow
                 total={serverStats.total}
                 style={{ marginBottom: 20 }}
@@ -249,6 +262,20 @@ export default function Terminals() {
                         extra: serverStats.totalMountDevs > 0
                             ? `${Math.round((serverStats.timeoutMountDev / serverStats.totalMountDevs) * 100)}% 超时率`
                             : undefined,
+                    },
+                    {
+                        label: 'AT 启用',
+                        value: serverStats.atEnabled,
+                        color: '#ec4899',
+                        icon: <ApiOutlined />,
+                        extra: serverStats.total > 0 ? `${Math.round((serverStats.atEnabled / serverStats.total) * 100)}% 启用率` : undefined,
+                    },
+                    {
+                        label: '经纬度',
+                        value: serverStats.withJw,
+                        color: '#10b981',
+                        icon: <EnvironmentOutlined />,
+                        extra: serverStats.total > 0 ? `${Math.round((serverStats.withJw / serverStats.total) * 100)}% 已配率` : undefined,
                     },
                 ]}
             />
