@@ -79,6 +79,17 @@ export const ADMIN_MENU: AdminMenuGroup[] = [
   //  - AI 生成已并入「协议」group 下
   //  - AI 修改 / Dry-run 已在 PR-1 合并到协议详情 tab
   // 历史 group 留 removed-from-2026-07-17 标记, 方便回溯
+  // feat/web-ai-ops (server PR #106): "AI 工具" group 恢复,
+  //  - AI Token 签发: 给 Mavis / 外部工具签 RoleType.AI 只读 token
+  //  - AI 调用审计: 查 log.userRequests filter userGroup=ai
+  {
+    title: 'AI 工具',
+    ico: <IconFont type="icon-zhire" />,
+    child: [
+      { key: 'ai-token', to: '/admin/ai/token', text: 'AI Token 签发', icon: <IconFont type="icon-zhire" /> },
+      { key: 'ai-audit', to: '/admin/ai/audit', text: 'AI 调用审计', icon: <IconFont type="icon-xiaoxitongzhi" /> },
+    ],
+  },
 ]
 
 /** 默认展开的一级分组 key */
