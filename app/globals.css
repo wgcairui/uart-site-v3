@@ -196,6 +196,10 @@ html, body {
     radial-gradient(at 100% 100%, #fce7f3 0%, transparent 50%),
     var(--bg-page);
   overflow: hidden;
+  /* 内容少时撑满 main 滚动区, 避免底部留白 (cairui 2026-07-23 反馈: 节点管理 / dashboard 等短页跳过来下方大片空白)
+   * 100% 参考父 <main class="scroll-area"> 的 content height (main 是 flex:1, 高度由外层 100vh 减去 AdminHeader 决定)
+   * 内容多时, 自身高度被内容撑开超过 100%, 仍正常滚动, 不影响长页 (alarm/mail/sms 等已经 inline 写过 minHeight: 100%, 重复无副作用) */
+  min-height: 100%;
 }
 .bg-bento-canvas::before {
   content: '';

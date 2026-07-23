@@ -42,6 +42,7 @@ import { MyDatePickerRange } from '@/components/common/MyDatePickerRange'
 import { PageHeader } from '@/components/common/PageHeader'
 import { PageSummary } from '@/components/common/PageSummary'
 import { EmptyState } from '@/components/common/EmptyState'
+import { AlarmDetailModal } from './_components/AlarmDetailModal'
 
 dayjs.extend(relativeTime)
 dayjs.locale('zh-cn')
@@ -77,7 +78,8 @@ const MobileAlarmCards: React.FC<{
     loading: boolean
     total: number
     onRefresh: () => void
-}> = ({ items, loading, total, onRefresh }) => {
+    onItemClick?: (item: Uart.uartAlarmObject) => void
+}> = ({ items, loading, total, onRefresh, onItemClick }) => {
     return (
         <>
             {loading && items.length === 0 ? (
@@ -115,7 +117,12 @@ const MobileAlarmCards: React.FC<{
                             const d = ts ? dayjs(ts) : null
                             const relative = d ? d.fromNow() : '—'
                             return (
-                                <div key={item._id ?? `${item.mac}-${ts}-${item.pid}`} className="alarm-mobile-card">
+                                <div
+                                    key={item._id ?? `${item.mac}-${ts}-${item.pid}`}
+                                    className="alarm-mobile-card"
+                                    onClick={onItemClick ? () => onItemClick(item) : undefined}
+                                    style={onItemClick ? { cursor: 'pointer' } : undefined}
+                                >
                                     <div className="alarm-mobile-card-header">
                                         <span className="alarm-mac">{item.mac || '—'}</span>
                                         <span className="alarm-mobile-card-time" title={d ? d.format('YYYY-MM-DD HH:mm:ss') : ''}>
@@ -278,6 +285,12 @@ export const LogAlarm: React.FC = () => {
         total: 0, month: 0, week: 0, day: 0, tags: [],
     })
     const [loading, setLoading] = useState(false)
+
+    // 详情 Modal (跟 mail/sms 模式一致: 列表移出详情列, 点击行弹窗)
+    const [detailModal, setDetailModal] = useState<{ open: boolean; record: Uart.uartAlarmObject | null }>({
+        open: false,
+        record: null,
+    })
 
     useEffect(() => {
         let cancelled = false
@@ -582,6 +595,7 @@ export const LogAlarm: React.FC = () => {
                     loading={loading}
                     total={realTotal}
                     onRefresh={triggerFetch}
+                    onItemClick={(item) => setDetailModal({ open: true, record: item })}
                 />
             ) : (
                 <div
@@ -655,9 +669,21 @@ export const LogAlarm: React.FC = () => {
                                 setPageSize(ps)
                             },
                         }}
+                        // 跟 mail/sms 一致: 列表移出详情列, 点击行弹窗
+                        onRow={(record) => ({
+                            onClick: () => setDetailModal({ open: true, record }),
+                            style: { cursor: 'pointer' },
+                        })}
                     />
                 </div>
             )}
+
+            {/* 告警详情 Modal (跟 mail/sms 详情模式一致) */}
+            <AlarmDetailModal
+                open={detailModal.open}
+                record={detailModal.record}
+                onClose={() => setDetailModal({ open: false, record: null })}
+            />
         </div>
     )
 }
