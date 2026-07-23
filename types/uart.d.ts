@@ -1391,6 +1391,38 @@ declare namespace Uart {
         topDanger: { mac: string; name: string; score: number }[];
     }
 
+    // ─── v2 admin terminal detailed stats (server admin-dashboard.controller.ts:488 getTerminalDetailedStats, 2026-07-17) ───
+    /** GET /api/v2/admin/dashboard/terminals/detailed-stats
+     *  server PR #76 同期 ship (commit e3dd670 / deploy eb769492c64d)
+     *  2026-07-23 扩展: PR #108 (server) 加 3 字段 (disable / atEnabled / withJw) */
+    interface TerminalDetailedStatsResp {
+        /** 总设备数 (server countDocuments) */
+        total: number;
+        /** 在线数 (online === true) */
+        online: number;
+        /** 离线数 (total - online) */
+        offline: number;
+        /** 在线率 (online / total * 100, 0.1 精度) */
+        onlineRate: number;
+        /** 共享数 (share === true) */
+        shared: number;
+        // === server PR #108 / commit d08886b / image 2b7cad80f0e0 (2026-07-23 ship) ===
+        /** 停用设备数 (disable: true, 运维关注) */
+        disable: number;
+        /** AT 指令启用数 (AT: true, 运维关注) */
+        atEnabled: number;
+        /** 已配经纬度设备数 (jw 非空, 产品关注) */
+        withJw: number;
+        /** 超时挂载设备数 (mountDevs.online !== true) */
+        timeoutMountDev: number;
+        /** 平均挂载数 (mountDevs.length / total, 0.1 精度) */
+        avgMountDevs: number;
+        /** 总挂载数 (sum of mountDevs.length) */
+        totalMountDevs: number;
+        /** PID 分布 (top 10, sorted desc) */
+        pidDistribution: { label: string; value: number }[];
+    }
+
     // ─── v2 admin user detailed stats (server 343/admin-dashboard.controller.ts:399 getUserDetailedStats, 2026-07-17) ───
     /** GET /api/v2/admin/dashboard/users/detailed-stats
      *  server PR #76 / commit e3dd670 (squash merged 5e1824e3a, deploy eb769492c64d) */

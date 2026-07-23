@@ -3,15 +3,18 @@ import { Button, Col, Row, Spin, Tabs, Modal, Divider, Form, Input, Tag, message
 import React, { useState, useMemo } from "react";
 import {
     ApiOutlined, NodeIndexOutlined, AppstoreOutlined, DeploymentUnitOutlined,
+    ShareAltOutlined, PieChartOutlined, ClockCircleOutlined,
+    CalculatorOutlined, DatabaseOutlined, StopOutlined, EnvironmentOutlined,
 } from '@ant-design/icons'
 import { TerminalsTable } from "@/components/terminal/TerminalsTable";
-import { getTerminalStats, addRegisterTerminal } from "@/lib/api/fetchRoot";
+import { getTerminalStats, addRegisterTerminal, getTerminalDetailedStats } from "@/lib/api/fetchRoot";
 import { usePromise } from "@/lib/hooks/usePromise";
 import { ModalConfirm } from "@/lib/utils/util";
 import { NodesSelects } from "@/components/node/NodesSelects";
 import { PageHeader } from "@/components/common/PageHeader";
 import { PageSummary } from "@/components/common/PageSummary";
-import { StatusTag } from "@/components/common/StatusTag";
+import { StatSection } from "@/components/common/StatSection";
+import { StatCardsRow } from "@/components/common/StatCardsRow";
 import { AnomalousDevicesCard } from "@/components/terminal/AnomalousDevicesCard";
 
 const TerminalAddDTU: React.FC = () => {
@@ -31,12 +34,9 @@ const TerminalAddDTU: React.FC = () => {
             if (mac.length !== 12) {
                 const ok = await ModalConfirm(`[${mac}]长度为${mac.length},标准长度为12位,确认提交??`);
                 if (!ok) continue;
-                await addRegisterTerminal(mac, node);
-                message.success(`添加设备${mac}成功`);
-            } else {
-                await addRegisterTerminal(mac, node);
-                message.success(`添加设备${mac}成功`);
             }
+            await addRegisterTerminal(mac, node);
+            message.success(`添加设备${mac}成功`);
         }
     };
 
@@ -70,22 +70,74 @@ export default function Terminals() {
     const [registerModalOpen, setRegisterModalOpen] = useState(false)
     const [terminals, setterminals] = useState<Uart.Terminal[]>([])
 
-    const { data: stats, loading: statsLoading } = usePromise(async () => {
-        const { data } = await getTerminalStats()
-        const d = data as {
-            onlines: {type: string, value: number}[],
-            nodes: {type: string, value: number}[],
-            pids: {type: string, value: number}[],
-            devs: {type: string, value: number}[]
+    /**
+     * 终端统计双源: getTerminalStats (4 个 distribution) + getTerminalDetailedStats (9 维 scalar + 1 分布)
+     * 合并到 serverStats 一份 state, 下面 PageSummary / 2nd row / stats tab / TerminalsTable 共享
+     * - nodes 跟 pids 喂给 TerminalsTable 列头 funnel 多选
+     * - onlines/nodes/pids/devs 喂给 stats tab 4 个 distribution section
+     */
+    const { data: serverStats, loading: statsLoading } = usePromise(async () => {
+        const [{ data: stats }, { data: det }] = await Promise.all([
+            getTerminalStats(),
+            getTerminalDetailedStats()
+        ])
+        const s = stats as {
+            onlines: { type: string; value: number }[],
+            nodes: { type: string; value: number }[],
+            pids: { type: string; value: number }[],
+            devs: { type: string; value: number }[],
+        } | undefined
+        const d = det as Partial<Uart.TerminalDetailedStatsResp> | undefined
+
+        // distribution 按 value desc
+        s?.onlines?.sort((a, b) => b.value - a.value)
+        s?.nodes?.sort((a, b) => b.value - a.value)
+        s?.pids?.sort((a, b) => b.value - a.value)
+        s?.devs?.sort((a, b) => b.value - a.value)
+
+        return {
+            // distribution (4 块)
+            onlines: s?.onlines ?? [],
+            nodes: s?.nodes ?? [],
+            pids: s?.pids ?? [],
+            devs: s?.devs ?? [],
+            // detailed scalar (5 块)
+            total: d?.total ?? 0,
+            online: d?.online ?? 0,
+            offline: d?.offline ?? 0,
+            onlineRate: d?.onlineRate ?? 0,
+            shared: d?.shared ?? 0,
+            // === server PR #108 (2026-07-23 ship) 加 3 字段 ===
+            disable: d?.disable ?? 0,
+            atEnabled: d?.atEnabled ?? 0,
+            withJw: d?.withJw ?? 0,
+            timeoutMountDev: d?.timeoutMountDev ?? 0,
+            avgMountDevs: d?.avgMountDevs ?? 0,
+            totalMountDevs: d?.totalMountDevs ?? 0,
+            pidDistribution: d?.pidDistribution ?? [],
         }
+    }, {
+        onlines: [], nodes: [], pids: [], devs: [],
+        total: 0, online: 0, offline: 0, onlineRate: 0, shared: 0,
+        disable: 0, atEnabled: 0, withJw: 0,
+        timeoutMountDev: 0, avgMountDevs: 0, totalMountDevs: 0,
+        pidDistribution: [],
+    })
 
-        d.onlines?.sort((a, b) => b.value - a.value);
-        d.nodes?.sort((a, b) => b.value - a.value);
-        d.pids?.sort((a, b) => b.value - a.value);
-        d.devs?.sort((a, b) => b.value - a.value);
-
-        return d;
-    }, undefined)
+    // 喂给 TerminalsTable 列头 funnel 多选 (server-side filter, server 走 $or regex 子串匹配
+    // 但 stats 喂的是真实 unique 值, select 选出来必精确)
+    // 节点列: getTerminalStats().nodes (terminal.mountNode 唯一值)
+    // 型号列: getTerminalDetailedStats().pidDistribution (terminal.PID 唯一值, top 10 排序)
+    // ⚠️ 不能用 getTerminalStats().pids — 那是 mount device pid ($unwind mountDevs + group pid),
+    //   跟 terminal.PID (DTU 型号, e.g. "M100") 完全错位
+    const statsNodes = useMemo(() => serverStats.nodes.map(n => n.type).filter(Boolean), [serverStats.nodes])
+    const statsPids = useMemo(
+        () => serverStats.pidDistribution.map(p => p.label).filter(Boolean),
+        [serverStats.pidDistribution]
+    )
+    // 2nd row 副指标: 节点数 (从 distribution 长度拿) + 总挂载 + 平均挂载 + 超时挂载
+    const distinctNodeCount = statsNodes.length
+    const distinctPidCount = statsPids.length
 
     const items = [
         {
@@ -94,6 +146,8 @@ export default function Terminals() {
             children: (
                 <TerminalsTable
                     readyData={setterminals}
+                    statsNodes={statsNodes}
+                    statsPids={statsPids}
                     extraActions={
                         <Button type="primary" size="small" onClick={() => setRegisterModalOpen(true)} className="btn-brand">
                             批量注册设备
@@ -105,25 +159,25 @@ export default function Terminals() {
         {
             key: 'stats',
             label: '终端统计',
-            children: stats ? (
-                <Row gutter={[20, 20]}>
-                    <Col xs={24} md={12} key="onlines">
-                        <StatSection title="在线分布" icon={<ApiOutlined />} data={stats.onlines} color="#10b981" />
-                    </Col>
-                    <Col xs={24} md={12} key="nodes">
-                        <StatSection title="节点分布" icon={<NodeIndexOutlined />} data={stats.nodes} color="#6366f1" />
-                    </Col>
-                    <Col xs={24} md={12} key="pids">
-                        <StatSection title="PID 分布" icon={<AppstoreOutlined />} data={stats.pids} color="#a855f7" />
-                    </Col>
-                    <Col xs={24} md={12} key="devs">
-                        <StatSection title="设备分布" icon={<DeploymentUnitOutlined />} data={stats.devs} color="#f59e0b" />
-                    </Col>
-                </Row>
-            ) : statsLoading ? (
+            children: statsLoading ? (
                 <div className="bento-card" style={{ textAlign: 'center', padding: 60 }}>
                     <Spin />
                 </div>
+            ) : serverStats.total > 0 ? (
+                <Row gutter={[20, 20]}>
+                    <Col xs={24} md={12} key="onlines">
+                        <StatSection title="在线分布" icon={<ApiOutlined />} data={serverStats.onlines} color="#10b981" />
+                    </Col>
+                    <Col xs={24} md={12} key="nodes">
+                        <StatSection title="节点分布" icon={<NodeIndexOutlined />} data={serverStats.nodes} color="#6366f1" />
+                    </Col>
+                    <Col xs={24} md={12} key="pids">
+                        <StatSection title="PID 分布" icon={<AppstoreOutlined />} data={serverStats.pids} color="#a855f7" />
+                    </Col>
+                    <Col xs={24} md={12} key="devs">
+                        <StatSection title="设备分布" icon={<DeploymentUnitOutlined />} data={serverStats.devs} color="#f59e0b" />
+                    </Col>
+                </Row>
             ) : (
                 <div className="bento-card" style={{ textAlign: 'center', padding: 60, color: 'var(--ink-500)' }}>
                     暂无统计数据
@@ -131,13 +185,6 @@ export default function Terminals() {
             )
         }
     ];
-
-    // server `admin-dashboard.controller.ts getTerminalStats()` 用 $group by online 字段,
-    // 返回 onlines: [{type: 'true', value: N}, {type: 'false', value: M}] —— type 是 online 字段值字符串
-    const total = stats?.onlines?.reduce((s, x) => s + x.value, 0) ?? 0
-    const onlines = stats?.onlines?.find(x => x.type === 'true')?.value ?? 0
-    const offlines = stats?.onlines?.find(x => x.type === 'false')?.value ?? 0
-    const nodes = stats?.nodes?.reduce((s, x) => s + x.value, 0) ?? 0
 
     return (
         <div className="bg-bento-canvas" style={{ position: 'relative', zIndex: 0 }}>
@@ -149,16 +196,89 @@ export default function Terminals() {
                     { title: '终端' },
                 ]}
             />
+            {/* PageSummary 主卡 6 张: 总数/在线/离线/共享数/在线率/停用 (server PR #108 加 停用, warning variant) */}
             <div style={{ marginBottom: 24 }}>
                 <PageSummary
                     items={[
-                        { label: '设备总数', value: total, variant: 'primary' },
-                        { label: '在线', value: onlines, variant: 'success' },
-                        { label: '离线', value: offlines, variant: 'warning' },
-                        { label: '节点数', value: nodes, variant: 'info' },
+                        { label: '设备总数', value: serverStats.total, variant: 'primary' },
+                        { label: '在线', value: serverStats.online, variant: 'success' },
+                        { label: '离线', value: serverStats.offline, variant: 'warning' },
+                        {
+                            label: '共享数',
+                            value: serverStats.shared,
+                            variant: 'info',
+                            icon: <ShareAltOutlined />,
+                        },
+                        {
+                            label: '在线率',
+                            value: `${serverStats.onlineRate}%`,
+                            variant: 'info',
+                            icon: <PieChartOutlined />,
+                            extra: serverStats.total > 0 ? `${serverStats.online} / ${serverStats.total}` : undefined,
+                        },
+                        {
+                            label: '停用',
+                            value: serverStats.disable,
+                            variant: 'warning',
+                            icon: <StopOutlined />,
+                            extra: serverStats.total > 0 ? `${Math.round((serverStats.disable / serverStats.total) * 100)}% 停用率` : undefined,
+                        },
                     ]}
                 />
             </div>
+            {/* 2nd row 副卡 6 张: 节点数/总挂载/平均挂载/超时挂载/AT 启用/经纬度
+                模板抽到 components/common/StatCardsRow.tsx (2026-07-23), 跟 user/page.tsx:308-340 共用
+                AT 启用 + 经纬度 2 张是 server PR #108 (2026-07-23) 新加, 跟 1 张 PageSummary 新"停用"卡一起组成运维 3 件套 */}
+            <StatCardsRow
+                total={serverStats.total}
+                style={{ marginBottom: 20 }}
+                items={[
+                    {
+                        label: '节点数',
+                        value: distinctNodeCount,
+                        color: '#6366f1',
+                        icon: <NodeIndexOutlined />,
+                        extra: `${distinctPidCount} 种型号`,
+                    },
+                    {
+                        label: '总挂载',
+                        value: serverStats.totalMountDevs,
+                        color: '#8b5cf6',
+                        icon: <DatabaseOutlined />,
+                        extra: serverStats.total > 0 ? `每台 ${serverStats.avgMountDevs} 个` : undefined,
+                    },
+                    {
+                        label: '平均挂载',
+                        value: serverStats.avgMountDevs,
+                        color: '#06b6d4',
+                        icon: <CalculatorOutlined />,
+                        extra: serverStats.total > 0 ? `${serverStats.totalMountDevs} 总数` : undefined,
+                    },
+                    {
+                        label: '超时挂载',
+                        value: serverStats.timeoutMountDev,
+                        color: '#f59e0b',
+                        icon: <ClockCircleOutlined />,
+                        extra: serverStats.totalMountDevs > 0
+                            ? `${Math.round((serverStats.timeoutMountDev / serverStats.totalMountDevs) * 100)}% 超时率`
+                            : undefined,
+                    },
+                    {
+                        label: 'AT 启用',
+                        value: serverStats.atEnabled,
+                        color: '#ec4899',
+                        icon: <ApiOutlined />,
+                        extra: serverStats.total > 0 ? `${Math.round((serverStats.atEnabled / serverStats.total) * 100)}% 启用率` : undefined,
+                    },
+                    {
+                        label: '经纬度',
+                        value: serverStats.withJw,
+                        color: '#10b981',
+                        icon: <EnvironmentOutlined />,
+                        extra: serverStats.total > 0 ? `${Math.round((serverStats.withJw / serverStats.total) * 100)}% 已配率` : undefined,
+                    },
+                ]}
+            />
             {/* 问题设备卡片 — 2026-07-23 ship, 数据源 server GET /api/v2/admin/terminals/anomalies */}
             <AnomalousDevicesCard />
             <div className="bento-card" style={{ marginBottom: 20, padding: 24 }}>
@@ -175,92 +295,4 @@ export default function Terminals() {
             </Modal>
         </div>
     );
-}
-
-/**
- * 统计子区: bento-card 包装 + 标题 + KV grid
- * 跟 user 页注册类型行视觉对齐 (stat-card 风格)
- */
-const StatSection: React.FC<{
-    title: string
-    icon: React.ReactNode
-    data: { type: string; value: number }[]
-    color: string
-}> = ({ title, icon, data, color }) => {
-    const total = data.reduce((s, x) => s + x.value, 0)
-    return (
-        <div className="bento-card" style={{ padding: 20, height: '100%' }}>
-            <div
-                style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 8,
-                    marginBottom: 16,
-                    paddingBottom: 12,
-                    borderBottom: '1px solid var(--ink-100)',
-                }}
-            >
-                <span
-                    style={{
-                        width: 32,
-                        height: 32,
-                        borderRadius: 8,
-                        background: `${color}1a`,
-                        color,
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        fontSize: 16,
-                    }}
-                >
-                    {icon}
-                </span>
-                <h3 style={{ margin: 0, fontSize: 14, fontWeight: 600, color: 'var(--ink-900)' }}>{title}</h3>
-                <span style={{ marginLeft: 'auto', fontSize: 12, color: 'var(--ink-500)' }}>共 {total}</span>
-            </div>
-            <div
-                style={{
-                    display: 'grid',
-                    gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))',
-                    gap: 12,
-                }}
-            >
-                {data.map(item => {
-                    const pct = total > 0 ? Math.round((item.value / total) * 100) : 0
-                    return (
-                        <div
-                            key={item.type}
-                            className="stat-card"
-                            style={{
-                                padding: 14,
-                                background: `${color}08`,
-                                border: `1px solid ${color}1a`,
-                            }}
-                        >
-                            <div style={{ display: 'flex', alignItems: 'baseline', gap: 6, marginBottom: 4 }}>
-                                <span
-                                    className="app-kv-label"
-                                    style={{ fontFamily: 'ui-monospace, monospace', textTransform: 'none', letterSpacing: 0 }}
-                                >
-                                    {item.type}
-                                </span>
-                            </div>
-                            <div
-                                style={{
-                                    fontSize: 24,
-                                    fontWeight: 700,
-                                    color: 'var(--ink-900)',
-                                    fontVariantNumeric: 'tabular-nums',
-                                    lineHeight: 1.1,
-                                }}
-                            >
-                                {item.value}
-                            </div>
-                            <div style={{ fontSize: 11, color: 'var(--ink-500)', marginTop: 4 }}>{pct}%</div>
-                        </div>
-                    )
-                })}
-            </div>
-        </div>
-    )
 }
