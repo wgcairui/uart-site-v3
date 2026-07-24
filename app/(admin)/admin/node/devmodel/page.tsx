@@ -1,87 +1,23 @@
 'use client'
 import { DeleteFilled, WarningFilled, PlusOutlined, AppstoreOutlined, FilterOutlined, ReloadOutlined } from "@ant-design/icons";
-import { Button, Form, Input, message, Modal, Space, Spin, Table, Tooltip } from 'antd'
-import { confirm, success, info, error, warning } from '@/lib/utils/modal'
-import React, { useEffect, useState } from "react";
+import { Button, Input, message, Modal, Space, Spin, Table, Tooltip } from 'antd'
+import { confirm } from '@/lib/utils/modal'
+import React, { useState } from "react";
 import { useRouter } from "next/navigation";
-import { addDevType, deleteDevModel, DevTypes, getDevModelStats } from "@/lib/api/fetchRoot";
+import { deleteDevModel, DevTypes, getDevModelStats } from "@/lib/api/fetchRoot";
 import {
     generateTableKey,
     makeServerSearchProp,
     makeServerFilterProp,
     extractServerTableQuery,
 } from "@/lib/utils/tableCommon";
-import { ProtocolsCascader } from "@/components/protocol/ProtocolsCascader";
 import { usePromise } from "@/lib/hooks/usePromise";
 import { PageHeader } from "@/components/common/PageHeader";
 import { PageSummary, type SummaryVariant } from "@/components/common/PageSummary";
 import { EmptyState } from "@/components/common/EmptyState";
 import { PaginationReq } from "@/types";
 
-interface props {
-    ok?: () => void;
-    visible: boolean;
-    onCancel: () => void;
-    initialValue?: Uart.DevsType | null;
-}
-
-const AddDevModel: React.FC<props> = ({ ok, visible, onCancel, initialValue }) => {
-    const types = {
-        ups: "UPS",
-        air: "空调",
-        em: "电量仪",
-        th: "温湿度",
-        'io': "IO"
-    } as any
-
-    const [model, setModel] = useState('')
-    const [protocol, setProtocol] = useState<[Uart.protocolType, string][]>([])
-
-    useEffect(() => {
-        if (visible) {
-            if (initialValue) {
-                setModel(initialValue.DevModel);
-                const p = initialValue.Protocols?.map(el => [el.Type as unknown as Uart.protocolType, el.Protocol] as [Uart.protocolType, string]) || [];
-                setProtocol(p);
-            } else {
-                setModel('');
-                setProtocol([]);
-            }
-        }
-    }, [visible, initialValue]);
-
-    const addDevTypes = () => {
-        if (!protocol.length) return message.warning("请至少选择一个协议");
-        const Type = protocol[0]?.[0];
-        if (!Type) return;
-        const Protocols = protocol.map(el => el[1])
-        addDevType(types[Type] || "UPS", model, Protocols.map(el => ({ ProtocolType: Type, Protocol: el })))
-            .then(() => {
-                message.success("保存成功");
-                onCancel();
-                ok && ok()
-            });
-    }
-
-    return (
-        <Modal
-            title={initialValue ? "编辑设备配置" : "添加设备类型"}
-            open={visible}
-            onCancel={onCancel}
-            onOk={addDevTypes}
-            destroyOnHidden
-        >
-            <Form labelCol={{ span: 5 }}>
-                <Form.Item label="设备型号">
-                    <Input value={model} onChange={e => setModel(e.target.value)} disabled={!!initialValue} placeholder="输入设备型号" />
-                </Form.Item>
-                <Form.Item label="设备协议">
-                    <ProtocolsCascader value={protocol} onChange={(val: any) => setProtocol(val)} multiple></ProtocolsCascader>
-                </Form.Item>
-            </Form>
-        </Modal>
-    )
-}
+import { AddDevModelModal } from './_components/AddDevModelModal'
 
 export const DevModel: React.FC = () => {
 
@@ -206,7 +142,12 @@ export const DevModel: React.FC = () => {
                     })),
                 ]}
             />
-            <AddDevModel visible={visible} onCancel={() => setVisible(false)} initialValue={editingItem} ok={fecth} />
+            <AddDevModelModal
+                open={visible}
+                onClose={() => setVisible(false)}
+                initialValue={editingItem}
+                onSaved={fecth}
+            />
             <div className="bento-card" style={{ padding: 20, marginBottom: 20 }}>
                 {loading && data.length === 0 ? (
                     <div style={{ padding: 80, textAlign: 'center' }}>
