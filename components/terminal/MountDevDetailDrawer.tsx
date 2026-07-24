@@ -7,16 +7,22 @@
  * 完整看 → 跳独立页 /admin/node/terminal/[mac]/mount-dev/[pid]
  *
  * 内容精简:
- * - Hero strip: 图标 + 名称 + PID + 协议 + 在线状态
+ * - Hero strip: 图标 + 名称 + PID + 协议 + 在线状态 (StatusTag)
  * - Meta: 设备ID/PID/上行/采集
- * - Descriptions: 6 行 (名称/类型/协议/PID/终端MAC/在线状态)
+ * - KVList: 6 行 (名称/类型/协议/PID/终端MAC/在线状态)
  * - 实时数据: TerminalCurData (单条最新, TerminalCurData 自身只显示 1 条)
  * - 右上"完整详情"链接 → 独立页
  *
- * 视觉: 紫光 header · 玻璃 bento · 720px 适合不退出当前页 quick peek
+ * 视觉: 渐变 header · 玻璃 bento · 720px 适合不退出当前页 quick peek
+ *
+ * Props:
+ * - mac  string 终端 MAC
+ * - dev  Uart.TerminalMountDevs | null  挂载设备信息（null 时不渲染）
+ * - open boolean  控制 drawer 开关
+ * - onClose () => void  关闭回调
  */
 
-import { Drawer, Tag, Descriptions, Button, Spin } from 'antd'
+import { Drawer, Spin } from 'antd'
 import { AppstoreOutlined, ExportOutlined } from '@ant-design/icons'
 import { useRouter } from 'next/navigation'
 import { getTerminalPidProtocol } from '@/lib/api/fetch'
@@ -24,6 +30,9 @@ import { usePromise } from '@/lib/hooks/usePromise'
 import { TerminalCurData } from '@/app/(admin)/admin/node/terminal/[mac]/TerminalDataTab'
 import { devType } from '@/lib/utils/devImgSource'
 import { devTypeIcon } from '@/components/common/IconFont'
+import { StatusTag } from '@/components/common/StatusTag'
+import { Button } from '@/components/common/Button'
+import { KVList } from '@/components/common/KVList'
 
 interface MountDevDetailDrawerProps {
   mac: string
@@ -31,6 +40,9 @@ interface MountDevDetailDrawerProps {
   open: boolean
   onClose: () => void
 }
+
+/** 抽屉宽度（适合"快速瞥一眼"场景：bento KPI + 6 行 KV + 实时数据 1 条刚好一屏） */
+const WIDTH = 720
 
 export function MountDevDetailDrawer({ mac, dev, open, onClose }: MountDevDetailDrawerProps) {
   const router = useRouter()
@@ -47,22 +59,28 @@ export function MountDevDetailDrawer({ mac, dev, open, onClose }: MountDevDetail
   const iconEl = devTypeIcon[dev.Type] || <AppstoreOutlined />
   const lastEmit = (dev as any).lastEmit
   const lastRecord = (dev as any).lastRecord
+  const remark = (mountDev as any)?.remark
 
   return (
     <Drawer
       open={open}
       onClose={onClose}
-      width={720}
+      width={WIDTH}
       title={
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
           <div
             style={{
-              width: 40, height: 40, borderRadius: 10,
+              width: 40,
+              height: 40,
+              borderRadius: 10,
               background: online
-                ? 'linear-gradient(135deg, #10b981 0%, #8b5cf6 100%)'
-                : 'linear-gradient(135deg, #f59e0b 0%, #ec4899 100%)',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              color: '#fff', fontSize: 20,
+                ? 'linear-gradient(135deg, var(--color-success, #10b981) 0%, var(--brand-500, #8b5cf6) 100%)'
+                : 'linear-gradient(135deg, var(--color-warning, #f59e0b) 0%, var(--accent-500, #ec4899) 100%)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              color: '#fff',
+              fontSize: 20,
               flexShrink: 0,
             }}
           >
@@ -77,12 +95,11 @@ export function MountDevDetailDrawer({ mac, dev, open, onClose }: MountDevDetail
             </div>
           </div>
           <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 6 }}>
-            <Tag
-              color={online ? 'success' : 'warning'}
-              style={{ margin: 0, fontFamily: 'var(--font-mono)' }}
-            >
-              {online ? '● 在线' : '● 离线'}
-            </Tag>
+            <StatusTag
+              variant={online ? 'online' : 'warning'}
+              text={online ? '在线' : '离线'}
+              pulse={online}
+            />
           </div>
         </div>
       }
@@ -98,7 +115,7 @@ export function MountDevDetailDrawer({ mac, dev, open, onClose }: MountDevDetail
       }}
       extra={
         <Button
-          type="primary"
+          variant="primary"
           size="small"
           icon={<ExportOutlined />}
           onClick={() => {
@@ -116,8 +133,13 @@ export function MountDevDetailDrawer({ mac, dev, open, onClose }: MountDevDetail
           padding: '12px 20px',
           background: 'rgba(255, 255, 255, 0.7)',
           borderBottom: '1px solid var(--ink-100)',
-          display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap',
-          fontSize: 11, color: 'var(--ink-500)', fontFamily: 'var(--font-mono)',
+          display: 'flex',
+          alignItems: 'center',
+          gap: 16,
+          flexWrap: 'wrap',
+          fontSize: 11,
+          color: 'var(--ink-500)',
+          fontFamily: 'var(--font-mono)',
         }}
       >
         <span>设备ID: {mac}</span>
@@ -137,29 +159,30 @@ export function MountDevDetailDrawer({ mac, dev, open, onClose }: MountDevDetail
         ) : null}
       </div>
 
-      {/* 内容区: Descriptions + 实时数据 (单条) */}
+      {/* 内容区: KVList + 实时数据 (单条) */}
       <div style={{ padding: 20 }}>
         <Spin spinning={loading}>
           {mountDev ? (
-            <Descriptions
-              size="small"
-              column={2}
-              bordered
-              style={{ marginBottom: 20 }}
+            <KVList
               items={[
-                { key: 'name', label: '设备名', children: dev.mountDev || '-' },
-                { key: 'type', label: '类型', children: dev.Type || '-' },
-                { key: 'protocol', label: '协议', children: dev.protocol || '-' },
-                { key: 'pid', label: 'PID', children: dev.pid },
-                { key: 'mac', label: '终端 MAC', children: mac },
-                { key: 'status', label: '在线状态', children: online ? '在线' : '离线' },
-                ...(mountDev as any).remark ? [{ key: 'remark', label: '备注', children: (mountDev as any).remark }] : [],
+                { label: '设备名', value: dev.mountDev || '-' },
+                { label: '类型', value: dev.Type || '-' },
+                { label: '协议', value: dev.protocol || '-' },
+                { label: 'PID', value: dev.pid },
+                { label: '终端 MAC', value: mac },
+                {
+                  label: '在线状态',
+                  value: online ? '在线' : '离线',
+                },
+                ...(remark ? [{ label: '备注', value: remark }] : []),
               ]}
             />
           ) : null}
         </Spin>
 
-        <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--ink-700)', marginBottom: 8 }}>实时数据</div>
+        <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--ink-700)', marginBottom: 8, marginTop: 20 }}>
+          实时数据
+        </div>
         <TerminalCurData mac={mac} pid={dev.pid} />
       </div>
     </Drawer>
