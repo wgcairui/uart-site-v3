@@ -1,29 +1,21 @@
 /* =============================================================
- * Login Page v3 · Glass + Mesh 4 色渐变
- * 配合 hybrid.html Page C 风格:
- * - 4 色渐变背景 (蓝紫粉橙)
- * - 品牌 hero (左) + 玻璃登录卡 (右)
- * - 圆角 24px
+ * Login Page v3 · Glass + Mesh (登录品牌入口)
+ * 规范: docs/style-guide.md v2 §3.3
+ *
+ * 4 色渐变 Mesh 背景走 globals.css .bg-glass-mesh utility.
+ * 玻璃卡背景走 components/common/GlassCard variant="dark".
+ * 本文件只保留 login 特有布局 / hero 装饰 / antd 内部 element 适配.
  * ============================================================= */
 
 .login-page {
-  height: 100vh;
-  overflow: hidden;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
   position: relative;
-  background: linear-gradient(125deg, #3b82f6 0%, #8b5cf6 35%, #ec4899 70%, #f97316 100%);
+  overflow: hidden;
 }
 
-.login-page::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background: radial-gradient(at 20% 80%, #06b6d4 0%, transparent 40%),
-              radial-gradient(at 80% 20%, #f43f5e 0%, transparent 40%);
-  opacity: 0.6;
-  mix-blend-mode: screen;
-  pointer-events: none;
-}
-
+/* 额外装饰圆 (跟 .bg-glass-mesh::before 互补, 不重复) */
 .login-page::after {
   content: "";
   position: absolute;
@@ -33,238 +25,325 @@
   height: 200px;
   background: rgba(255, 255, 255, 0.08);
   backdrop-filter: blur(40px);
+  -webkit-backdrop-filter: blur(40px);
   border-radius: 50%;
   filter: blur(40px);
   pointer-events: none;
+  z-index: 0;
 }
 
-.login-page .layout {
-  height: 100vh;
-  display: flex;
-  flex-direction: column;
-  position: relative;
-  z-index: 1;
-}
-
-/* Header 半透明 (Mesh 背景透出) */
-.login-page .header {
-  background: rgba(255, 255, 255, 0.10) !important;
+/* ===== Header (半透明 + Mesh 透出) ===== */
+.login-page .login-header {
+  background: rgba(255, 255, 255, 0.10);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
   display: flex;
   align-items: center;
   padding: 0 50px;
   border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+  position: relative;
   z-index: 1;
+  height: 64px;
+  flex-shrink: 0;
 }
 
-.login-page .header-drop {
+.login-page .login-header-title {
+  font-size: 36px;
+  font-family: "cursive", var(--font-sans);
+  font-weight: 700;
+  line-height: 1;
+}
+
+.login-page .login-header-drop {
   margin-left: auto;
 }
 
-/* Content 居中 */
-.login-page .content {
+.login-page .login-header-lang {
+  color: rgba(255, 255, 255, 0.85);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  text-decoration: none;
+  font-size: 14px;
+}
+.login-page .login-header-lang:hover {
+  color: #fff;
+}
+
+/* ===== Content (居中 grid) ===== */
+.login-page .login-content {
   flex: 1;
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 12px;
+  position: relative;
+  z-index: 1;
   overflow-y: auto;
 }
 
-.login-page .content-row {
+.login-page .login-grid {
   width: 100%;
   max-width: 1080px;
+  display: grid;
+  grid-template-columns: 1.2fr 1fr;
+  gap: 60px;
   align-items: center;
+  padding: 16px;
 }
 
-/* v3 brand hero (左) */
-.login-page .content-row-col1 {
-  padding: 40px;
+/* ===== Hero (左) ===== */
+.login-page .login-hero {
   color: #fff;
-  position: relative;
-  z-index: 1;
+  padding: 24px 16px;
 }
 
-.login-page .content-row-col1 h3 {
+.login-page .login-hero-brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 40px;
+}
+
+.login-page .login-hero-mark {
+  width: 48px;
+  height: 48px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-family: var(--font-mono);
+  font-size: 18px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.login-page .login-hero-brand-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.login-page .login-hero-title-main {
+  font-size: 20px;
+  font-weight: 600;
+  color: #fff;
+  letter-spacing: -0.01em;
+  line-height: 1.2;
+}
+
+.login-page .login-hero-subtitle-main {
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.7);
+  letter-spacing: 0.04em;
+}
+
+.login-page .login-hero-title {
   font-size: 2.5rem;
+  font-weight: 700;
+  line-height: 1.15;
+  margin: 0 0 16px;
+  color: #fff;
+  font-family: var(--font-sans);
+}
+
+.login-page .login-hero-title em {
+  font-style: normal;
   background: linear-gradient(135deg, #fbbf24 0%, #f97316 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
-  margin-bottom: 16px;
-  font-weight: 700;
-  font-family: var(--font-sans);
 }
 
-.login-page .content-row-col1 h4 {
-  font-size: 1.2rem;
-  color: rgba(255, 255, 255, 0.85);
-  margin-bottom: 32px;
+.login-page .login-hero-desc {
+  font-size: 1.05rem;
   line-height: 1.7;
+  color: rgba(255, 255, 255, 0.9);
+  margin: 0 0 32px;
   max-width: 480px;
 }
 
-.login-page .content-row-col1 h5 {
-  margin-top: 16px;
-  color: rgba(255, 255, 255, 0.6);
+.login-page .login-hero-stats {
+  margin-top: 48px;
+  display: flex;
+  gap: 40px;
+  padding-top: 32px;
+  border-top: 1px solid rgba(255, 255, 255, 0.2);
 }
 
-.login-page .content-row-col2 {
+.login-page .login-hero-stat {
+  font-family: var(--font-mono);
+}
+
+.login-page .login-hero-stat-label {
+  display: block;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  opacity: 0.7;
+}
+
+.login-page .login-hero-stat-value {
+  display: block;
+  font-size: 32px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  margin-top: 6px;
+  font-family: var(--font-sans);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ===== Login Card (右) — GlassCard dark 容器 ===== */
+.login-page .login-card-wrap {
   display: flex;
   justify-content: center;
-  padding: 24px;
 }
 
-/* 登录卡: v3 玻璃质感 24px 圆角 */
-.login-page .card-login {
+.login-page .login-card {
   width: 100%;
   max-width: 420px;
-  background: rgba(255, 255, 255, 0.15) !important;
-  backdrop-filter: blur(40px) !important;
-  -webkit-backdrop-filter: blur(40px) !important;
-  border: 1px solid rgba(255, 255, 255, 0.25) !important;
-  border-radius: 24px !important;
-  box-shadow: 0 20px 60px -10px rgba(0, 0, 0, 0.2) !important;
-  padding: 40px !important;
   color: #fff;
 }
 
-/* 登录卡内文字 / 输入框 */
-.login-page .card-login .ant-card-head {
-  border-bottom: 1px solid rgba(255, 255, 255, 0.15) !important;
-  color: #fff;
-}
-.login-page .card-login .ant-input,
-.login-page .card-login .ant-input-affix-wrapper {
+/* login form 内部 antd Input 适配 (Glass 容器上仍用 antd Input) */
+.login-page .login-form .ant-input,
+.login-page .login-form .ant-input-affix-wrapper {
   background: rgba(255, 255, 255, 0.12) !important;
   border: 1px solid rgba(255, 255, 255, 0.25) !important;
   color: #fff !important;
 }
-.login-page .card-login .ant-input::placeholder,
-.login-page .card-login .ant-input-affix-wrapper .ant-input::placeholder {
+.login-page .login-form .ant-input::placeholder,
+.login-page .login-form .ant-input-affix-wrapper .ant-input::placeholder {
   color: rgba(255, 255, 255, 0.5) !important;
 }
-.login-page .card-login .ant-input-affix-wrapper > .ant-input-prefix {
+.login-page .login-form .ant-input-affix-wrapper > .ant-input-prefix {
   color: rgba(255, 255, 255, 0.7) !important;
 }
-.login-page .card-login .ant-input:focus,
-.login-page .card-login .ant-input-affix-wrapper:focus,
-.login-page .card-login .ant-input-affix-wrapper-focused {
+.login-page .login-form .ant-input:focus,
+.login-page .login-form .ant-input-affix-wrapper:focus,
+.login-page .login-form .ant-input-affix-wrapper-focused {
   background: rgba(255, 255, 255, 0.18) !important;
   box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.20) !important;
 }
-.login-page .card-login .ant-tabs-tab {
+.login-page .login-form .ant-form-item {
+  margin-bottom: 16px;
+}
+
+/* Tabs 内部 v2 风格 (浅色文字 + 白色 ink-bar) */
+.login-page .login-tabs .ant-tabs-tab {
   color: rgba(255, 255, 255, 0.6) !important;
 }
-.login-page .card-login .ant-tabs-tab.ant-tabs-tab-active .ant-tabs-tab-btn {
+.login-page .login-tabs .ant-tabs-tab.ant-tabs-tab-active .ant-tabs-tab-btn {
   color: #fff !important;
 }
-.login-page .card-login .ant-tabs-ink-bar {
+.login-page .login-tabs .ant-tabs-ink-bar {
   background: #fff !important;
 }
-
-.login-page .login-form-button {
-  width: 100%;
-  height: 40px;
-  font-size: 16px;
-  background: rgba(255, 255, 255, 0.95) !important;
-  color: var(--brand-700) !important;
-  border: 0 !important;
-  font-weight: 600;
-  border-radius: 12px !important;
+.login-page .login-tabs .ant-tabs-tab-btn .anticon {
+  margin-right: 8px !important;
+  vertical-align: -0.125em;
 }
-.login-page .login-form-button:hover {
-  background: #fff !important;
-  color: var(--brand-600) !important;
-  transform: translateY(-1px);
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+.login-page .login-tabs .ant-tabs-nav-list {
+  margin: 0 auto;
 }
 
-.login-page .login-form-button-warning {
-  width: 100%;
-  height: 40px;
-  font-size: 16px;
-  background: var(--color-warning) !important;
-  color: #fff !important;
-  border: 0 !important;
-  font-weight: 600;
-  border-radius: 12px !important;
-  margin-top: 9px;
+/* v2 Button 间距 (主操作 + 试用 + 开发) */
+.login-page .login-form-actions {
+  margin-bottom: 0 !important;
 }
-.login-page .login-form-button-warning:hover {
-  background: #d97706 !important;
-  color: #fff !important;
-  transform: translateY(-1px);
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
-}
-
-/* dev 登录按钮 (NEXT_PUBLIC_HAS_DEV_CREDS=1 才显示, 紫色 dev 标识) */
-.login-page .login-form-button-dev {
-  width: 100%;
+.login-page .login-form-actions .ant-btn {
   height: 44px;
-  font-size: 14px;
-  background: transparent !important;
-  color: var(--color-brand-600, #7c3aed) !important;
-  border: 1px dashed var(--color-brand-500, #8b5cf6) !important;
-  font-weight: 500;
-  border-radius: var(--radius-xl) !important;
-  margin-top: 9px;
+  font-weight: 600;
+  border-radius: 12px;
+  font-size: 15px;
 }
-.login-page .login-form-button-dev:hover {
-  background: rgba(124, 58, 237, 0.06) !important;
+.login-page .login-form-trial {
+  margin-top: 10px;
+}
+.login-page .login-form-dev {
+  margin-top: 10px;
+  background: transparent !important;
+  color: rgba(255, 255, 255, 0.85) !important;
+  border: 1px dashed rgba(255, 255, 255, 0.45) !important;
+  font-size: 13px !important;
+  font-weight: 500 !important;
+  height: 40px !important;
+}
+.login-page .login-form-dev:hover {
+  background: rgba(255, 255, 255, 0.08) !important;
   border-style: solid !important;
 }
 
-.login-page .hidden-sm-and-down {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  width: 100%;
-}
-
-.login-page #wxlogin {
+/* 微信登录 iframe */
+.login-page .login-wx-qr {
   display: flex;
   justify-content: center;
   align-items: center;
   width: 100%;
   min-height: 150px;
 }
-
 .login-page #wxlogin iframe {
   display: block;
   margin: 0 auto;
 }
 
+/* ===== Footer ===== */
+.login-page .login-footer {
+  text-align: center;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.6);
+  padding: 12px 50px;
+  position: relative;
+  z-index: 1;
+  font-size: 12px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  flex-shrink: 0;
+}
+.login-page .login-footer a {
+  color: rgba(255, 255, 255, 0.85);
+  text-decoration: none;
+}
+.login-page .login-footer a:hover {
+  color: #fff;
+  text-decoration: underline;
+}
+
+/* ===== Loading (首次进入 user check) ===== */
+.login-loading {
+  height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(125deg, #3b82f6 0%, #8b5cf6 35%, #ec4899 70%, #f97316 100%);
+}
+
+/* ===== 移动端 (< 768px, 跟 hybrid.html Page D 一致) ===== */
 @media screen and (max-width: 768px) {
-  /* 移动端: hero 隐藏, 登录卡居中 (跟 hybrid.html Page D 一致) */
-  .login-page .content-row-col1 {
+  .login-page .login-hero {
     display: none;
   }
-  .login-page .header {
+  .login-page .login-header {
     padding: 0 20px;
   }
-  .login-page .card-login {
-    padding: 28px !important;
-    max-width: 100%;
-  }
-  .login-page .content-row {
+  .login-page .login-grid {
+    grid-template-columns: 1fr;
+    gap: 24px;
     padding: 16px;
   }
-}
-
-.login-page .ant-layout-footer {
-  text-align: center;
-  background: transparent !important;
-  color: rgba(255, 255, 255, 0.6) !important;
-  padding: 12px 50px;
-}
-
-.login-page .ant-tabs-tab-btn .anticon {
-  margin-right: 8px !important;
-  vertical-align: -0.125em;
-}
-
-.login-page .ant-tabs-nav-list {
-  margin: 0 auto;
+  .login-page .login-card {
+    max-width: 100%;
+  }
+  .login-page .login-footer {
+    padding: 12px 20px;
+    font-size: 11px;
+  }
 }

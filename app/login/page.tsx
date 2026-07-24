@@ -2,8 +2,10 @@
 
 import React, { useEffect, useState } from "react";
 import { AES } from "crypto-js";
-import { Layout, Image, Dropdown, Row, Col, Card, Tabs, Form, Input, Button, message, Spin } from "antd";
-import { UserOutlined, LockOutlined, WechatFilled } from "@ant-design/icons";
+import { Dropdown, Form, Input, Tabs, message, Spin } from "antd";
+import { UserOutlined, LockOutlined, WechatFilled, GlobalOutlined } from "@ant-design/icons";
+import { GlassCard } from "@/components/common/GlassCard";
+import { Button } from "@/components/common/Button";
 import { IconFont } from "@/components/common/IconFont";
 import { getAuthUser, getLoginHash, login as loginApi } from "@/lib/api/fetch";
 
@@ -11,10 +13,10 @@ import { useNav } from "@/lib/hooks/useNav";
 import { setToken, getToken } from "@/lib/utils/token";
 import { useUserStore } from "@/lib/store/userStore";
 
-// ⚠️ 移除内层 ConfigProvider (cairui 21:00 拍 Option A hotfix #1):
+// ⚠️ 不内嵌 ConfigProvider (历史 hotfix #1):
 // 之前 page 内嵌套 ConfigProvider (locale={isZh ? Zh : En}) 覆盖了外层
 // AntdProvider 的 v2 紫主题 (Theme Token 不继承, fallback 到 antd 默认 #1677ff).
-// 当前表单全中文, locale switcher 仅切 antd 内部消息, 跟表单 label 文案不一致,
+// 表单保留全中文, locale switcher 仅切 antd 内部消息, 跟表单 label 文案不一致,
 // 先去掉等后续做完整 i18n (state 保留, 不破 UI).
 import "./login.css";
 
@@ -23,7 +25,7 @@ const Login: React.FC = () => {
 
 	const [loading, setLoading] = useState(true);
 
-	const [isZh, setZh] = useState(true);
+	const [, setZh] = useState(true);
 
 	/**
 	 * tab index
@@ -45,13 +47,14 @@ const Login: React.FC = () => {
 			if (res.ok && json?.code === 200) {
 				// cookie 已在 route.ts 里 set, 直接跳 admin
 				// 等同于手工登录成功后的 navi("/admin")
-				message.success(`dev 登录成功: ${json.data?.user || 'admin'}`)
-				window.location.href = json.data?.redirect || '/admin'
+				const user = json?.data?.user ?? 'admin'
+				message.success(`dev 登录成功: ${user}`)
+				window.location.href = json?.data?.redirect || '/admin'
 			} else {
-				message.error(`dev 登录失败: ${json?.message || res.status}`)
+				message.error(`dev 登录失败: ${json?.message ?? res.status}`)
 			}
 		} catch (e: any) {
-			message.error(`dev 登录出错: ${e?.message || String(e)}`)
+			message.error(`dev 登录出错: ${e?.message ?? String(e)}`)
 		} finally {
 			setDevLoginLoading(false)
 		}
@@ -154,133 +157,156 @@ const Login: React.FC = () => {
 		}
 	};
 
-	return loading ? (
-		<div className="loading">
-			<Spin description="loading" size="large" />
-		</div>
-	) : (
-		<div className="login-page bg-glass-mesh">
-			<Layout className="layout">
-					<Layout.Header className="header">
-						{/* <Image src="https://www.ladishb.com/logo.png" preview={false}></Image> */}
-						<span className="text-brand-gradient" style={{ fontSize: 36, fontFamily: "cursive", fontWeight: 700 }}>百事服</span>
-						<Dropdown
-							menu={{
-								items: [
-									{ key: "cn", label: "中文", icon: <IconFont type="icon-zhongwen" />, onClick: () => setZh(true) },
-									{ key: "en", label: "En", icon: <IconFont type="icon-yingwen" />, onClick: () => setZh(false) }
-								]
-							}}
-							className="header-drop"
-						>
-							<a href="" onClick={(e) => e.preventDefault()}>
-								lauguage
-							</a>
-						</Dropdown>
-					</Layout.Header>
-					<Layout.Content className="content">
-						<Row className="content-row">
-							<Col span={24} md={12}>
-								<div className="content-row-col1">
-									<div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 40 }}>
-										<div
-											style={{
-												width: 48, height: 48, borderRadius: 14,
-												background: 'rgba(255, 255, 255, 0.2)',
-												backdropFilter: 'blur(20px)',
-												border: '1px solid rgba(255, 255, 255, 0.3)',
-												display: 'flex', alignItems: 'center', justifyContent: 'center',
-												color: '#fff', fontFamily: 'var(--font-mono)', fontSize: 18, fontWeight: 700,
-											}}
-										>
-											U
-										</div>
-										<div style={{ fontSize: 20, fontWeight: 600, color: '#fff', letterSpacing: '-0.01em' }}>
-											UART Server
-										</div>
-									</div>
-									<h3>管理 <em style={{ fontStyle: 'normal', background: 'linear-gradient(135deg, #fbbf24 0%, #f97316 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>941 台</em><br />工业 IoT 设备</h3>
-									<h4>实时采集 · 远程控制 · 告警通知 · 数据分析。一套平台搞定从 DTU 到云端的所有环节。</h4>
-									<div
-										style={{
-											marginTop: 48, display: 'flex', gap: 40,
-											paddingTop: 32, borderTop: '1px solid rgba(255, 255, 255, 0.2)',
-										}}
-									>
-										<div style={{ fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.15em', opacity: 0.7, fontFamily: 'var(--font-mono)' }}>
-											在线设备
-											<strong style={{ display: 'block', fontSize: 32, fontWeight: 600, opacity: 1, letterSpacing: '-0.02em', marginTop: 6, fontFamily: 'var(--font-sans)' }}>291</strong>
-										</div>
-										<div style={{ fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.15em', opacity: 0.7, fontFamily: 'var(--font-mono)' }}>
-											覆盖协议
-											<strong style={{ display: 'block', fontSize: 32, fontWeight: 600, opacity: 1, letterSpacing: '-0.02em', marginTop: 6, fontFamily: 'var(--font-sans)' }}>47</strong>
-										</div>
-										<div style={{ fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.15em', opacity: 0.7, fontFamily: 'var(--font-mono)' }}>
-											服务节点
-											<strong style={{ display: 'block', fontSize: 32, fontWeight: 600, opacity: 1, letterSpacing: '-0.02em', marginTop: 6, fontFamily: 'var(--font-sans)' }}>12</strong>
-										</div>
-									</div>
-								</div>
-							</Col>
-							<Col span={24} md={12} className="content-row-col2">
-								<Card className="card-login">
-									<Tabs defaultActiveKey={tabdefaultActiveKey} items={[
-										{
-											key: 'wx_qr',
-											label: <span><WechatFilled />微信登录/注册</span>,
-											children: <div id="wxlogin" className="hidden-sm-and-down"></div>,
-										},
-										{
-											key: 'login',
-											label: <span><UserOutlined />账号登录</span>,
-											children: (
-												<Form name="normal_login" className="login-form" initialValues={{ remember: true }} onFinish={onFinish}>
-													<Form.Item name="username" rules={[{ required: true, message: "输入云平台账号或百事服账号!" }]}>
-														<Input prefix={<UserOutlined className="site-form-item-icon" />} placeholder="输入你的账号" />
-													</Form.Item>
-													<Form.Item name="password" rules={[{ required: true, message: "输入密码,密码不能为空!" }]}>
-														<Input prefix={<LockOutlined className="site-form-item-icon" />} type="password" placeholder="输入密码" />
-													</Form.Item>
-
-													<Form.Item>
-														<Button loading={loginLoading} type="primary" htmlType="submit" className="login-form-button">
-															登录
-														</Button>
-														<Button
-															loading={loginLoading}
-															className="login-form-button-warning"
-															onClick={() => onFinish({ username: "test", password: "123456" })}
-														>
-															我要试用?
-														</Button>
-														{hasDevCreds && (
-															<Button
-																loading={devLoginLoading}
-																className="login-form-button-dev"
-																onClick={onDevLogin}
-																title="本机 .env.local 配置 DEV_ADMIN_USER / DEV_ADMIN_PASSWORD 才有效 (route.ts NODE_ENV guard)"
-															>
-																开发登录
-															</Button>
-														)}
-													</Form.Item>
-												</Form>
-											),
-										},
-									]} />
-								</Card>
-							</Col>
-						</Row>
-					</Layout.Content>
-					<Layout.Footer>
-						© 2019 All Rights Reserved
-						<a href="http://www.besiv.com/" target="_blank">
-							百事服
-						</a>
-						鄂ICP备19029626号-1
-					</Layout.Footer>
-				</Layout>
+	if (loading) {
+		return (
+			<div className="login-loading">
+				<Spin description="loading" size="large" />
 			</div>
+		);
+	}
+
+	return (
+		<div className="login-page bg-glass-mesh">
+			<header className="login-header">
+				<span className="text-brand-gradient login-header-title">百事服</span>
+				<Dropdown
+					menu={{
+						items: [
+							{ key: "cn", label: "中文", icon: <IconFont type="icon-zhongwen" />, onClick: () => setZh(true) },
+							{ key: "en", label: "En", icon: <IconFont type="icon-yingwen" />, onClick: () => setZh(false) }
+						]
+					}}
+					className="login-header-drop"
+				>
+					<a href="" onClick={(e) => e.preventDefault()} className="login-header-lang">
+						<GlobalOutlined />
+						<span>language</span>
+					</a>
+				</Dropdown>
+			</header>
+
+			<main className="login-content">
+				<div className="login-grid">
+					{/* Brand hero (左) — 视觉锚点 */}
+					<section className="login-hero">
+						<div className="login-hero-brand">
+							<div className="login-hero-mark">U</div>
+							<div className="login-hero-brand-text">
+								<div className="login-hero-title-main">UART Server</div>
+								<div className="login-hero-subtitle-main">百事服 · 工业 IoT 平台</div>
+							</div>
+						</div>
+						<h1 className="login-hero-title">
+							管理 <em>941 台</em><br />工业 IoT 设备
+						</h1>
+						<p className="login-hero-desc">
+							实时采集 · 远程控制 · 告警通知 · 数据分析。一套平台搞定从 DTU 到云端的所有环节。
+						</p>
+						<div className="login-hero-stats">
+							<div className="login-hero-stat">
+								<span className="login-hero-stat-label">在线设备</span>
+								<strong className="login-hero-stat-value">291</strong>
+							</div>
+							<div className="login-hero-stat">
+								<span className="login-hero-stat-label">覆盖协议</span>
+								<strong className="login-hero-stat-value">47</strong>
+							</div>
+							<div className="login-hero-stat">
+								<span className="login-hero-stat-label">服务节点</span>
+								<strong className="login-hero-stat-value">12</strong>
+							</div>
+						</div>
+					</section>
+
+					{/* 登录卡 (右) — Glass Dark 容器 */}
+					<section className="login-card-wrap">
+						<GlassCard variant="dark" padding="xl" className="login-card">
+							<Tabs
+								defaultActiveKey={tabdefaultActiveKey}
+								className="login-tabs"
+								items={[
+									{
+										key: 'wx_qr',
+										label: <span><WechatFilled />微信登录/注册</span>,
+										children: <div id="wxlogin" className="login-wx-qr" />,
+									},
+									{
+										key: 'login',
+										label: <span><UserOutlined />账号登录</span>,
+										children: (
+											<Form
+												name="normal_login"
+												className="login-form"
+												initialValues={{ remember: true }}
+												onFinish={onFinish}
+											>
+												<Form.Item
+													name="username"
+													rules={[{ required: true, message: "输入云平台账号或百事服账号!" }]}
+												>
+													<Input
+														prefix={<UserOutlined className="site-form-item-icon" />}
+														placeholder="输入你的账号"
+													/>
+												</Form.Item>
+												<Form.Item
+													name="password"
+													rules={[{ required: true, message: "输入密码,密码不能为空!" }]}
+												>
+													<Input.Password
+														prefix={<LockOutlined className="site-form-item-icon" />}
+														placeholder="输入密码"
+													/>
+												</Form.Item>
+
+												<Form.Item className="login-form-actions">
+													<Button
+														variant="primary"
+														loading={loginLoading}
+														htmlType="submit"
+														block
+														className="login-form-submit"
+													>
+														登录
+													</Button>
+													<Button
+														variant="ghost"
+														loading={loginLoading}
+														onClick={() => onFinish({ username: "test", password: "123456" })}
+														block
+														className="login-form-trial"
+													>
+														我要试用?
+													</Button>
+													{hasDevCreds && (
+														<Button
+															variant="default"
+															loading={devLoginLoading}
+															onClick={onDevLogin}
+															block
+															className="login-form-dev"
+															title="本机 .env.local 配置 DEV_ADMIN_USER / DEV_ADMIN_PASSWORD 才有效 (route.ts NODE_ENV guard)"
+														>
+															开发登录
+														</Button>
+													)}
+												</Form.Item>
+											</Form>
+										),
+									},
+								]}
+							/>
+						</GlassCard>
+					</section>
+				</div>
+			</main>
+
+			<footer className="login-footer">
+				<span>© 2019 All Rights Reserved</span>
+				<a href="http://www.besiv.com/" target="_blank" rel="noreferrer">百事服</a>
+				<span>鄂ICP备19029626号-1</span>
+			</footer>
+		</div>
 	);
 };
 
