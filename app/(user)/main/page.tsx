@@ -164,13 +164,13 @@ const UserIndex: React.FC = (props) => {
                                                 </Space>}
                                                 subtitle={dayjs(el.uptime).format("YY/M/D H:m:s")}
                                                 actions={[
-                                                    <Tooltip title="编辑查看">
+                                                    <Tooltip key="eye" title="编辑查看">
                                                         <EyeFilled style={{ color: 'var(--color-success)' }} onClick={() => nav("/main/terminal/" + el.DevMac)} />
                                                     </Tooltip>,
-                                                    <Tooltip title="重命名">
+                                                    <Tooltip key="edit" title="重命名">
                                                         <EditFilled style={{ color: 'var(--color-primary)' }} onClick={() => renameTerminal(el)} />
                                                     </Tooltip>,
-                                                    <Tooltip title="删除" >
+                                                    <Tooltip key="delete" title="删除" >
                                                         <Popconfirm
                                                             title={`确认删除设备[${el.name}]?`}
                                                             onConfirm={() => delTermianl(el)}

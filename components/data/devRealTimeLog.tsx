@@ -21,12 +21,6 @@ export const DevRealTimeLog: React.FC<props> = ({ terminal }) => {
     const [logs, setLogs] = useState<eventData[]>([])
     const [maxSum, setMaxSum] = useState(10)
 
-    useEffect(() => {
-        if(logs.length>0){
-            subscribe()
-        }
-    }, [logs])
-
     const subscribe = ()=>{
         socketClient.io.once('mac_log', (data: eventData) => {
             if (!data.time) {
@@ -41,6 +35,12 @@ export const DevRealTimeLog: React.FC<props> = ({ terminal }) => {
             setLogs(newLogs)
         })
     }
+
+    useEffect(() => {
+        if(logs.length>0){
+            subscribe()
+        }
+    }, [logs])
 
     const start = ()=>{
         addListenMac(terminal.DevMac);

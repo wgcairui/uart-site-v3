@@ -166,7 +166,7 @@ const Alarm: React.FC = () => {
                 console.warn('[confirmAll] id=' + id, err)
             }
         }
-        setAlarmsData(prev => prev.map(a => (a._id && ids.includes(a._id) ? { ...a, isOk: true } : a)))
+        setAlarmsData(prev => (prev ?? []).map(a => (a._id && ids.includes(a._id) ? { ...a, isOk: true } : a)))
         message.success(`已确认 ${okCount}/${ids.length} 条告警`)
     }
 

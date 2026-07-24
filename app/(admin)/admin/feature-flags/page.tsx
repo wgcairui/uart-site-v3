@@ -446,19 +446,19 @@ const HelpModal: React.FC<HelpModalProps> = ({ open, onClose }) => (
         <h3 style={{ fontSize: 15, fontWeight: 600, marginBottom: 8 }}>🛠️ 使用流程 (5 步)</h3>
         <ol style={{ paddingLeft: 20, color: '#475569' }}>
           <li style={{ marginBottom: 6 }}>
-            <strong>代码中读取</strong>: 后端代码用 evaluator 拿值, 例 <code style={{ background: '#f1f5f9', padding: '0 4px', borderRadius: 3 }}>evaluator.evaluate('ui.new_dashboard', {`{mac}`})</code>
+            <strong>代码中读取</strong>: 后端代码用 evaluator 拿值, 例 <code style={{ background: '#f1f5f9', padding: '0 4px', borderRadius: 3 }}>evaluator.evaluate(&apos;ui.new_dashboard&apos;, {`{mac}`})</code>
           </li>
           <li style={{ marginBottom: 6 }}>
-            <strong>创建开关</strong>: 点"新建开关", 填 key/类型/默认值/描述, 选填设备覆盖/通知接收方
+            <strong>创建开关</strong>: 点&quot;新建开关&quot;, 填 key/类型/默认值/描述, 选填设备覆盖/通知接收方
           </li>
           <li style={{ marginBottom: 6 }}>
-            <strong>启用</strong>: 列表里点"启用" (或编辑时打开 enabled)
+            <strong>启用</strong>: 列表里点&quot;启用&quot; (或编辑时打开 enabled)
           </li>
           <li style={{ marginBottom: 6 }}>
-            <strong>调整</strong>: 需要改值时点"编辑"; 紧急情况点"熔断"
+            <strong>调整</strong>: 需要改值时点&quot;编辑&quot;; 紧急情况点&quot;熔断&quot;
           </li>
           <li>
-            <strong>停用</strong>: 长期不用点"软删" (enabled=false, 不真删数据)
+            <strong>停用</strong>: 长期不用点&quot;软删&quot; (enabled=false, 不真删数据)
           </li>
         </ol>
       </section>
@@ -467,11 +467,11 @@ const HelpModal: React.FC<HelpModalProps> = ({ open, onClose }) => (
       <section style={{ marginTop: 20, padding: 12, background: '#faf5ff', border: '1px solid #e9d5ff', borderRadius: 8 }}>
         <div style={{ fontSize: 12, fontWeight: 600, color: '#7c3aed', marginBottom: 4 }}>💡 典型用例</div>
         <div style={{ fontSize: 12, color: '#475569', lineHeight: 1.6 }}>
-          告警系统: <code>alert.dispatch.mode</code> = "auto" | "manual" | "delayed_auto", 控制告警发送方式;
+          告警系统: <code>alert.dispatch.mode</code> = &quot;auto&quot; | &quot;manual&quot; | &quot;delayed_auto&quot;, 控制告警发送方式;
           <br />
           新功能灰度: <code>ui.new_dashboard</code> = true, 给 10% 设备开放测试;
           <br />
-          紧急熔断: <code>feature.x</code> 突然出问题, 点"熔断"按钮秒级关闭。
+          紧急熔断: <code>feature.x</code> 突然出问题, 点&quot;熔断&quot;按钮秒级关闭。
         </div>
       </section>
     </div>

@@ -1,6 +1,6 @@
 'use client'
 import { createFromIconfontCN } from '@ant-design/icons';
-import React, { CSSProperties, useMemo } from 'react';
+import React, { CSSProperties } from 'react';
 import "./IconFont.css"
 
 
@@ -13,24 +13,26 @@ export const IconFont = createFromIconfontCN({
   scriptUrl: alicdn
 });
 
+/**
+ * 旋转图标 - 工厂在 module scope 创建, 不在 render 里
+ */
+const IconFontSpinBase = createFromIconfontCN({
+  scriptUrl: alicdn,
+  extraCommonProps: {
+    className: 'anmi',
+  },
+});
 
 export const IconFontSpin: React.FC<CSSProperties & { type: string }> = (opt) => {
-  const IFS = useMemo(() => {
-    return createFromIconfontCN({
-      scriptUrl: alicdn,
-      extraCommonProps: {
-        className: 'anmi',
-        style: {
-          fontSize: opt.fontSize || 48,
-          animationDuration: opt.animationDuration || `0s`,
-          color: opt.color
-        }
-      }
-    });
-  }, [opt])
-
   return (
-    <IFS type={opt.type}></IFS>
+    <IconFontSpinBase
+      type={opt.type}
+      style={{
+        fontSize: opt.fontSize || 48,
+        animationDuration: opt.animationDuration || `0s`,
+        color: opt.color,
+      }}
+    />
   )
 }
 

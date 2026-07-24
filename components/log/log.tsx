@@ -12,9 +12,15 @@ export interface pieArg {
     event: (data: {type: string, value: number}, plot: any) => void
 }
 
+export type LogDataFun = (
+    start: string,
+    end: string,
+    ...args: any[]
+) => Promise<unknown>
+
 export interface log<T = any> extends TableProps<T> {
     lastDay?: number | undefined
-    dataFun: Function
+    dataFun: LogDataFun
     cPie?: (string | pieArg)[] | undefined
     filterNode?: string | undefined  // 节点名称过滤
     filterMac?: string | undefined   // 设备mac过滤
@@ -39,8 +45,9 @@ export const Log: React.FC<log> = (props) => {
             : {}
     })
 
-    const list = usePromise(async () => {
-        const { data } = await props.dataFun(date[0]?.format() || "", date[1]?.format() || "", props.filterMac, props.filterPhone)
+    const list = usePromise<any[]>(async () => {
+        const result: any = await props.dataFun(date[0]?.format() || "", date[1]?.format() || "", props.filterMac, props.filterPhone)
+        const data = result?.data ?? result
         let items = Array.isArray(data) ? data : (data?.items ?? [])
         if (props.filterNode) {
             items = items.filter((item: any) => item.Name === props.filterNode)
@@ -61,7 +68,7 @@ export const Log: React.FC<log> = (props) => {
         ].flat() as any
 
         return arr
-    }, [filter])
+    }, [props.columns])
 
     const pies = useMemo(() => {
         if (props.cPie && list.data.length > 0) {
@@ -86,7 +93,7 @@ export const Log: React.FC<log> = (props) => {
         } else {
             return []
         }
-    }, [list.data])
+    }, [list.data, props.cPie])
 
     const target = (type: string, key: string) => {
         setFilter(filter => ({ ...filter, [type]: [key] }))

@@ -115,7 +115,7 @@ export default function AdminDashboardPage() {
                     >
                         <div style={{ position: 'absolute', top: -50, right: -50, width: 200, height: 200, background: 'radial-gradient(circle, var(--accent-400) 0%, transparent 70%)', opacity: 0.5, pointerEvents: 'none' }} />
                         <div style={{ position: 'relative', zIndex: 1, color: 'rgba(255,255,255,0.7)', fontSize: 12, fontWeight: 500, letterSpacing: '0.05em', textTransform: 'uppercase', fontFamily: 'var(--font-mono)', whiteSpace: 'nowrap' }}>
-                            // 设备总数 · TOTAL
+                            设备总数 · TOTAL
                         </div>
                         <div style={{ position: 'relative', zIndex: 1, fontSize: 64, fontWeight: 600, letterSpacing: '-0.03em', lineHeight: 1, marginTop: 16, fontFamily: 'var(--font-sans)', color: '#fff' }}>
                             {hero.total}
@@ -194,7 +194,7 @@ export default function AdminDashboardPage() {
 
             {/* 底部: 刷新状态 */}
             <div style={{ marginTop: 16, display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 11, color: 'var(--ink-500)', fontFamily: 'var(--font-mono)' }}>
-                <span>// v3 hybrid v4 · 12 section Bento · 30s refresh</span>
+                <span>v3 hybrid v4 · 12 section Bento · 30s refresh</span>
                 <span>last refresh: {lastRefresh.toLocaleTimeString('zh-CN', { hour12: false })}</span>
             </div>
         </div>
@@ -213,7 +213,7 @@ function KpiCard({ icon, label, value, trend, trendColor }: { icon: React.ReactN
     return (
         <div className="bento-card" style={{ padding: 24, display: 'flex', flexDirection: 'column', minHeight: 180 }}>
             <div style={{ color: 'var(--brand-500)', fontSize: 11, fontWeight: 500, letterSpacing: '0.05em', textTransform: 'uppercase', fontFamily: 'var(--font-mono)', display: 'flex', alignItems: 'center', gap: 6 }}>
-                {icon} // {label}
+                {icon} <span style={{ marginLeft: 4 }}>{label}</span>
             </div>
             <div style={{ color: 'var(--ink-900)', fontSize: 36, fontWeight: 600, letterSpacing: '-0.02em', lineHeight: 1.1, marginTop: 8 }}>
                 {value}

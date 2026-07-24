@@ -11,7 +11,7 @@ interface Result<T> {
     status: number
 }
 
-export type universalResult<T = {}> = Result<T>
+export type universalResult<T = Record<string, unknown>> = Result<T>
 
 export interface PaginationReq {
     page?: number;
