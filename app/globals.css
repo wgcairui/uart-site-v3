@@ -1421,6 +1421,27 @@ html, body {
 }
 
 /* =============================================================
+ * user 端移动端优先 · 锁定宽度 375px 容器
+ * 2026-07-24 · user-side-mobile-locked
+ * - 简化: 不再依赖 viewport media query, 固定 375px 设计宽度
+ * - 内部组件按 375px 比例设计 (PageSummary 2x2 / 设备卡 1 列 / Tabs 横滚)
+ * - desktop (> 375px) 自动居中, 左右留白
+ * - 移动端 (≤ 375px) 满宽 (减去 16px 安全区)
+ * ============================================================= */
+
+.user-content-frame {
+  max-width: 375px;
+  width: 100%;
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: 16px;
+  padding-right: 16px;
+  box-sizing: border-box;
+  position: relative;
+  min-height: 100%;
+}
+
+/* =============================================================
  * TrendChart v3 · 24h area chart (hybrid Page B)
  * ============================================================= */
 

@@ -89,6 +89,7 @@ const UserIndex: React.FC = (props) => {
         <div className="bg-bento-canvas" style={{ position: 'relative', zIndex: 0 }}>
             <PageHeader title="我的设备" subtitle="查看所有绑定设备、网关、聚合设备" />
             <PageSummary
+                column={2}
                 items={[
                     { label: '网关总数', value: terminals.length, variant: 'primary' },
                     {

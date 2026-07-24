@@ -44,17 +44,24 @@ function resolveColor(variant?: SummaryVariant, color?: string): string {
  * - 副标签 text-xs，方向用 semantic 色
  *
  * 替代旧版 `<Divider plain>标题 / {total}</Divider>` + 顶部 3px 彩条风格。
+ *
+ * 列数规则（2026-07-24 简化）：
+ * - 固定 N 列 (`repeat(N, 1fr)`)，不再用 auto-fit
+ * - 调用方根据容器宽度显式传 column：user 移动端 375px 容器 → column=2
+ *   admin 桌面端 → 默认 4
+ * - gap 跟列数走：4 列 20px / 2 列 12px（紧凑）
  */
 export function PageSummary({ items, column = 4 }: PageSummaryProps) {
   if (items.length === 0) return null
+
+  const gap = column >= 4 ? 20 : 12
 
   return (
     <div
       style={{
         display: 'grid',
-        // 响应式: 4 卡 → 2 卡 → 1 卡, 桌面端保持 column 列数, 窄屏自动 fallback
-        gridTemplateColumns: `repeat(auto-fit, minmax(${column >= 4 ? 220 : 280}px, 1fr))`,
-        gap: 20,
+        gridTemplateColumns: `repeat(${column}, 1fr)`,
+        gap,
         marginBottom: 32,
       }}
       className="page-summary-grid"

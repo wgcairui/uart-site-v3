@@ -181,9 +181,11 @@ export default function UserLayout({ children }: { children: React.ReactNode }) 
                 />
             )}
 
-            {/* 主内容 */}
+            {/* 主内容 - 375px 锁定宽度容器 (mobile-first, desktop 居中) */}
             <main className="scroll-area" style={{ flex: 1, position: 'relative' }}>
-                <PageTransition>{children}</PageTransition>
+                <div className="user-content-frame">
+                    <PageTransition>{children}</PageTransition>
+                </div>
                 <AbsButton>
                     <div style={{ padding: 16 }}>
                         <div style={{ fontSize: 12, color: 'var(--ink-500)', marginBottom: 8 }}>
