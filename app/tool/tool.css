@@ -1,0 +1,257 @@
+/* =============================================================
+ * Tool Page v3 · Glass + Mesh (CRC16 / SUB 工具 · LOW 视觉优先级)
+ * 规范: docs/style-guide.md v2 §3.3 品牌入口规范
+ *
+ * 4 色渐变 Mesh 背景走 globals.css .bg-glass-mesh utility.
+ * 玻璃卡背景走 components/common/GlassCard variant="dark".
+ * 本文件只保留 tool 特有布局 + antd Tabs/Form/Input 在 Glass 容器上的 v2 适配.
+ * ============================================================= */
+
+.page-tool {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  overflow: hidden;
+}
+
+.page-tool-content {
+  flex: 1;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 32px 16px;
+  position: relative;
+  z-index: 1;
+  overflow-y: auto;
+}
+
+.page-tool-card {
+  width: 100%;
+  max-width: 880px;
+  color: #fff;
+}
+
+/* 头部品牌条 */
+.page-tool-card-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 20px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.18);
+}
+
+.page-tool-card-mark {
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-family: var(--font-mono);
+  font-size: 16px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.page-tool-card-title {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+  min-width: 0;
+}
+
+.page-tool-card-title-main {
+  font-size: 20px;
+  font-weight: 600;
+  color: #fff;
+  letter-spacing: -0.01em;
+  line-height: 1.2;
+}
+
+.page-tool-card-title-sub {
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.7);
+  letter-spacing: 0.04em;
+  font-family: var(--font-mono);
+  text-transform: uppercase;
+}
+
+.page-tool-card-meta {
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.6);
+  font-family: var(--font-mono);
+  text-align: right;
+  flex-shrink: 0;
+}
+
+/* Tabs v2 风格 (浅色文字 + 白色 ink-bar) */
+.page-tool-tabs .ant-tabs-tab {
+  color: rgba(255, 255, 255, 0.6) !important;
+  font-weight: 500;
+  font-size: 14px;
+  padding: 8px 4px;
+}
+
+.page-tool-tabs .ant-tabs-tab.ant-tabs-tab-active .ant-tabs-tab-btn {
+  color: #fff !important;
+}
+
+.page-tool-tabs .ant-tabs-ink-bar {
+  background: #fff !important;
+  height: 2px;
+}
+
+.page-tool-tabs .ant-tabs-nav {
+  margin-bottom: 20px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+.page-tool-tabs .ant-tabs-content-holder {
+  color: #fff;
+}
+
+/* 表单 (Glass 容器上 antd 元素 v2 适配) */
+.page-tool-form {
+  margin-top: 4px;
+}
+
+.page-tool-form .ant-form-item-label > label {
+  color: rgba(255, 255, 255, 0.85) !important;
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+}
+
+.page-tool-form .ant-form-item {
+  margin-bottom: 16px;
+}
+
+.page-tool-form .ant-input,
+.page-tool-form .ant-input-number,
+.page-tool-form .ant-input-number-input,
+.page-tool-form textarea.ant-input {
+  background: rgba(255, 255, 255, 0.12) !important;
+  border: 1px solid rgba(255, 255, 255, 0.25) !important;
+  color: #fff !important;
+  font-family: var(--font-mono);
+  border-radius: 10px;
+}
+
+.page-tool-form .ant-input-number {
+  width: 100%;
+}
+
+.page-tool-form .ant-input::placeholder,
+.page-tool-form .ant-input-number-input::placeholder,
+.page-tool-form textarea.ant-input::placeholder {
+  color: rgba(255, 255, 255, 0.5) !important;
+}
+
+.page-tool-form .ant-input:focus,
+.page-tool-form .ant-input-number:focus,
+.page-tool-form .ant-input-number-focused,
+.page-tool-form textarea.ant-input:focus,
+.page-tool-form .ant-input-focused,
+.page-tool-form textarea.ant-input-focused {
+  background: rgba(255, 255, 255, 0.18) !important;
+  border-color: rgba(255, 255, 255, 0.5) !important;
+  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.15) !important;
+  outline: none;
+}
+
+.page-tool-form .ant-input-number .ant-input-number-handler-wrap {
+  background: transparent !important;
+  border-left-color: rgba(255, 255, 255, 0.25) !important;
+}
+
+.page-tool-form .ant-input-number .ant-input-number-handler {
+  color: rgba(255, 255, 255, 0.6) !important;
+  border-color: rgba(255, 255, 255, 0.15) !important;
+}
+
+/* Select 适配 (CRC16 指令类型下拉) */
+.page-tool-form .ant-select .ant-select-selector {
+  background: rgba(255, 255, 255, 0.12) !important;
+  border: 1px solid rgba(255, 255, 255, 0.25) !important;
+  color: #fff !important;
+  border-radius: 10px !important;
+}
+
+.page-tool-form .ant-select .ant-select-selection-item,
+.page-tool-form .ant-select .ant-select-selection-placeholder {
+  color: #fff !important;
+  font-family: var(--font-mono);
+}
+
+.page-tool-form .ant-select .ant-select-arrow {
+  color: rgba(255, 255, 255, 0.6) !important;
+}
+
+.page-tool-form .ant-select-focused .ant-select-selector,
+.page-tool-form .ant-select-open .ant-select-selector {
+  background: rgba(255, 255, 255, 0.18) !important;
+  border-color: rgba(255, 255, 255, 0.5) !important;
+  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.15) !important;
+}
+
+/* 输出只读 (crc 结果 / 序列化结果) */
+.page-tool-form .ant-form-item-output .ant-input,
+.page-tool-form .ant-form-item-output textarea.ant-input {
+  background: rgba(15, 23, 42, 0.25) !important;
+  border-style: dashed !important;
+  color: #fff !important;
+  font-variant-numeric: tabular-nums;
+}
+
+.page-tool-form-actions {
+  margin-top: 4px;
+  margin-bottom: 0 !important;
+}
+
+.page-tool-form-actions .ant-btn {
+  height: 40px;
+  font-weight: 600;
+  border-radius: 10px;
+  font-size: 14px;
+  padding: 0 24px;
+}
+
+/* 卡片底部 */
+.page-tool-card-footer {
+  margin-top: 24px;
+  padding-top: 16px;
+  border-top: 1px solid rgba(255, 255, 255, 0.15);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.6);
+  font-family: var(--font-mono);
+}
+
+/* 移动端 */
+@media screen and (max-width: 768px) {
+  .page-tool-content {
+    padding: 16px 12px;
+  }
+  .page-tool-card {
+    max-width: 100%;
+  }
+  .page-tool-card-header {
+    flex-wrap: wrap;
+  }
+  .page-tool-card-meta {
+    width: 100%;
+    text-align: left;
+  }
+}
