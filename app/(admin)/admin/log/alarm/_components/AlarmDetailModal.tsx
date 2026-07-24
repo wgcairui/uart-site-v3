@@ -14,7 +14,7 @@
  *  - 严重程度 (server v2 enum): critical / warning / info
  */
 
-import { Modal, Space, Tag } from 'antd'
+import { Modal, Space } from 'antd'
 import {
     CheckCircleOutlined, CloseCircleOutlined, BellOutlined,
     FireOutlined, ExclamationCircleOutlined, InfoCircleOutlined,
@@ -23,6 +23,10 @@ import dayjs from 'dayjs'
 import React from 'react'
 
 import { SectionTitle } from '@/components/common/SectionTitle'
+import { StatusTag } from '@/components/common/StatusTag'
+
+/** 告警详情 Modal 宽度 (v2 token 替代硬编码 720) */
+export const ALARM_DETAIL_MODAL_WIDTH = 720
 
 // ─── 顶部状态条 4 列 KV ──────────────────────────────────────────────────────
 
@@ -42,18 +46,18 @@ const StatusBar: React.FC<StatusBarProps> = ({ record }) => {
                 gap: '12px 20px',
                 padding: '14px 18px',
                 background: isOk
-                    ? 'linear-gradient(135deg, rgba(16,185,129,0.06), rgba(16,185,129,0.02))'
-                    : 'linear-gradient(135deg, rgba(239,68,68,0.06), rgba(239,68,68,0.02))',
-                border: `1px solid ${isOk ? 'rgba(16,185,129,0.2)' : 'rgba(239,68,68,0.2)'}`,
+                    ? 'linear-gradient(135deg, color-mix(in srgb, var(--color-success) 6%, transparent), color-mix(in srgb, var(--color-success) 2%, transparent))'
+                    : 'linear-gradient(135deg, color-mix(in srgb, var(--color-danger) 6%, transparent), color-mix(in srgb, var(--color-danger) 2%, transparent))',
+                border: `1px solid ${isOk ? 'color-mix(in srgb, var(--color-success) 20%, transparent)' : 'color-mix(in srgb, var(--color-danger) 20%, transparent)'}`,
                 borderRadius: 10,
                 marginBottom: 16,
             }}
         >
             <Field label="状态">
                 {isOk ? (
-                    <Tag color="success" icon={<CheckCircleOutlined />}>已恢复</Tag>
+                    <StatusTag variant="online" text="已恢复" icon={<CheckCircleOutlined />} />
                 ) : (
-                    <Tag color="error" icon={<CloseCircleOutlined />}>告警中</Tag>
+                    <StatusTag variant="error" text="告警中" icon={<CloseCircleOutlined />} />
                 )}
             </Field>
             <Field label="设备">
@@ -61,11 +65,11 @@ const StatusBar: React.FC<StatusBarProps> = ({ record }) => {
             </Field>
             <Field label="严重程度">
                 {severity === 'critical' ? (
-                    <Tag color="error" icon={<FireOutlined />} style={{ margin: 0 }}>严重</Tag>
+                    <StatusTag variant="error" text="严重" icon={<FireOutlined />} showDot={false} />
                 ) : severity === 'warning' ? (
-                    <Tag color="warning" icon={<ExclamationCircleOutlined />} style={{ margin: 0 }}>警告</Tag>
+                    <StatusTag variant="warning" text="警告" icon={<ExclamationCircleOutlined />} showDot={false} />
                 ) : (
-                    <Tag color="blue" icon={<InfoCircleOutlined />} style={{ margin: 0 }}>提示</Tag>
+                    <StatusTag variant="info" text="提示" icon={<InfoCircleOutlined />} showDot={false} />
                 )}
             </Field>
             <Field label="告警时间">
@@ -113,9 +117,7 @@ const DeviceSection: React.FC<{ record: Uart.uartAlarmObject }> = ({ record }) =
                 <span style={{ color: 'var(--ink-500)', fontSize: 13, paddingTop: 2 }}>协议</span>
                 <div>
                     {record.protocol ? (
-                        <Tag color="blue" style={{ fontFamily: 'ui-monospace, monospace', fontSize: 12, margin: 0 }}>
-                            {record.protocol}
-                        </Tag>
+                        <StatusTag variant="info" text={record.protocol} showDot={false} size="sm" />
                     ) : (
                         <span style={{ color: 'var(--ink-300)' }}>—</span>
                     )}
@@ -124,7 +126,7 @@ const DeviceSection: React.FC<{ record: Uart.uartAlarmObject }> = ({ record }) =
                 <span style={{ color: 'var(--ink-500)', fontSize: 13, paddingTop: 2 }}>标签</span>
                 <div>
                     {record.tag ? (
-                        <Tag color="purple" style={{ margin: 0 }}>{record.tag}</Tag>
+                        <StatusTag variant="info" text={record.tag} showDot={false} />
                     ) : (
                         <span style={{ color: 'var(--ink-300)' }}>—</span>
                     )}
@@ -186,7 +188,7 @@ export const AlarmDetailModal: React.FC<AlarmDetailModalProps> = ({ open, record
             open={open}
             onCancel={onClose}
             footer={null}
-            width={720}
+            width={ALARM_DETAIL_MODAL_WIDTH}
             destroyOnHidden
             styles={{ body: { maxHeight: 'calc(100vh - 200px)', overflowY: 'auto' } }}
         >

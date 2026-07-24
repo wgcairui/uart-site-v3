@@ -18,7 +18,7 @@
  */
 
 import {
-    Alert, Empty, Modal, Space, Tabs, Tag,
+    Alert, Empty, Modal, Space, Tabs,
 } from 'antd'
 import {
     CheckCircleOutlined, CloseCircleOutlined, CodeOutlined,
@@ -28,6 +28,10 @@ import dayjs from 'dayjs'
 import React, { useMemo, useState } from 'react'
 
 import { SectionTitle } from '@/components/common/SectionTitle'
+import { StatusTag, type StatusTagVariant } from '@/components/common/StatusTag'
+
+/** 邮件详情 Modal 宽度 (v2 token 替代硬编码 880) */
+export const MAIL_DETAIL_MODAL_WIDTH = 880
 
 // ─── 顶层状态条 5 列 KV (左键右值) ──────────────────────────────────────────
 
@@ -55,18 +59,18 @@ const StatusBar: React.FC<StatusBarProps> = ({ record }) => {
                 gap: '12px 20px',
                 padding: '14px 18px',
                 background: isOk
-                    ? 'linear-gradient(135deg, rgba(16,185,129,0.06), rgba(16,185,129,0.02))'
-                    : 'linear-gradient(135deg, rgba(239,68,68,0.06), rgba(239,68,68,0.02))',
-                border: `1px solid ${isOk ? 'rgba(16,185,129,0.2)' : 'rgba(239,68,68,0.2)'}`,
+                    ? 'linear-gradient(135deg, color-mix(in srgb, var(--color-success) 6%, transparent), color-mix(in srgb, var(--color-success) 2%, transparent))'
+                    : 'linear-gradient(135deg, color-mix(in srgb, var(--color-danger) 6%, transparent), color-mix(in srgb, var(--color-danger) 2%, transparent))',
+                border: `1px solid ${isOk ? 'color-mix(in srgb, var(--color-success) 20%, transparent)' : 'color-mix(in srgb, var(--color-danger) 20%, transparent)'}`,
                 borderRadius: 10,
                 marginBottom: 16,
             }}
         >
             <Field label="状态">
                 {isOk ? (
-                    <Tag color="success" icon={<CheckCircleOutlined />}>发送成功</Tag>
+                    <StatusTag variant="online" text="发送成功" icon={<CheckCircleOutlined />} />
                 ) : (
-                    <Tag color="error" icon={<CloseCircleOutlined />}>发送失败</Tag>
+                    <StatusTag variant="error" text="发送失败" icon={<CloseCircleOutlined />} />
                 )}
             </Field>
             <Field label="主题">
@@ -80,7 +84,7 @@ const StatusBar: React.FC<StatusBarProps> = ({ record }) => {
                 </span>
             </Field>
             <Field label="收件人">
-                <Tag color="blue">{record.mails?.length ?? 0} 个</Tag>
+                <StatusTag variant="info" text={`${record.mails?.length ?? 0} 个`} showDot={false} />
             </Field>
             <Field label="耗时 / 大小">
                 <span style={{ fontFamily: 'ui-monospace, monospace', fontSize: 12 }}>
@@ -113,9 +117,7 @@ const AddressSection: React.FC<{ record: Uart.logMailSend }> = ({ record }) => {
                 <span style={{ color: 'var(--ink-500)', fontSize: 13, paddingTop: 2 }}>发件人</span>
                 <div>
                     {record.sendParams?.from ? (
-                        <Tag color="purple" style={{ fontFamily: 'ui-monospace, monospace', fontSize: 12 }}>
-                            {record.sendParams.from}
-                        </Tag>
+                        <StatusTag variant="info" text={record.sendParams.from} showDot={false} size="sm" />
                     ) : (
                         <span style={{ color: 'var(--ink-300)' }}>—</span>
                     )}
@@ -126,13 +128,13 @@ const AddressSection: React.FC<{ record: Uart.logMailSend }> = ({ record }) => {
                     {Array.isArray(record.mails) && record.mails.length ? (
                         <Space size={[6, 6]} wrap>
                             {record.mails.map((m, i) => (
-                                <Tag
+                                <StatusTag
                                     key={`${m}-${i}`}
-                                    color="blue"
-                                    style={{ fontFamily: 'ui-monospace, monospace', fontSize: 12, margin: 0 }}
-                                >
-                                    {m}
-                                </Tag>
+                                    variant="info"
+                                    text={m}
+                                    showDot={false}
+                                    size="sm"
+                                />
                             ))}
                         </Space>
                     ) : (
@@ -176,14 +178,17 @@ const HtmlBodySection: React.FC<{ html: string | undefined }> = ({ html }) => {
                 title="邮件正文"
                 extra={
                     <Space size={8}>
-                        <Tag
-                            icon={copied ? <CheckCircleOutlined /> : <CopyOutlined />}
-                            color={copied ? 'success' : 'default'}
-                            style={{ cursor: 'pointer', userSelect: 'none' }}
+                        <span
                             onClick={handleCopyHtml}
+                            style={{ cursor: 'pointer', userSelect: 'none', display: 'inline-flex' }}
                         >
-                            {copied ? '已复制' : '复制源码'}
-                        </Tag>
+                            <StatusTag
+                                icon={copied ? <CheckCircleOutlined /> : <CopyOutlined />}
+                                variant={copied ? 'online' : 'idle'}
+                                text={copied ? '已复制' : '复制源码'}
+                                showDot={false}
+                            />
+                        </span>
                     </Space>
                 }
             />
@@ -263,7 +268,12 @@ const SuccessSection: React.FC<{ success: Uart.mailResponse | undefined }> = ({ 
             <SectionTitle
                 icon={<CheckCircleOutlined />}
                 title="SMTP 响应"
-                extra={<Tag color="success">accepted × {success.accepted?.length ?? 0}</Tag>}
+                extra={
+                    <StatusTag
+                        variant="online"
+                        text={`accepted × ${success.accepted?.length ?? 0}`}
+                    />
+                }
             />
 
             {/* 1. 顶层标量字段 KV 网格 */}
@@ -276,9 +286,11 @@ const SuccessSection: React.FC<{ success: Uart.mailResponse | undefined }> = ({ 
                 }}
             >
                 <KV label="response" value={
-                    <Tag color={/^\d{3}\s/.test(success.response ?? '') ? 'success' : 'warning'}>
-                        {success.response || '—'}
-                    </Tag>
+                    <StatusTag
+                        variant={/^\d{3}\s/.test(success.response ?? '') ? 'online' : 'warning'}
+                        text={success.response || '—'}
+                        showDot={false}
+                    />
                 } />
                 <KV label="messageId" value={
                     <span style={{ fontFamily: 'ui-monospace, monospace', fontSize: 12, wordBreak: 'break-all' }}>
@@ -301,12 +313,12 @@ const SuccessSection: React.FC<{ success: Uart.mailResponse | undefined }> = ({ 
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 16 }}>
                 <ListGroup
                     title="accepted"
-                    color="success"
+                    variant="online"
                     items={success.accepted ?? []}
                 />
                 <ListGroup
                     title="rejected"
-                    color="error"
+                    variant="error"
                     items={success.rejected ?? []}
                 />
             </div>
@@ -328,9 +340,13 @@ const SuccessSection: React.FC<{ success: Uart.mailResponse | undefined }> = ({ 
                     <Space size={[4, 4]} wrap>
                         {Array.isArray(envelope.to) && envelope.to.length
                             ? envelope.to.map((t, i) => (
-                                <Tag key={`${t}-${i}`} style={{ fontFamily: 'ui-monospace, monospace', fontSize: 11, margin: 0 }}>
-                                    {t}
-                                </Tag>
+                                <StatusTag
+                                    key={`${t}-${i}`}
+                                    variant="idle"
+                                    text={t}
+                                    showDot={false}
+                                    size="sm"
+                                />
                             ))
                             : <span style={{ color: 'var(--ink-300)' }}>—</span>
                         }
@@ -352,9 +368,9 @@ const KV: React.FC<{ label: string; value: React.ReactNode }> = ({ label, value 
 
 const ListGroup: React.FC<{
     title: string
-    color: 'success' | 'error' | 'warning' | 'processing'
+    variant: StatusTagVariant
     items: string[]
-}> = ({ title, color, items }) => (
+}> = ({ title, variant, items }) => (
     <div
         style={{
             padding: 12,
@@ -365,18 +381,18 @@ const ListGroup: React.FC<{
     >
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
             <span style={{ fontSize: 12, color: 'var(--ink-500)' }}>{title}</span>
-            <Tag color={color} style={{ margin: 0 }}>{items.length}</Tag>
+            <StatusTag variant={variant} text={items.length} />
         </div>
         {items.length ? (
             <Space size={[4, 4]} wrap>
                 {items.map((it, i) => (
-                    <Tag
+                    <StatusTag
                         key={`${it}-${i}`}
-                        color={color}
-                        style={{ fontFamily: 'ui-monospace, monospace', fontSize: 11, margin: 0 }}
-                    >
-                        {it}
-                    </Tag>
+                        variant={variant}
+                        text={it}
+                        showDot={false}
+                        size="sm"
+                    />
                 ))}
             </Space>
         ) : (
@@ -423,7 +439,7 @@ const ErrorSection: React.FC<{ error: unknown }> = ({ error }) => {
             <SectionTitle
                 icon={<WarningOutlined />}
                 title="错误信息"
-                extra={<Tag color="error">failed</Tag>}
+                extra={<StatusTag variant="error" text="failed" />}
             />
             <Alert
                 type="error"
@@ -513,7 +529,7 @@ export const MailDetailModal: React.FC<MailDetailModalProps> = ({ open, record, 
             open={open}
             onCancel={onClose}
             footer={null}
-            width={880}
+            width={MAIL_DETAIL_MODAL_WIDTH}
             destroyOnHidden
             // modal body max-height, 防超大 HTML 撑爆屏幕
             styles={{ body: { maxHeight: 'calc(100vh - 200px)', overflowY: 'auto' } }}
