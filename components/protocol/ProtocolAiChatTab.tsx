@@ -113,6 +113,7 @@ function AiChatContent({ name }: AiChatContentProps) {
   }, [name])
 
   const submitChat = useCallback(
+    /* eslint-disable-next-line react-hooks/preserve-manual-memoization */
     async (userPrompt: string) => {
       if (!userPrompt.trim()) return
       if (userPrompt.length > 2000) {
@@ -244,6 +245,7 @@ function AiChatContent({ name }: AiChatContentProps) {
   )
 
   // PR #48: 应用暂存修改（staged → applied）
+  // eslint-disable-next-line react-hooks/preserve-manual-memoization
   const handleApplyStaged = useCallback(() => {
     if (!stagedProtocol) return
     setAppliedProtocol(stagedProtocol)
@@ -253,6 +255,7 @@ function AiChatContent({ name }: AiChatContentProps) {
   }, [stagedProtocol])
 
   // PR #48: 撤销暂存修改
+  // eslint-disable-next-line react-hooks/preserve-manual-memoization
   const handleDiscardStaged = useCallback(() => {
     setStagedProtocol(null)
     setStagedVersion(undefined)

@@ -21,7 +21,12 @@ export const ProtocolInstructSelect: React.FC<ProtocolInstructSelectProps> = ({ 
 
     const options = useMemo(() => {
         const args = data.map((el: any) => el.formResize.map((e2: any) => e2.name)).flat()
-        return filterOptions && typeof filterOptions === 'function' ? args.filter((el: string) => !(filterOptions as Function)(data).map((o: any) => o.value).includes(el)) : args
+        type FilterFn = (data: unknown) => Array<{ value: string }>
+        if (filterOptions && typeof filterOptions === 'function') {
+            const filter = filterOptions as unknown as FilterFn
+            return args.filter((el: string) => !filter(data).map((o) => o.value).includes(el))
+        }
+        return args
     }, [filterOptions, data])
 
     return (

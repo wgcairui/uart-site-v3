@@ -11,8 +11,8 @@ describe('tableCommon', () => {
     it('appends index to key field', () => {
       const data = [{ id: 'a' }, { id: 'b' }]
       const result = generateTableKey(data, 'id')
-      expect(result[0]?.key).toBe('a0')
-      expect(result[1]?.key).toBe('b1')
+      expect(result[0]?.key).toBe('a-0')
+      expect(result[1]?.key).toBe('b-1')
     })
 
     it('preserves other fields', () => {

@@ -24,7 +24,7 @@ export interface IusePromise<T> {
     /**
      * 设置数据
      */
-    setData: React.Dispatch<SetStateAction<T>>
+    setData: React.Dispatch<SetStateAction<T | undefined>>
 }
 
 /**
@@ -38,7 +38,12 @@ export const usePromise = <T,>(fn: () => Promise<T>, initValue?: T | (() => T), 
 
     const [loading, setLoading] = useState(true)
 
-    const [data, setData] = initValue ? useState<T>(initValue) : useState<T>()
+    const [data, setData] = useState<T | undefined>(() => {
+        if (typeof initValue === 'function') {
+            return (initValue as () => T)()
+        }
+        return initValue as T | undefined
+    })
 
     const [err, setErr] = useState<any>()
 
@@ -59,6 +64,6 @@ export const usePromise = <T,>(fn: () => Promise<T>, initValue?: T | (() => T), 
         data: data as T,
         err,
         fecth,
-        setData: setData as React.Dispatch<SetStateAction<T>>
+        setData: setData as React.Dispatch<SetStateAction<T | undefined>>
     }
 }

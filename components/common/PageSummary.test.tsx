@@ -44,7 +44,7 @@ describe('PageSummary', () => {
       <PageSummary items={[{ label: 'a', value: 1 }]} />
     )
     const grid = container.querySelector('.page-summary-grid') as HTMLElement
-    expect(grid.style.gridTemplateColumns).toBe('repeat(4, minmax(0, 1fr))')
+    expect(grid.style.gridTemplateColumns).toBe('repeat(auto-fit, minmax(220px, 1fr))')
   })
 
   it('respects column prop', () => {
@@ -52,7 +52,7 @@ describe('PageSummary', () => {
       <PageSummary column={2} items={[{ label: 'a', value: 1 }]} />
     )
     const grid = container.querySelector('.page-summary-grid') as HTMLElement
-    expect(grid.style.gridTemplateColumns).toBe('repeat(2, minmax(0, 1fr))')
+    expect(grid.style.gridTemplateColumns).toBe('repeat(auto-fit, minmax(280px, 1fr))')
   })
 
   it('applies active highlight outline', () => {
