@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Tag, Tooltip, Empty, Button, Popconfirm, Modal, message, Dropdown, Descriptions } from 'antd'
+import { confirm, success, info, error, warning } from '@/lib/utils/modal'
 import {
   AppstoreOutlined,
   CheckCircleFilled,
@@ -47,7 +48,7 @@ export function MountDevicesStrip({ mac, mountDevs, onChange }: MountDevicesStri
   const list = Array.isArray(mountDevs) ? mountDevs : []
 
   const delMountDev = (dev: Uart.TerminalMountDevs) => {
-    Modal.confirm({
+    confirm({
       content: `确认删除挂载设备:${mac}/${dev.pid} ?`,
       okType: 'danger',
       onOk() {

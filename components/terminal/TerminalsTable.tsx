@@ -13,6 +13,7 @@ import {
 	notification,
 	ColProps,
 } from 'antd'
+import { confirm, success, info, error, warning } from '@/lib/utils/modal'
 import { ColumnsType } from "antd/lib/table";
 import dayjs from "dayjs";
 import React, { useEffect, useState } from "react";
@@ -186,7 +187,7 @@ export const TerminalsTable: React.FC<Omit<TableProps<Uart.Terminal>, "dataSourc
 	};
 
 	const deleteRegisterTerminalm = (DevMac: string) => {
-		Modal.confirm({
+		confirm({
 			content: `是否确定删除DTU:${DevMac} ??`,
 			onOk: async () => {
 				const key = "deleteRegisterTerminalm";
@@ -205,7 +206,7 @@ export const TerminalsTable: React.FC<Omit<TableProps<Uart.Terminal>, "dataSourc
 	};
 
 	const initTerminalm = (DevMac: string) => {
-		Modal.confirm({
+		confirm({
 			content: `是否确定初始化DTU:${DevMac} ??`,
 			onOk: async () => {
 				const key = "initTerminalm";
@@ -221,7 +222,7 @@ export const TerminalsTable: React.FC<Omit<TableProps<Uart.Terminal>, "dataSourc
 
 	const unbindDev = (mac: string, user?: string) => {
 		if (user) {
-			Modal.confirm({
+			confirm({
 				content: `是否删除用户[${user}]绑定设备{${mac}}?`,
 				onOk() {
 					delUserTerminal(user, mac).then(() => {

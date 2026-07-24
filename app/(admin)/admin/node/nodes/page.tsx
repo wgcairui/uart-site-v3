@@ -20,6 +20,7 @@
  */
 
 import { Button, Form, Input, message, Modal, Space, Table, Tag } from 'antd'
+import { confirm, success, info, error, warning } from '@/lib/utils/modal'
 import { PageHeader } from '@/components/common/PageHeader'
 import { PageSummary, type SummaryVariant } from '@/components/common/PageSummary'
 import { StatusTag } from '@/components/common/StatusTag'
@@ -211,7 +212,7 @@ export const Nodes: React.FC = () => {
     }, [nodes])
 
     const handleDelete = (node: string) => {
-        Modal.confirm({
+        confirm({
             content: `确定删除节点 "${node}" 吗？`,
             onOk() {
                 return deleteNode(node).then((el) => {
@@ -229,7 +230,7 @@ export const Nodes: React.FC = () => {
     }
 
     const handleRestart = (node: string) => {
-        Modal.confirm({
+        confirm({
             content: `确定重启节点:${node}??`,
             onOk() {
                 return nodeRestart(node).then(() => {
@@ -241,7 +242,7 @@ export const Nodes: React.FC = () => {
 
     const handleRotate = (node: string, hasToken: boolean) => {
         const isInit = !hasToken
-        Modal.confirm({
+        confirm({
             title: isInit ? '为节点生成 Token' : '重置节点 Token',
             content: (
                 <div>

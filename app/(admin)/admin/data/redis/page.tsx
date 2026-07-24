@@ -24,6 +24,7 @@ import { DeleteOutlined, ReloadOutlined, SearchOutlined, DatabaseOutlined,
   TagsOutlined, HddOutlined, UnorderedListOutlined,
 } from '@ant-design/icons'
 import { Button, Form, Input, message, Modal, Space, Spin, Table, Tag, Tooltip, Typography } from 'antd'
+import { confirm, success, info, error, warning } from '@/lib/utils/modal'
 import type { ColumnsType, TablePaginationConfig } from 'antd/lib/table'
 import React, { useMemo, useState } from 'react'
 import { redisflushdb, rediskeys, rediskeysdel, rediskeysdValue } from '@/lib/api/fetchRoot'
@@ -209,7 +210,7 @@ export const Redis: React.FC = () => {
 
   /** 删除单个 key */
   const deleteKey = (targetKey: string) => {
-    Modal.confirm({
+    confirm({
       title: '确认删除 key',
       content: <Text code>{targetKey}</Text>,
       okText: '删除',
@@ -228,7 +229,7 @@ export const Redis: React.FC = () => {
   const batchDelete = () => {
     const names = selectedRowKeys as string[]
     if (names.length === 0) return
-    Modal.confirm({
+    confirm({
       title: `确认删除 ${names.length} 个 key?`,
       content: (
         <div style={{ maxHeight: 200, overflow: 'auto' }}>

@@ -1,5 +1,6 @@
 'use client'
-import { Col, Descriptions, Image, Modal, Progress, Row, Switch, Tabs } from "antd";
+import { Col, Descriptions, Image, Modal, Progress, Row, Switch, Tabs } from "antd"
+import { confirm, success, info, error, warning } from '@/lib/utils/modal';
 import React, { useMemo } from "react";
 import { getProtocolSetup, getTerminalPidProtocol } from "@/lib/api/fetch";
 import { usePromise } from "@/lib/hooks/usePromise";
@@ -68,7 +69,7 @@ export const TerminalDevUps: React.FC<result> = ({ mac, pid, result }) => {
      * @param val
      */
     const OnOff = (val: boolean) => {
-        Modal.confirm({
+        confirm({
             content: `确定${!val ? '关闭' : '打开'}UPS??`,
             onOk: () => {
                 openScheduleOp({ mac, pid, tag: !val ? '关机' : '开机' })

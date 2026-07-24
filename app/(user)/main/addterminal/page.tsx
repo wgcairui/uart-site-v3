@@ -34,6 +34,7 @@ import {
     Space,
     Spin,
 } from 'antd'
+import { confirm, success, info, error, warning } from '@/lib/utils/modal'
 import { Button } from '@/components/common/Button'
 import {
     SearchOutlined,
@@ -170,7 +171,7 @@ const AddTerminal: React.FC = () => {
             .then(el => {
                 if (el.code === 200) {
                     message.success({ key, content: '绑定成功' })
-                    Modal.success({
+                    success({
                         title: '绑定成功',
                         content: `成功绑定设备 ${ter.name || ter.DevMac}，是否返回主页?`,
                         okText: '返回主页',

@@ -8,7 +8,8 @@
 // 重要: sendInstructScheduled 的 content 字段是已组装的最终指令 (hex 字符串),
 //   而 user 端原本是传 item 对象给 server 由 server 端 fillInstructTemplate 算 hex
 //   这里在前端复刻 fillInstructTemplate (见 fillInstructTemplate), 行为与 server 端一致
-import { Modal, message } from "antd";
+import { Modal, message } from "antd"
+import { confirm, success, info, error, warning } from '@/lib/utils/modal';
 import {
   SendProcotolInstructSet as userSendInstruct,
   getProtocolSetup as userGetProtocolSetup,
@@ -176,5 +177,5 @@ export async function sendInstructScheduled(args: {
 
 /** Modal.info 提示 ack 结果, 跟原 sendOprateInstruct 风格一致 */
 export function showSendResult(data: Uart.ApolloMongoResult | undefined) {
-  if (data) Modal.info({ content: data?.msg || "发送失败" });
+  if (data) info({ content: data?.msg || "发送失败" });
 }

@@ -1,6 +1,7 @@
 'use client'
 import { DeleteFilled, WarningFilled, PlusOutlined, AppstoreOutlined, FilterOutlined, ReloadOutlined } from "@ant-design/icons";
 import { Button, Form, Input, message, Modal, Space, Spin, Table, Tooltip } from 'antd'
+import { confirm, success, info, error, warning } from '@/lib/utils/modal'
 import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { addDevType, deleteDevModel, DevTypes, getDevModelStats } from "@/lib/api/fetchRoot";
@@ -112,7 +113,7 @@ export const DevModel: React.FC = () => {
     }, [])
 
     const deleteDevModels = (DevModel: string) => {
-        Modal.confirm({
+        confirm({
             content: `确定删除型号"${DevModel}"？？？`,
             icon: <WarningFilled />,
             onOk() {

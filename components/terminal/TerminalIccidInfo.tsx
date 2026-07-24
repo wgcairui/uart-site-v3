@@ -10,6 +10,7 @@ import {
 	Spin,
 	Avatar,
 } from 'antd'
+import { confirm, success, info, error, warning } from '@/lib/utils/modal'
 import { ColumnsType } from "antd/lib/table";
 import dayjs from "dayjs";
 import React, { useEffect, useState } from "react";
@@ -114,7 +115,7 @@ export const TerminalBindUsers: React.FC<{ mac: string; share: boolean; ownerId:
 	 * @param user
 	 */
 	const unbindDev = (user: string) => {
-		Modal.confirm({
+		confirm({
 			content: `是否删除设备设备{${prop.mac}}的绑定用户[${user}]?`,
 			onOk() {
 				delUserTerminal(user, prop.mac).then((el) => {

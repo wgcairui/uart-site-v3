@@ -1,5 +1,6 @@
 'use client'
-import { Descriptions, Tag, Modal, Button, Space, Empty, message, Select, Input } from "antd";
+import { Descriptions, Tag, Modal, Button, Space, Empty, message, Select, Input } from "antd"
+import { confirm, success, info, error, warning } from '@/lib/utils/modal';
 import dayjs from "dayjs";
 import React from "react";
 import { toggleUserGroup, modifyUserRemark, getUser, resetUserPassword, modifyAdminUserAlarmSetupContacts } from "@/lib/api/fetchRoot";
@@ -25,7 +26,7 @@ export const UserDes: React.FC<Props<Uart.UserInfo | string>> = ({ user: u, upda
      * 切换用户组
      */
     const swicthGroup = () => {
-        Modal.confirm({
+        confirm({
             content: `是否变更用户${user.name} 为 [${user.userGroup === "admin" ? "user" : "admin"
                 }]`,
             onOk() {
@@ -44,7 +45,7 @@ export const UserDes: React.FC<Props<Uart.UserInfo | string>> = ({ user: u, upda
      */
     const changePassword = () => {
         let newPwd = ''
-        Modal.confirm({
+        confirm({
             title: `修改 [${user.user}] 的密码`,
             content: (
                 <Input.Password

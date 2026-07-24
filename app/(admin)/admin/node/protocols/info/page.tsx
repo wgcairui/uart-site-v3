@@ -31,6 +31,7 @@
 import { useCallback, useEffect, useState, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { message, Modal, Space, Spin, Table, Tabs } from 'antd'
+import { confirm, success, info, error, warning } from '@/lib/utils/modal'
 import type { ColumnsType } from 'antd/lib/table'
 import { CopyFilled, DeleteFilled, ExperimentOutlined, MessageOutlined, UploadOutlined } from '@ant-design/icons'
 import dayjs from 'dayjs'
@@ -124,7 +125,7 @@ function ProtocolDes({ Protocol }: ProtocolDesProps) {
 
   const handleAddInstruct = (name: string) => {
     if (instructs.some((el) => el.name === name)) {
-      Modal.info({ content: '指令字符重复' })
+      info({ content: '指令字符重复' })
       return
     }
     modifyInstruct({

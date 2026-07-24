@@ -18,6 +18,7 @@ import {
   AppstoreOutlined,
 } from '@ant-design/icons'
 import { Tooltip, Modal, Input, message, Popover, Empty, Spin } from 'antd'
+import { confirm, success, info, error, warning } from '@/lib/utils/modal'
 import dayjs from 'dayjs'
 import {
   SendProcotolInstructSet,
@@ -138,7 +139,7 @@ export function DeviceActions({ terminal, title = '设备操作', onChange }: De
 
   // ─── 4. 强制离线 ────────────────────────────────────────────
   const handleForceOffline = () => {
-    Modal.confirm({
+    confirm({
       title: '强制离线',
       content: `确定要把 ${t.DevMac} 强制设为离线吗?\n\n注意: 这只是 admin 端的覆盖标记, 设备真实连接状态由 socket 维护, 等下次心跳会自动恢复。`,
       okText: '强制离线',
@@ -164,7 +165,7 @@ export function DeviceActions({ terminal, title = '设备操作', onChange }: De
 
   // ─── 4. 重置终端 ────────────────────────────────────────────
   const handleReset = () => {
-    Modal.confirm({
+    confirm({
       title: '重置终端',
       content: `确定要重置 ${t.DevMac} 吗?\n\n重置会清空终端的运行时状态并重新初始化, 但不会删除挂载设备和用户绑定。`,
       okText: '确认重置',
@@ -191,7 +192,7 @@ export function DeviceActions({ terminal, title = '设备操作', onChange }: De
   // ─── 4. 解除挂载 (含 picker) ─────────────────────────────────
   const [unmountOpen, setUnmountOpen] = useState(false)
   const handleUnmount = (dev: Uart.TerminalMountDevs) => {
-    Modal.confirm({
+    confirm({
       title: '解除挂载',
       content: `确认删除挂载设备: ${t.DevMac} / ${dev.mountDev} (pid=${dev.pid}) ?\n\n此操作不可逆。`,
       okText: '确认删除',

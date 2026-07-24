@@ -1,5 +1,6 @@
 'use client'
-import { Col, Divider, Form, Modal, Row, Switch } from "antd";
+import { Col, Divider, Form, Modal, Row, Switch } from "antd"
+import { confirm, success, info, error, warning } from '@/lib/utils/modal';
 import React, { useMemo } from "react";
 import { getProtocolSetup, getTerminalPidProtocol } from "@/lib/api/fetch";
 import { usePromise } from "@/lib/hooks/usePromise";
@@ -70,7 +71,7 @@ export const TerminalDevIO: React.FC<result> = ({ mac, pid, result }) => {
      */
     const changeDo = async (item: Uart.queryResultArgument, v: boolean) => {
         const tag = Boolean(Number(item.value)) ? '断开' : '闭合'
-        Modal.confirm({
+        confirm({
             content: `确认操作${item.name} [${tag}]?`,
             onOk() {
                 // 获取index

@@ -1,7 +1,8 @@
 'use client'
 
 import { PlusSquareFilled } from "@ant-design/icons";
-import { Avatar, Col, Descriptions, Divider, Modal, Row, Tag, Image, message, Space, Form } from "antd";
+import { Avatar, Col, Descriptions, Divider, Modal, Row, Tag, Image, message, Space, Form } from "antd"
+import { confirm, success, info, error, warning } from '@/lib/utils/modal';
 import { Button } from '@/components/common/Button'
 import { StatusTag } from '@/components/common/StatusTag'
 import dayjs from "dayjs";
@@ -38,7 +39,7 @@ const UserInfo: React.FC = props => {
         const loading = message.loading({ content: 'loading' })
         const { data } = type === 'wp' ? await wpTicket() : await mpTicket()
         loading()
-        Modal.info({
+        info({
             title: type === 'wp' ? '小程序二维码' : '公众号二维码',
             content: (
                 <Image src={data || ''}></Image>

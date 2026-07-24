@@ -14,6 +14,7 @@
  */
 
 import { Button, message, Modal, Space } from 'antd'
+import { confirm, success, info, error, warning } from '@/lib/utils/modal'
 import {
     ReloadOutlined,
     SafetyCertificateOutlined,
@@ -78,7 +79,7 @@ export const NodeDetail: React.FC = () => {
 
     const handleRotate = () => {
         const isInit = !(node.hasToken ?? false)
-        Modal.confirm({
+        confirm({
             title: isInit ? '为节点生成 Token' : '重置节点 Token',
             content: (
                 <div>
@@ -112,7 +113,7 @@ export const NodeDetail: React.FC = () => {
     }
 
     const handleRestart = () => {
-        Modal.confirm({
+        confirm({
             content: `确定重启节点:${nodeId}?`,
             onOk() {
                 setRestarting(true)

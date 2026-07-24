@@ -22,6 +22,7 @@ import {
 	Dropdown,
 	ColProps,
 } from 'antd'
+import { confirm, success, info, error, warning } from '@/lib/utils/modal'
 
 import dayjs from "dayjs";
 import React, { useEffect, useState } from "react";
@@ -163,7 +164,7 @@ export const TerminalMountDevs: React.FC<infoProps> = (props) => {
 	 * @param pid
 	 */
 	const delMountDev = (mac: string, pid: number) => {
-		Modal.confirm({
+		confirm({
 			content: `确认删除挂载设备:${mac}/${pid} ?`,
 			onOk() {
 				const key = "delTerminalMountDev" + mac + pid;

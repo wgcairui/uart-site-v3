@@ -17,6 +17,7 @@
 import {
   Button, Input, InputNumber, Modal, Radio, Space, Switch, Tag, message,
 } from 'antd'
+import { confirm, success, info, error, warning } from '@/lib/utils/modal'
 import {
   EditOutlined, ExclamationCircleOutlined,
 } from '@ant-design/icons'
@@ -145,7 +146,7 @@ const BooleanValue: React.FC<{ ff: Uart.UartFeatureFlag; onSaved: () => void }> 
           onChange={(next) => {
             if (next) {
               let reason = ''
-              Modal.confirm({
+              confirm({
                 title: '开启紧急熔断?',
                 icon: <ExclamationCircleOutlined />,
                 content: (

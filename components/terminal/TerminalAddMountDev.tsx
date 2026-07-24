@@ -1,5 +1,6 @@
 'use client'
-import { Modal, Form, Select, message } from "antd";
+import { Modal, Form, Select, message } from "antd"
+import { confirm, success, info, error, warning } from '@/lib/utils/modal';
 import React, { useEffect, useMemo, useState } from "react";
 import { addTerminalMountDev, getTerminal } from "@/lib/api/fetch";
 import { usePromise } from "@/lib/hooks/usePromise";
@@ -80,7 +81,7 @@ export const TerminalAddMountDev: React.FC<addMountDev> = ({ visible, mac, onCan
 
     const postMountDev = () => {
         if (mountDev.protocol) {
-            Modal.confirm({
+            confirm({
                 content: `确认添加地址[${mountDev.pid}]设备[${mountDev.mountDev}/${mountDev.protocol}]?`,
                 onOk: () => {
                     const key = mac + mountDev.pid

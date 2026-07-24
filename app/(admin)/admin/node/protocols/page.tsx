@@ -1,5 +1,6 @@
 'use client'
 import { Button, Dropdown, Form, Input, message, Modal, Radio, Space, Spin, Table } from 'antd'
+import { confirm, success, info, error, warning } from '@/lib/utils/modal'
 import React, { useMemo, useState } from "react";
 import { deleteProtocol, getProtocols, setProtocol, getProtocolStats } from "@/lib/api/fetchRoot";
 import { generateTableKey, makeServerSearchProp, makeServerFilterProp, extractServerTableQuery } from "@/lib/utils/tableCommon";
@@ -126,13 +127,13 @@ export const Protocols: React.FC = () => {
     }, [])
 
     const deleteProtocols = async (Protocol: string) => {
-        Modal.confirm({
+        confirm({
             content: `确定要删除指令:${Protocol}吗??`,
             onOk() {
                 deleteProtocol(Protocol).then((el: any) => {
                     if (el.code === 200 || el.code === 0) {
                         if (Array.isArray(el.data) && el.data.length > 0) {
-                            Modal.error({ content: `设备模型 ${el.data.join(', ')} 还在使用该协议，无法删除！` })
+                            error({ content: `设备模型 ${el.data.join(', ')} 还在使用该协议，无法删除！` })
                         } else {
                             message.success("删除协议成功")
                             fecth()

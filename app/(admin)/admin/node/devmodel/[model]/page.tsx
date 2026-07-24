@@ -22,6 +22,7 @@
 import { Suspense, useCallback, useEffect, useState } from 'react'
 import { useParams, useRouter, useSearchParams } from 'next/navigation'
 import { message, Modal, Spin } from 'antd'
+import { confirm, success, info, error, warning } from '@/lib/utils/modal'
 import {
   AppstoreOutlined,
   ClusterOutlined,
@@ -102,7 +103,7 @@ function DevModelDetailInner() {
   const typeVariant = TYPE_VARIANT[typeName] || 'idle'
 
   const handleDelete = () => {
-    Modal.confirm({
+    confirm({
       title: `确认删除设备型号 [${model}] ?`,
       icon: <ExclamationCircleOutlined />,
       content: '该设备型号下如果还有设备在用, 删除会失败',

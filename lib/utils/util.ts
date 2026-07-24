@@ -1,5 +1,6 @@
 // Note: 此文件含浏览器 API，仅在 Client Component 中使用
-import { message, Modal } from "antd";
+import { message, Modal } from "antd"
+import { confirm, success, info, error, warning } from '@/lib/utils/modal';
 import { getProtocolSetup, getTerminalPidProtocol, SendProcotolInstructSet } from '@/lib/api/fetch'
 import { prompt } from '@/lib/utils/prompt'
 
@@ -54,7 +55,7 @@ export const sendOprateInstruct = async (mac: string, pid: number | string, tag:
     })
     const { data } = await SendProcotolInstructSet({ DevMac: mac, pid: Number(pid), protocol: mountDev.protocol, mountDev: mountDev.mountDev }, item)
     loading()
-    if (data) Modal.info({ content: data?.msg || '发送失败' })
+    if (data) info({ content: data?.msg || '发送失败' })
     return data
 }
 
@@ -99,7 +100,7 @@ export const RepeatFilter = <T extends Record<string, any>>(data: T[], key: stri
  */
 export const ModalConfirm = (content: string): Promise<boolean> => {
     return new Promise((resolve) => {
-        Modal.confirm({
+        confirm({
             content,
             onOk() {
                 resolve(true)
