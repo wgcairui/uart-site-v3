@@ -301,6 +301,26 @@ html, body {
   text-transform: uppercase;
   font-family: var(--font-mono);
 }
+
+/* userinfo 账号 openid 长串 (2026-07-24 fix): mono + 小号 + 换行, 防止挤爆 Descriptions 单元格 */
+.userinfo-account-code {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  word-break: break-all;
+  overflow-wrap: anywhere;
+  background: var(--ink-100);
+  padding: 2px 8px;
+  border-radius: 4px;
+  cursor: pointer;
+  display: inline-block;
+  max-width: 100%;
+  line-height: 1.6;
+  transition: background var(--motion-fast) var(--ease);
+}
+.userinfo-account-code:hover {
+  background: var(--ink-200);
+}
+
 .stat-card-value {
   font-size: 32px;
   font-weight: 700;
