@@ -321,6 +321,29 @@ html, body {
   background: var(--ink-200);
 }
 
+/* dev page 精简 device header (2026-07-24 redesign Option A) */
+.v3-device-header {
+  background: var(--bg-panel) !important;
+  border: 1px solid var(--ink-100) !important;
+  border-radius: 16px !important;
+}
+.v3-device-header h2 {
+  font-family: var(--font-outfit);
+}
+.v3-device-header-mac {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--ink-700);
+  background: var(--ink-100);
+  padding: 2px 8px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background var(--motion-fast) var(--ease);
+}
+.v3-device-header-mac:hover {
+  background: var(--ink-200);
+}
+
 .stat-card-value {
   font-size: 32px;
   font-weight: 700;
