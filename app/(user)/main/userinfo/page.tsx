@@ -1,7 +1,7 @@
 'use client'
 
 import { PlusSquareFilled } from "@ant-design/icons";
-import { Avatar, Col, Descriptions, Divider, Modal, Row, Tag, Image, message, Space, Form } from "antd"
+import { Avatar, Col, Descriptions, Divider, Modal, Row, Tag, Image, Tooltip, message, Space, Form } from "antd"
 import { confirm, success, info, error, warning } from '@/lib/utils/modal';
 import { Button } from '@/components/common/Button'
 import { StatusTag } from '@/components/common/StatusTag'
@@ -12,7 +12,6 @@ import { prompt } from "@/lib/utils/prompt";
 import { RegexMail, RegexTel } from "@/lib/utils/util";
 import { getUserAlarmSetup, modifyUserAlarmSetupTel, mpTicket, wpTicket } from "@/lib/api/fetch";
 import { PageHeader } from "@/components/common/PageHeader";
-import { PageSummary } from "@/components/common/PageSummary";
 
 /**
  * 显示用户信息
@@ -103,16 +102,8 @@ const UserInfo: React.FC = props => {
                 title={user.name || user.user}
                 breadcrumb={[{ title: '首页', href: '/main' }]}
             />
-            <PageSummary
-                items={[
-                    { label: '账号', value: user.user, variant: 'primary' },
-                    { label: '昵称', value: user.name || '-', variant: 'info' },
-                    { label: '电话', value: user.tel || '-', variant: 'success' },
-                    { label: '邮箱', value: user.mail || '-', variant: 'warning' },
-                ]}
-            />
             <Row justify="center" align="middle">
-                <Col xs={24} md={12} style={{ padding: isMobile ? 4 : 12 }}>
+                <Col xs={24} md={14} lg={12} style={{ padding: isMobile ? 4 : 12 }}>
                     <Space orientation="vertical" style={{ width: '100%' }}>
                         <Divider plain>用户信息</Divider>
                         <p>修改用户信息请使用小程序操作</p>
@@ -122,6 +113,19 @@ const UserInfo: React.FC = props => {
                             size={isMobile ? 'small' : 'default'}
                             {...(isMobile ? { labelStyle: { width: 90 } } : {})}
                         >
+                            <Descriptions.Item label="账号" span={2}>
+                                <Tooltip title="点击复制">
+                                    <code
+                                        className="userinfo-account-code"
+                                        onClick={() => {
+                                            navigator.clipboard?.writeText(user.user || '')
+                                            message.success('账号已复制')
+                                        }}
+                                    >
+                                        {user.user}
+                                    </code>
+                                </Tooltip>
+                            </Descriptions.Item>
                             <Descriptions.Item label="avanter" >
                                 <Avatar src={user.avanter} />
                             </Descriptions.Item>
