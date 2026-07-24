@@ -26,6 +26,17 @@ function MountDevPageInner() {
   const mac = params.mac as string
   const pid = parseInt(params.pid as string, 10)
 
+  // 移动端 detection: < 768px 缩 hero / 改 Descriptions 单列 / 收紧 padding
+  const [isMobile, setIsMobile] = useState(false)
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    const mq = window.matchMedia('(max-width: 768px)')
+    const update = () => setIsMobile(mq.matches)
+    update()
+    mq.addEventListener('change', update)
+    return () => mq.removeEventListener('change', update)
+  }, [])
+
   // 拉 terminal (拿 mountDev 详情) + mountDev pid/protocol 详情
   const { data: terminal, loading: tLoading } = usePromise(async () => {
     const { data } = await getTerminal(mac)
@@ -67,7 +78,7 @@ function MountDevPageInner() {
   return (
     <div className="bg-bento-canvas" style={{ position: 'relative', zIndex: 0 }}>
       {/* 面包屑导航 */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12, fontSize: 12, color: 'var(--ink-500)', fontFamily: 'var(--font-mono)' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12, fontSize: 12, color: 'var(--ink-500)', fontFamily: 'var(--font-mono)', flexWrap: 'wrap' }}>
         <a onClick={() => router.back()} style={{ cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
           <ArrowLeftOutlined /> 返回
         </a>
@@ -82,7 +93,7 @@ function MountDevPageInner() {
         className="bento-card"
         style={{
           marginBottom: 20,
-          padding: '20px 28px',
+          padding: isMobile ? '14px 16px' : '20px 28px',
           background: online
             ? 'linear-gradient(135deg, #1e1b4b 0%, #312e81 60%, #6d28d9 100%)'
             : 'linear-gradient(135deg, #1e1b4b 0%, #5b1d1d 60%, #9f1239 100%)',
@@ -100,25 +111,31 @@ function MountDevPageInner() {
             opacity: 0.4, pointerEvents: 'none',
           }}
         />
-        <div style={{ position: 'relative', zIndex: 1, display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 16 }}>
-          <div style={{ minWidth: 0, display: 'flex', alignItems: 'center', gap: 16 }}>
+        <div
+          style={{
+            position: 'relative', zIndex: 1,
+            display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between',
+            gap: 16, flexWrap: 'wrap',
+          }}
+        >
+          <div style={{ minWidth: 0, display: 'flex', alignItems: 'center', gap: isMobile ? 10 : 16, flex: '1 1 auto' }}>
             <div
               style={{
-                width: 64, height: 64, borderRadius: 14,
+                width: isMobile ? 48 : 64, height: isMobile ? 48 : 64, borderRadius: 14,
                 background: 'rgba(255, 255, 255, 0.15)',
                 border: '1px solid rgba(255, 255, 255, 0.25)',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
-                fontSize: 32, color: '#fff',
+                fontSize: isMobile ? 24 : 32, color: '#fff',
                 flexShrink: 0,
               }}
             >
               {iconEl}
             </div>
-            <div style={{ minWidth: 0 }}>
-              <h2 style={{ fontSize: 22, fontWeight: 600, letterSpacing: '-0.02em', color: '#fff', margin: 0, lineHeight: 1.3 }}>
+            <div style={{ minWidth: 0, flex: 1 }}>
+              <h2 style={{ fontSize: isMobile ? 17 : 22, fontWeight: 600, letterSpacing: '-0.02em', color: '#fff', margin: 0, lineHeight: 1.3, wordBreak: 'break-all' }}>
                 {dev.mountDev || '未命名'}
               </h2>
-              <div style={{ fontFamily: 'var(--font-mono)', fontSize: 12, color: 'rgba(255,255,255,0.7)', marginTop: 4 }}>
+              <div style={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: 'rgba(255,255,255,0.7)', marginTop: 4, wordBreak: 'break-all' }}>
                 PID {dev.pid} · {dev.protocol || '未配置协议'} · {dev.Type || '未知类型'} · 终端 {mac}
               </div>
             </div>
@@ -145,12 +162,12 @@ function MountDevPageInner() {
         className="bento-card"
         style={{
           marginBottom: 20,
-          padding: '14px 20px',
+          padding: isMobile ? '10px 12px' : '14px 20px',
           background: 'rgba(255, 255, 255, 0.7)',
           backdropFilter: 'blur(16px)',
           border: '1px solid rgba(255, 255, 255, 0.9)',
           borderRadius: 12,
-          display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap',
+          display: 'flex', alignItems: 'center', gap: isMobile ? 8 : 16, flexWrap: 'wrap',
           fontSize: 11, color: 'var(--ink-500)', fontFamily: 'var(--font-mono)',
         }}
       >
@@ -177,9 +194,10 @@ function MountDevPageInner() {
       </div>
 
       {/* 4 段 Tabs */}
-      <div className="bento-card" style={{ padding: 24 }}>
+      <div className="bento-card" style={{ padding: isMobile ? 12 : 24 }}>
         <Tabs
           defaultActiveKey="detail"
+          {...(isMobile ? { tabBarStyle: { margin: 0, fontSize: 13 } } : {})}
           items={[
             {
               key: 'detail',
@@ -188,7 +206,7 @@ function MountDevPageInner() {
                 <div>
                   <Descriptions
                     size="small"
-                    column={3}
+                    column={isMobile ? 1 : 3}
                     bordered
                     style={{ marginBottom: 20 }}
                     items={[
@@ -225,6 +243,7 @@ function MountDevPageInner() {
                     type="primary"
                     icon={<ExportOutlined />}
                     onClick={() => router.push(`/main/constant?mac=${encodeURIComponent(mac)}&pid=${pid}`)}
+                    block={isMobile}
                   >
                     打开告警配置
                   </Button>
