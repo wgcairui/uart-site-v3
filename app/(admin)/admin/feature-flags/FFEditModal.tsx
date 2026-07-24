@@ -16,14 +16,23 @@
  * - 'use client' 必加
  * - Modal.confirm 不用 Popconfirm
  * - 只改 UI 不改 API / DTO
+ * - v2 token: 8 处硬编码 hex → var(--ink-*) / var(--color-*) / rgba 语义色
+ * - 5 emoji → antd icon (MailOutlined / MobileOutlined / RobotOutlined / WarningOutlined / BulbOutlined)
+ * - antd Button danger → <Button variant="danger"> (走 btn-danger class)
+ * - Modal okButton 加 className='btn-brand' 走品牌渐变
  */
 
 import {
   Button, Form, Input, InputNumber, Modal, Select, Space, Switch, Tabs, message,
 } from 'antd'
-import { PlusOutlined, MinusCircleOutlined } from '@ant-design/icons'
+import {
+  PlusOutlined, MinusCircleOutlined,
+  MailOutlined, MobileOutlined, RobotOutlined,
+  WarningOutlined, BulbOutlined,
+} from '@ant-design/icons'
 import React, { useEffect } from 'react'
 
+import { Button as AppButton } from '@/components/common/Button'
 import {
   createFeatureFlag, updateFeatureFlag,
 } from '@/lib/api/fetchRoot'
@@ -213,10 +222,14 @@ export const FFEditModal: React.FC<FFEditModalProps> = ({ open, record, onClose,
   const advancedTab = (
     <Form form={form} layout="vertical" size="middle" component={false}>
       <div style={{
-        padding: 12, marginBottom: 16, background: '#fef3c7', borderRadius: 8,
-        border: '1px solid #fde68a', fontSize: 12, color: '#92400e', lineHeight: 1.6,
+        padding: 12, marginBottom: 16,
+        background: 'rgba(245, 158, 11, 0.10)',
+        borderRadius: 8,
+        border: '1px solid var(--color-warning)',
+        fontSize: 12, color: 'var(--ink-700)', lineHeight: 1.6,
       }}>
-        ⚠️ 高危操作: <b>kill switch</b> 会拦截所有依赖此 FF 的代码路径, <b>设备覆盖</b> 会按 MAC 强制覆盖默认值. 改前请确认.
+        <WarningOutlined style={{ color: 'var(--color-warning)', marginRight: 4 }} />
+        <b>高危操作</b>: <b>kill switch</b> 会拦截所有依赖此 FF 的代码路径, <b>设备覆盖</b> 会按 MAC 强制覆盖默认值. 改前请确认.
       </div>
 
       <Space size={24} style={{ marginBottom: 16 }}>
@@ -247,7 +260,7 @@ export const FFEditModal: React.FC<FFEditModalProps> = ({ open, record, onClose,
       </Form.Item>
 
       <div style={{ marginBottom: 8, fontSize: 13, fontWeight: 500 }}>设备覆盖 (per device)</div>
-      <div style={{ fontSize: 11, color: '#94a3b8', marginBottom: 10, lineHeight: 1.5 }}>
+      <div style={{ fontSize: 11, color: 'var(--ink-400)', marginBottom: 10, lineHeight: 1.5 }}>
         按 MAC 强制覆盖默认值. 优先级: device override &gt; default. 留 until 不填表示永久.
       </div>
 
@@ -268,9 +281,9 @@ export const FFEditModal: React.FC<FFEditModalProps> = ({ open, record, onClose,
                 <Form.Item name={[fname, 'note']} style={{ marginBottom: 0 }}>
                   <Input placeholder="备注" style={{ width: 130 }} />
                 </Form.Item>
-                <Button danger size="small" icon={<MinusCircleOutlined />} onClick={() => remove(fname)}>
+                <AppButton variant="danger" size="small" icon={<MinusCircleOutlined />} onClick={() => remove(fname)}>
                   删除
-                </Button>
+                </AppButton>
               </Space>
             ))}
             <Button type="dashed" onClick={() => add({ mac: '', value: '' })} block icon={<PlusOutlined />}>
@@ -285,27 +298,43 @@ export const FFEditModal: React.FC<FFEditModalProps> = ({ open, record, onClose,
   // ── Tab 3: 通知 ─────────────────────────────────────────
   const notifyTab = (
     <Form form={form} layout="vertical" size="middle" component={false}>
-      <div style={{ fontSize: 12, color: '#64748b', marginBottom: 16, lineHeight: 1.6 }}>
+      <div style={{ fontSize: 12, color: 'var(--ink-500)', marginBottom: 16, lineHeight: 1.6 }}>
         通知接收方: 审批通知 / 熔断告警通知 / 自定义通知统一发送目标. 留空表示该通道不通知.
       </div>
 
-      <Form.Item name={['recipients', 'email']} label="📧 Email" style={{ marginBottom: 12 }}>
+      <Form.Item
+        name={['recipients', 'email']}
+        label={<span><MailOutlined style={{ marginRight: 6 }} />Email</span>}
+        style={{ marginBottom: 12 }}
+      >
         <Input placeholder="admin@example.com" allowClear />
       </Form.Item>
-      <Form.Item name={['recipients', 'sms']} label="📱 SMS" style={{ marginBottom: 12 }}>
+      <Form.Item
+        name={['recipients', 'sms']}
+        label={<span><MobileOutlined style={{ marginRight: 6 }} />SMS</span>}
+        style={{ marginBottom: 12 }}
+      >
         <Input placeholder="13800138000" allowClear />
       </Form.Item>
-      <Form.Item name={['recipients', 'feishu_bot']} label="🤖 飞书" style={{ marginBottom: 16 }}>
+      <Form.Item
+        name={['recipients', 'feishu_bot']}
+        label={<span><RobotOutlined style={{ marginRight: 6 }} />飞书</span>}
+        style={{ marginBottom: 16 }}
+      >
         <Input placeholder="chat_id 或 webhook URL" allowClear />
       </Form.Item>
 
       {isAlertFF && (
         <>
           <div style={{
-            padding: 12, marginBottom: 16, background: '#f1f5f9', borderRadius: 8,
-            border: '1px solid #e2e8f0', fontSize: 12, color: '#475569', lineHeight: 1.6,
+            padding: 12, marginBottom: 16,
+            background: 'var(--ink-50)',
+            borderRadius: 8,
+            border: '1px solid var(--ink-200)',
+            fontSize: 12, color: 'var(--ink-700)', lineHeight: 1.6,
           }}>
-            💡 <b>告警等级延时</b>仅在 <code>delayed_auto</code> 模式下生效. 0ms = 立即发送.
+            <BulbOutlined style={{ color: 'var(--color-warning)', marginRight: 4 }} />
+            <b>告警等级延时</b>仅在 <code>delayed_auto</code> 模式下生效. 0ms = 立即发送.
           </div>
           <div style={{ marginBottom: 8, fontSize: 13, fontWeight: 500 }}>告警等级延时 (delayed_auto)</div>
           <Space size={8} wrap>
@@ -334,8 +363,9 @@ export const FFEditModal: React.FC<FFEditModalProps> = ({ open, record, onClose,
       width={720}
       destroyOnHidden
       okText={isEdit ? '保存' : '创建'}
+      okButtonProps={{ className: 'btn-brand' }}
     >
-      <Form form={form} component={false}>
+      <Form form={form} component={false} style={{ paddingTop: 4, paddingBottom: 8 }}>
         <Tabs
           defaultActiveKey="basic"
           items={[
