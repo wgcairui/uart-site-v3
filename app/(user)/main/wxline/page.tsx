@@ -1,7 +1,7 @@
 'use client'
 
 import { Empty, Spin } from "antd";
-import React, { Suspense } from "react";
+import React, { Suspense, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { TerminalMountDevNameLine } from "@/components/terminal/TerminalMountDevNameLine";
 import { useToken } from "@/lib/hooks/useToken";
@@ -22,12 +22,28 @@ const WxLine: React.FC = () => {
         name: search.get("name") || ''
     }
 
-    console.log(props, token);
+    // 移动端 detection: < 768px 缩小容器内边距 (小程序内嵌通常窄屏)
+    const [isMobile, setIsMobile] = useState(false)
+    useEffect(() => {
+        if (typeof window === 'undefined') return
+        const mq = window.matchMedia('(max-width: 768px)')
+        const update = () => setIsMobile(mq.matches)
+        update()
+        mq.addEventListener('change', update)
+        return () => mq.removeEventListener('change', update)
+    }, [])
 
     return (
         (!token || !props.mac || !props.pid || !props.name) ? <Empty description="请求参数不完整"></Empty>
             :
-            <div style={{ paddingTop: 12, paddingBottom: 32, paddingLeft: 18, paddingRight: 18 }}>
+            <div
+                style={{
+                    paddingTop: 12,
+                    paddingBottom: 32,
+                    paddingLeft: isMobile ? 8 : 18,
+                    paddingRight: isMobile ? 8 : 18,
+                }}
+            >
                 <TerminalMountDevNameLine {...props as any}></TerminalMountDevNameLine>
             </div>
     )

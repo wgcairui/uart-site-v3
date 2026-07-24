@@ -23,7 +23,7 @@
 
 import { Empty, Spin, Tabs } from 'antd'
 import { SettingOutlined, ArrowRightOutlined } from '@ant-design/icons'
-import { FC, Suspense, useEffect } from 'react'
+import { FC, Suspense, useEffect, useState } from 'react'
 import { useUserStore } from '@/lib/store/userStore'
 import { useSearchParams } from 'next/navigation'
 import { getTerminalPidProtocol } from '@/lib/api/fetch'
@@ -40,12 +40,15 @@ const UserConstant: FC = () => {
     const user = useUserStore(s => s.user)
     const param = useSearchParams()
 
-    // 移动端 detection
+    // 移动端 detection: < 768px 缩减 Tabs 字体 / 内边距
+    const [isMobile, setIsMobile] = useState(false)
     useEffect(() => {
         if (typeof window === 'undefined') return
         const mq = window.matchMedia('(max-width: 768px)')
-        // 仅声明一次, 不需要 setState
-        void mq
+        const update = () => setIsMobile(mq.matches)
+        update()
+        mq.addEventListener('change', update)
+        return () => mq.removeEventListener('change', update)
     }, [])
 
     const { data: mountDev, loading } = usePromise(async () => {
@@ -194,7 +197,8 @@ const UserConstant: FC = () => {
             {/* 配置 Tabs (bento-card 容器) */}
             <div className="bento-card" style={{ padding: 0 }}>
                 <Tabs
-                    style={{ padding: '0 24px' }}
+                    style={{ padding: isMobile ? '0 12px' : '0 24px' }}
+                    {...(isMobile ? { tabBarStyle: { margin: 0, fontSize: 13 } } : {})}
                     items={[
                         {
                             key: 'show',

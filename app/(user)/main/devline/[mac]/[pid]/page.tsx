@@ -31,6 +31,17 @@ function DevLineInner() {
     const search = useSearchParams()
     const dataName = search.get("name") || ''
 
+    // 移动端 detection: < 768px 缩小 BentoCard 内边距 + PageHeader 缩字号（globals.css 已处理 header）
+    const [isMobile, setIsMobile] = useState(false)
+    useEffect(() => {
+        if (typeof window === 'undefined') return
+        const mq = window.matchMedia('(max-width: 768px)')
+        const update = () => setIsMobile(mq.matches)
+        update()
+        mq.addEventListener('change', update)
+        return () => mq.removeEventListener('change', update)
+    }, [])
+
     return (
         (!terminal || !mountDev) ? <Empty />
             : <>
@@ -44,7 +55,7 @@ function DevLineInner() {
                     ]}
                 />
                 <BentoCard
-                    style={{ marginTop: 16 }}
+                    style={{ marginTop: 16, padding: isMobile ? 12 : undefined }}
                     padding="sm"
                 >
                     <TerminalMountDevNameLine mac={terminal.DevMac} pid={mountDev.pid} name={dataName}></TerminalMountDevNameLine>

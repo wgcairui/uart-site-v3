@@ -13,7 +13,6 @@ import { RegexMail, RegexTel } from "@/lib/utils/util";
 import { getUserAlarmSetup, modifyUserAlarmSetupTel, mpTicket, wpTicket } from "@/lib/api/fetch";
 import { PageHeader } from "@/components/common/PageHeader";
 import { PageSummary } from "@/components/common/PageSummary";
-import '../../userinfo.css'
 
 /**
  * 显示用户信息
@@ -33,6 +32,17 @@ const UserInfo: React.FC = props => {
             setTels(el.data?.tels || [])
             setMails(el.data?.mails || [])
         })
+    }, [])
+
+    // 移动端 detection: < 768px Descriptions 改单列 + Form 表单 wrap
+    const [isMobile, setIsMobile] = useState(false)
+    useEffect(() => {
+        if (typeof window === 'undefined') return
+        const mq = window.matchMedia('(max-width: 768px)')
+        const update = () => setIsMobile(mq.matches)
+        update()
+        mq.addEventListener('change', update)
+        return () => mq.removeEventListener('change', update)
     }, [])
 
     const showQR = async (type: 'wx' | 'wp') => {
@@ -102,11 +112,16 @@ const UserInfo: React.FC = props => {
                 ]}
             />
             <Row justify="center" align="middle">
-                <Col span={24} md={12} style={{padding:12}}>
-                    <Space orientation="vertical">
+                <Col xs={24} md={12} style={{ padding: isMobile ? 4 : 12 }}>
+                    <Space orientation="vertical" style={{ width: '100%' }}>
                         <Divider plain>用户信息</Divider>
                         <p>修改用户信息请使用小程序操作</p>
-                        <Descriptions title={user.user}>
+                        <Descriptions
+                            title={user.user}
+                            column={isMobile ? 1 : 2}
+                            size={isMobile ? 'small' : 'default'}
+                            {...(isMobile ? { labelStyle: { width: 90 } } : {})}
+                        >
                             <Descriptions.Item label="avanter" >
                                 <Avatar src={user.avanter} />
                             </Descriptions.Item>
@@ -129,7 +144,7 @@ const UserInfo: React.FC = props => {
                         </Descriptions>
 
                         <Divider plain>告警联系方式</Divider>
-                        <Form>
+                        <Form layout="vertical">
                             <Form.Item label="告警通知电话">
                                 {
                                     tels.map((el, key) => <Tag closable color="green" onClose={() => delTel(key)} key={key}>{el}</Tag>)
@@ -143,7 +158,7 @@ const UserInfo: React.FC = props => {
                                 <PlusSquareFilled style={{ color: "green" }} onClick={addMail} />
                             </Form.Item>
                             <Form.Item >
-                                <Button variant="primary" onClick={saveAlarm}>保存配置</Button>
+                                <Button variant="primary" onClick={saveAlarm} block={isMobile}>保存配置</Button>
                             </Form.Item>
                         </Form>
                     </Space>

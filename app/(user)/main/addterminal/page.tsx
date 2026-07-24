@@ -258,7 +258,7 @@ const AddTerminal: React.FC = () => {
                             mountForm.resetFields()
                         }}
                     >
-                        重置
+                        {isMobile ? null : '重置'}
                     </Button>
                 }
             />
@@ -310,7 +310,7 @@ const AddTerminal: React.FC = () => {
                     >
                         <SearchOutlined />
                     </span>
-                    <h3 style={{ fontSize: 16, fontWeight: 600, margin: 0 }}>
+                    <h3 style={{ fontSize: isMobile ? 14 : 16, fontWeight: 600, margin: 0 }}>
                         Step 1 · 查找设备
                     </h3>
                 </div>
@@ -341,7 +341,7 @@ const AddTerminal: React.FC = () => {
                                 loading={seachLoading}
                                 onClick={seachTerminal}
                             >
-                                查找
+                                {isMobile ? null : '查找'}
                             </Button>
                         </Space.Compact>
                     </Form.Item>
@@ -386,7 +386,7 @@ const AddTerminal: React.FC = () => {
                             </span>
                             <h3
                                 style={{
-                                    fontSize: 16,
+                                    fontSize: isMobile ? 14 : 16,
                                     fontWeight: 600,
                                     margin: 0,
                                     flex: 1,
@@ -398,6 +398,7 @@ const AddTerminal: React.FC = () => {
                                 variant="primary"
                                 onClick={bindTer}
                                 loading={bindLoading}
+                                block={isMobile}
                             >
                                 绑定设备
                             </Button>
@@ -475,7 +476,7 @@ const AddTerminal: React.FC = () => {
                             </span>
                             <h3
                                 style={{
-                                    fontSize: 16,
+                                    fontSize: isMobile ? 14 : 16,
                                     fontWeight: 600,
                                     margin: 0,
                                 }}
@@ -570,7 +571,7 @@ const AddTerminal: React.FC = () => {
                         <div className="bento-card">
                             <h3
                                 style={{
-                                    fontSize: 16,
+                                    fontSize: isMobile ? 14 : 16,
                                     fontWeight: 600,
                                     margin: '0 0 16px',
                                 }}
