@@ -265,6 +265,7 @@ const AddTerminal: React.FC = () => {
 
             {/* 总览 · 4 卡 (终端总数 / 在线 / 已挂载 / 协议数) */}
             <PageSummary
+                column={2}
                 items={[
                     {
                         label: '已绑定终端',

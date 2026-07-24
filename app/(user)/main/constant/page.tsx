@@ -165,6 +165,7 @@ const UserConstant: FC = () => {
 
             {/* PageSummary 4 卡 (协议 / 设备 / PID / 在线状态) */}
             <PageSummary
+                column={2}
                 items={[
                     {
                         label: '协议',

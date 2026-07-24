@@ -195,6 +195,7 @@ const Alarm: React.FC = () => {
 
             {/* PageSummary 4 卡 — 6 variant 全覆盖 (primary/success/warning/danger/info/purple) */}
             <PageSummary
+                column={2}
                 items={[
                     {
                         label: '告警总数',
