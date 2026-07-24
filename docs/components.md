@@ -656,6 +656,16 @@ export default MyComponent
 - [ ] **`ChatPane` 的 `onSubmit` 必须接真 handler**。空函数 / `() => undefined` 等于把整个 Sender 弄成"按钮坏了"
 - [ ] **同 design 系统组件复用前必读 §3 对应域**。`components/ai/AiWorkspace / ChatPane / StatsPane / ProtocolPreviewForm` 是 AI 域共享的，不要绕过它们自写一遍
 
+### 5.3.2 Modal 静态方法必须走 `lib/utils/modal` wrapper（full-ui-audit 2026-07-24）
+
+- [ ] **禁止直接调用 `Modal.confirm` / `success` / `info` / `error` / `warning`**。antd 默认蓝（`#1677ff`）跟 v2 紫粉渐变不匹配
+- [ ] **必须用** `import { confirm, success, info, error, warning } from '@/lib/utils/modal'`
+- [ ] wrapper 自动注入 `okButtonProps.className = 'btn-brand'`（紫粉渐变），`okButtonProps.danger === true` 时改 `'btn-danger'`，`cancelButtonProps.className = 'btn-default'`
+- [ ] **调用方已传 `okButtonProps.className` 时 wrapper 不覆盖**（调用方优先级最高）
+- [ ] 例外：如果业务需要自己控制 button className + 用 `<Button variant="primary" className="btn-brand">` 内联覆盖，可保留 `Modal.confirm` 但需显式 `okButtonProps={{ className: 'btn-brand' }}`
+- [ ] 新建项目代码必须走 wrapper，**不可逆**（PR-00 sweep 一次性迁移 28+ 调用点）
+- [ ] wrapper 自身在 `lib/utils/modal.ts`（156 行 + 15 测试），实现细节见 JSDoc 头部
+
 ### 5.4 性能
 
 - [ ] 列表用了 `rowKey`（否则 antd 会用 index 报警告）

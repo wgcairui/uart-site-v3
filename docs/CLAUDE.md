@@ -102,6 +102,40 @@ docs/
 | **#44** | 2026-07-17 | 3 AI 工具页整合进协议域（5 个 redirect + 2 新 tab） | `app/CLAUDE.md` 「AI 域整合」+ `docs/components.md` §3.7 |
 | **#45** | 2026-07-17 | AI 修改 tab 发送按钮无响应（删冗余 inputForm + 修 Sender no-op） | `docs/components.md` §5.3.1 + §3.7 |
 
+### 2026-07-24 · full-ui-audit 全量审计 + v2 收尾
+
+**触发**：cairui `/feature-dev` 任务，14 PR 批量整合 v2 设计系统收尾。
+
+**3 wave 编排**（13 uart-web worker + 1 root 串行 PR-00）：
+- **Wave 1（5 PR）**：modal wrapper + /login Glass + RotateTokenModal + devmodel/[model] v3 + protocols/info extract
+- **Wave 2（5 PR）**：user info device template + log detail StatusTag + MountDevDetailDrawer v2 + ScheduleOpModal v2 + FF modals cleanup
+- **Wave 3（3 PR）**：5 missing common tests (65 new) + 5 core module AGENTS.md + 5 peripheral module AGENTS.md
+- **PR-00（root 串行）**：28+ Modal.confirm/info/success/error/warning 调用点 sweep 36 文件
+
+**P0 sweep（1 PR）**：38 pre-existing eslint errors 清理（unescaped entities / Compilation Skipped / Function type / empty {} / jsx-key / jsx-no-comment-textnodes / rules-of-hooks / Cannot create components during render）+ 3 vitest pre-existing 漂移（PageSummary × 2 + tableCommon × 1，test/impl drift）。
+
+**P1（3 PR）**：
+- **P1-1** /wei + /tool 内部工具 Glass + Mesh 重写
+- **P1-2** devmodel list page 提取 1 modal 到 _components/AddDevModelModal
+- **P1-3** 6 page 移动端响应式 audit + 补齐（matchMedia + Col xs=24 md=N + 2 个新 CSS 加 @media (max-width: 768px)）
+
+**最终结果**：
+- 18 commits, 141 文件改动, +1,366 / -1,103 LOC
+- tsc 0 错 / eslint 0 错 / vitest 275/275 / build 44 routes / smoke 7/7 HTTP 200/307
+- 路由 LOW: 4 → 0 / HIGH: 26 → 35 / Module AGENTS.md: 1/11 → 11/11
+- Modal wrapper: 100% 走 btn-brand 紫粉渐变（替代 antd 默认蓝 #1677ff）
+
+**重要变更**：
+- `lib/utils/modal.ts` 新建（5 静态方法 wrapper + 调用方优先级语义）
+- 10 个 module 全部补 AGENTS.md（terminal/protocol/ai/log/data/admin/node/user/chart/layout）
+- 5 个 common 组件补测试（BentoCard/GlassCard/DeviceActions/DeviceLiveStream/LiveControls, 65 new tests）
+- Modal 用法：28+ `Modal.confirm` → `confirm()` from `@/lib/utils/modal`
+
+**踩坑教训**：
+- 第一波用 `general` agent 没项目专精 memory，6 min 0 commit。**uartsite-v3 项目 worker 永远用 uart-web agent**
+- PR-01 modal wrapper 自身有无限递归 bug（`return confirm()` vs `Modal.confirm()`），PR-01 单独跑 mock 巧合通过；PR-00 sweep 触发，修了脚本忽略 `lib/utils/modal.ts` 自身
+- 3 conflict 解决：devmodel/[model] (PR-04 vs PR-00), protocols/info (PR-05 vs PR-00), TerminalsTable (PR-67 origin vs PR-00)
+
 ### 2026-07-11 · 2+3 混合方案替换方案 C
 
 - **触发**：cairui 看完 5 套设计对比（含 Bento+Aurora / Glass+Mesh / Swiss / Neumorphism / 现状），选定 2+3 混合方案
