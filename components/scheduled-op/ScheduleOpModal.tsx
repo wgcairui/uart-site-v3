@@ -3,19 +3,37 @@
 /**
  * 立即发送 / 定时发送 共享 Modal (2026-06-30 决策 18 第一阶段)
  *
- * 流程:
- * 1. 调用方调 buildInstructItem 拿到组装好的 OprateInstruct
- * 2. 弹此 Modal, 让用户选 "立即发送" / "定时发送"
- * 3. 不勾: 调 sendInstructNow (admin/user 走不同 endpoint)
- * 4. 勾上 + 选 scheduledAt: 调 sendInstructScheduled (入 BullMQ delayed job)
+ * 视觉规范（PR-09 v2 化）：
+ * - 主按钮走 `<Button variant="primary">` (btn-brand 紫粉渐变)
+ * - Modal 用 `destroyOnHidden` (v2 modal 标准, 替代 `destroyOnClose`)
+ * - body 内容包 `<BentoCard padding="sm" hoverable={false}>` 容器
  *
- * 校验:
- * - scheduledAt 必须 > now+30s (留 BullMQ 调度余量)
+ * 流程：
+ * 1. 调用方调 buildInstructItem 拿到组装好的 OprateInstruct
+ * 2. 弹此 Modal，让用户选 "立即发送" / "定时发送"
+ * 3. 不勾：调 sendInstructNow（admin/user 走不同 endpoint）
+ * 4. 勾上 + 选 scheduledAt：调 sendInstructScheduled（入 BullMQ delayed job）
+ *
+ * Props 摘要：
+ * - `open`        Modal 显示状态
+ * - `mac`         设备 MAC
+ * - `pid`         mountDev pid（0-based 索引）
+ * - `item`        已组装的 OprateInstruct（含 value / val / bl）
+ * - `protocolName` 协议名（admin/user 端 endpoint 都要）
+ * - `mountDev`    mountDev 名（user 端 SendProcotolInstructSet body）
+ * - `api`         `'admin' | 'user'`，决定 endpoint 走 admin 还是 user 域
+ * - `onCancel`    关闭回调
+ * - `onSuccess?`  成功回调（'now' 不带 id / 'scheduled' 带 id）
+ *
+ * 校验：
+ * - scheduledAt 必须 > now+30s（留 BullMQ 调度余量）
  * - remark ≤ 256 字符
  */
-import { Button, Checkbox, DatePicker, Form, Input, Modal, Space, message } from 'antd'
+import { Checkbox, DatePicker, Form, Input, Modal, Space, message } from 'antd'
 import dayjs, { Dayjs } from 'dayjs'
 import { useState } from 'react'
+import Button from '@/components/common/Button'
+import BentoCard from '@/components/common/BentoCard'
 import { sendInstructNow, sendInstructScheduled, showSendResult } from '@/lib/utils/sendInstruct'
 
 interface ScheduleOpModalProps {
@@ -92,14 +110,14 @@ export const ScheduleOpModal: React.FC<ScheduleOpModalProps> = (props) => {
             open={open}
             title={`操作指令 - ${item.name}${schedule ? ' (定时发送)' : ' (立即发送)'}`}
             onCancel={onCancel}
-            destroyOnClose
+            destroyOnHidden
             footer={[
-                <Button key="cancel" onClick={onCancel} disabled={submitting}>
+                <Button key="cancel" variant="default" onClick={onCancel} disabled={submitting}>
                     取消
                 </Button>,
                 <Button
                     key="ok"
-                    type="primary"
+                    variant="primary"
                     loading={submitting}
                     onClick={handleOk}
                 >
@@ -107,55 +125,57 @@ export const ScheduleOpModal: React.FC<ScheduleOpModalProps> = (props) => {
                 </Button>,
             ]}
         >
-            <Form layout="vertical">
-                <Form.Item label="指令">
-                    <Input value={item.value} disabled />
-                </Form.Item>
-                {item.value.includes('%i') && (
-                    <Form.Item label="参数值 (val)">
-                        <Input value={item.val ?? ''} disabled />
+            <BentoCard padding="sm" hoverable={false}>
+                <Form layout="vertical">
+                    <Form.Item label="指令">
+                        <Input value={item.value} disabled />
                     </Form.Item>
-                )}
-                <Form.Item>
-                    <Checkbox
-                        checked={schedule}
-                        onChange={(e) => setSchedule(e.target.checked)}
-                    >
-                        定时发送 (创建定时任务, BullMQ 到点自动触发)
-                    </Checkbox>
-                </Form.Item>
-                {schedule && (
-                    <Space orientation="vertical" style={{ width: '100%' }}>
-                        <Form.Item
-                            label="计划触发时间"
-                            required
-                            extra={`需晚于当前时间 30s 以上, 后端 BullMQ 会按这个时间入队 delayed job`}
-                        >
-                            <DatePicker
-                                showTime
-                                value={scheduledAt}
-                                onChange={setScheduledAt}
-                                format="YYYY-MM-DD HH:mm:ss"
-                                disabledDate={(d) => d.isBefore(dayjs().startOf('minute'))}
-                                style={{ width: '100%' }}
-                            />
+                    {item.value.includes('%i') && (
+                        <Form.Item label="参数值 (val)">
+                            <Input value={item.val ?? ''} disabled />
                         </Form.Item>
-                        <Form.Item
-                            label="备注 (可选)"
-                            extra={`最多 ${MAX_REMARK} 字符, 用于说明业务场景`}
+                    )}
+                    <Form.Item>
+                        <Checkbox
+                            checked={schedule}
+                            onChange={(e) => setSchedule(e.target.checked)}
                         >
-                            <Input.TextArea
-                                rows={2}
-                                maxLength={MAX_REMARK}
-                                showCount
-                                value={remark}
-                                onChange={(e) => setRemark(e.target.value)}
-                                placeholder="例如: 下班前关闭空调"
-                            />
-                        </Form.Item>
-                    </Space>
-                )}
-            </Form>
+                            定时发送 (创建定时任务, BullMQ 到点自动触发)
+                        </Checkbox>
+                    </Form.Item>
+                    {schedule && (
+                        <Space orientation="vertical" style={{ width: '100%' }}>
+                            <Form.Item
+                                label="计划触发时间"
+                                required
+                                extra={`需晚于当前时间 30s 以上, 后端 BullMQ 会按这个时间入队 delayed job`}
+                            >
+                                <DatePicker
+                                    showTime
+                                    value={scheduledAt}
+                                    onChange={setScheduledAt}
+                                    format="YYYY-MM-DD HH:mm:ss"
+                                    disabledDate={(d) => d.isBefore(dayjs().startOf('minute'))}
+                                    style={{ width: '100%' }}
+                                />
+                            </Form.Item>
+                            <Form.Item
+                                label="备注 (可选)"
+                                extra={`最多 ${MAX_REMARK} 字符, 用于说明业务场景`}
+                            >
+                                <Input.TextArea
+                                    rows={2}
+                                    maxLength={MAX_REMARK}
+                                    showCount
+                                    value={remark}
+                                    onChange={(e) => setRemark(e.target.value)}
+                                    placeholder="例如: 下班前关闭空调"
+                                />
+                            </Form.Item>
+                        </Space>
+                    )}
+                </Form>
+            </BentoCard>
         </Modal>
     )
 }
