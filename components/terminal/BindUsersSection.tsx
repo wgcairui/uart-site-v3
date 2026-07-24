@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Tag, Tooltip, Empty, Button, Popconfirm, Modal, message, Avatar } from 'antd'
+import { confirm, success, info, error, warning } from '@/lib/utils/modal'
 import {
   TeamOutlined,
   CheckCircleFilled,
@@ -59,7 +60,7 @@ export function BindUsersSection({ mac, share, ownerId, onChange }: BindUsersSec
   }
 
   const handleUnbind = (user: string) => {
-    Modal.confirm({
+    confirm({
       title: `解绑用户 [${user}] ?`,
       content: '解绑后该用户无法访问此设备',
       okType: 'danger',

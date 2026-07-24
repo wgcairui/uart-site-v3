@@ -3,6 +3,7 @@
 import { Suspense, useEffect, useState, useCallback, useMemo } from 'react'
 import { useParams, useRouter, useSearchParams } from 'next/navigation'
 import { Spin, Tag, Empty, Button, Modal, message, Popconfirm, Tooltip } from 'antd'
+import { confirm, success, info, error, warning } from '@/lib/utils/modal'
 import {
   AppstoreOutlined,
   CheckCircleFilled,
@@ -81,7 +82,7 @@ function DevModelDetailInner() {
   }, [allProtocols])
 
   const handleDelete = () => {
-    Modal.confirm({
+    confirm({
       title: `确认删除设备型号 [${model}] ?`,
       icon: <ExclamationCircleOutlined style={{ color: '#ef4444' }} />,
       content: '该设备型号下如果还有设备在用, 删除会失败',

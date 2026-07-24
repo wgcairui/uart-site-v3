@@ -2,6 +2,7 @@
 
 import { DeleteFilled, EditFilled, PlusOutlined } from '@ant-design/icons'
 import { Alert, Button, Card, Divider, Form, Input, message, Modal, Select, Space, Table, Tag } from 'antd'
+import { confirm, success, info, error, warning } from '@/lib/utils/modal'
 import { ColumnsType } from 'antd/lib/table'
 import React, { useEffect, useMemo } from 'react'
 import { getProtocol, getProtocolSetup } from '@/lib/api/fetch'
@@ -151,7 +152,7 @@ export const ProtocolAlarmStat: React.FC<ProtocolProps> = ({ protocolName }) => 
 
     // 删除行
     const deleteRow = (item: Uart.ConstantAlarmStat) => {
-        Modal.confirm({
+        confirm({
             content: `确认删除状态配置: ${item.name}?`,
             onOk() {
                 const idx = (data || []).findIndex((el) => el.name === item.name)

@@ -21,6 +21,7 @@ import { CopyOutlined, DeleteOutlined, LinkOutlined, SearchOutlined, UploadOutli
   FileImageOutlined, FileTextOutlined, FileOutlined, FolderOutlined, ReloadOutlined,
 } from '@ant-design/icons'
 import { Button, Form, Input, message, Modal, Space, Spin, Table, Tooltip, Upload } from 'antd'
+import { confirm, success, info, error, warning } from '@/lib/utils/modal'
 import type { ColumnsType, TablePaginationConfig } from 'antd/lib/table'
 import type { UploadChangeParam } from 'antd/lib/upload'
 import type { UploadFile } from 'antd/lib/upload/interface'
@@ -135,7 +136,7 @@ export const OssUpload: React.FC = () => {
    * - 成功后清空选择 + 重新拉列表（替换旧版手动 setData hack）
    */
   const deleteFiles = (names: string[]) => {
-    Modal.confirm({
+    confirm({
       title: `确认删除 ${names.length} 个文件?`,
       content: (
         <div style={{ maxHeight: 200, overflow: 'auto' }}>

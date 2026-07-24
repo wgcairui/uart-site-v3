@@ -1,6 +1,7 @@
 'use client'
 import { DeleteFilled, EditFilled } from "@ant-design/icons";
-import { Button, Card, Divider, Form, InputNumber, message, Modal, Select, Space, Table } from "antd";
+import { Button, Card, Divider, Form, InputNumber, message, Modal, Select, Space, Table } from "antd"
+import { confirm, success, info, error, warning } from '@/lib/utils/modal';
 import { ColumnsType } from "antd/lib/table";
 import React, { useMemo } from "react";
 import { addDevConstant } from "@/lib/api/fetchRoot";
@@ -55,7 +56,7 @@ export const ProtocolThreshold: React.FC<ProtocolProps> = ({ protocolName }) => 
      * @param item
      */
     const deleteOprate = (item: Uart.Threshold) => {
-        Modal.confirm({
+        confirm({
             content: `确定删除阈值:${item.name}??`,
             onOk() {
                 const index = data.findIndex(el => el.name === item.name)

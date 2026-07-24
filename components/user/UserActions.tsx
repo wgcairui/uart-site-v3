@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { Input, Modal, message } from 'antd'
+import { confirm, success, info, error, warning } from '@/lib/utils/modal'
 import {
   SwapOutlined,
   KeyOutlined,
@@ -32,7 +33,7 @@ export function UserActions({ user, onChange }: UserActionsProps) {
   const [newPwd, setNewPwd] = useState('')
 
   const handleSwitchGroup = () => {
-    Modal.confirm({
+    confirm({
       content: `是否变更用户 ${user.name || user.user} 为 [${user.userGroup === 'admin' ? 'user' : 'admin'}]`,
       onOk() {
         return toggleUserGroup(user.user).then((el) => {

@@ -30,6 +30,7 @@
 import {
   Button, Form, Input, InputNumber, Modal, Select, Space, Switch, Table, Tag, message, Tabs,
 } from 'antd'
+import { confirm, success, info, error, warning } from '@/lib/utils/modal'
 import type { ColumnsType } from 'antd/es/table'
 import dayjs from 'dayjs'
 import {
@@ -247,7 +248,7 @@ function makeColumns(opts: { onEdit: (r: Uart.UartFeatureFlag) => void; onRefres
 
   const handleKillSwitch = (record: Uart.UartFeatureFlag) => {
     const next = !record.killSwitch
-    Modal.confirm({
+    confirm({
       title: next ? `开启 ${record.key} 的熔断?` : `关闭 ${record.key} 的熔断?`,
       icon: next ? <ExclamationCircleOutlined /> : undefined,
       content: (
@@ -273,7 +274,7 @@ function makeColumns(opts: { onEdit: (r: Uart.UartFeatureFlag) => void; onRefres
   }
 
   const handleDelete = (record: Uart.UartFeatureFlag) => {
-    Modal.confirm({
+    confirm({
       title: '软删开关',
       content: (
         <div>

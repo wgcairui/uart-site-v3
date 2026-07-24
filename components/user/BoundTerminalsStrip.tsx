@@ -11,6 +11,7 @@ import {
   message,
   Dropdown,
 } from 'antd'
+import { confirm, success, info, error, warning } from '@/lib/utils/modal'
 import { Button } from '@/components/common/Button'
 import {
   AppstoreOutlined,
@@ -61,7 +62,7 @@ export function BoundTerminalsStrip({ user, onChange }: BoundTerminalsStripProps
   const onlineCount = list.filter((t) => t.online).length
 
   const handleUnbind = (dev: Uart.Terminal) => {
-    Modal.confirm({
+    confirm({
       title: `解绑设备 [${dev.name || dev.DevMac}] ?`,
       content: '解绑后该用户无法访问此设备',
       okType: 'danger',

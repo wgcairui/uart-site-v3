@@ -5,6 +5,7 @@ import {
     SearchOutlined, SyncOutlined,
 } from '@ant-design/icons'
 import { Avatar, Button, Dropdown, Input, message, Modal, Space, Spin, Table, Tag, Tooltip } from 'antd'
+import { confirm, success, info, error, warning } from '@/lib/utils/modal'
 import { ColumnsType } from 'antd/lib/table'
 import dayjs from 'dayjs'
 import React, { useMemo, useState } from 'react'
@@ -60,7 +61,7 @@ export const WxUser: React.FC = () => {
      * 更新所有用户
      */
     const updateUsers = () => {
-        Modal.confirm({
+        confirm({
             content: '确定更新微信用户库?更新将耗时3~10分钟',
             onOk() {
                 const now = Date.now()
@@ -80,7 +81,7 @@ export const WxUser: React.FC = () => {
      * 发送测试信息
      */
     const alarmTest = (openid: string) => {
-        Modal.confirm({
+        confirm({
             content: '确定发送测试信息?',
             onOk() {
                 wx_send_info(0, openid).then(() => {

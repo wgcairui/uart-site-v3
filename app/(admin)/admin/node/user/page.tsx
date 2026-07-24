@@ -5,7 +5,8 @@ import {
 } from "@/lib/api/fetchRoot"
 import {
     Avatar, Button, message, Modal, Table, Tag, Space, Tooltip, Input, Spin,
-} from "antd";
+} from "antd"
+import { confirm, success, info, error, warning } from '@/lib/utils/modal';
 import {
     SwapOutlined, SearchOutlined, ReloadOutlined,
     EyeOutlined, DeleteOutlined, MessageOutlined,
@@ -188,7 +189,7 @@ export const User: React.FC = () => {
             fecth()
             message.success("删除成功");
         } else {
-            Modal.info({ content: res.message || "删除失败" });
+            info({ content: res.message || "删除失败" });
         }
     }
 

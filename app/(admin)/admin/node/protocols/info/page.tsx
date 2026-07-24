@@ -13,6 +13,7 @@ import {
   Tag,
   Upload,
 } from 'antd'
+import { confirm, success, info, error, warning } from '@/lib/utils/modal'
 import { ColumnsType } from 'antd/lib/table'
 import { RcFile } from 'antd/lib/upload'
 import { Suspense, useCallback, useEffect, useState } from 'react'
@@ -94,7 +95,7 @@ const ProtocolDes: React.FC<props> = ({ Protocol }) => {
       onOk(value) {
         if (value) {
           if (instructs.some((el) => el.name === value)) {
-            Modal.info({ content: '指令字符重复' })
+            info({ content: '指令字符重复' })
           } else {
             modifyInstruct({
               name: value,
@@ -137,7 +138,7 @@ const ProtocolDes: React.FC<props> = ({ Protocol }) => {
   }
 
   const deleteInstruct = (name: string) => {
-    Modal.confirm({
+    confirm({
       content: `确认删除指令:${name}?`,
       onOk() {
         const index = instructs.findIndex((el) => el.name === name)
@@ -310,13 +311,13 @@ const ProtocolUploadModal: React.FC<props & { open: boolean; onClose: () => void
   }
 
   const updateP = () => {
-    Modal.confirm({
+    confirm({
       content: '确定使用本地文件配置更新云端协议配置吗?',
       onOk() {
         const loading = message.loading('更新中...')
         updateProtocol(protocol!).then(() => {
           loading()
-          Modal.info({ content: '更新完成,更新页面查看最新的协议配置' })
+          info({ content: '更新完成,更新页面查看最新的协议配置' })
           // 更新成功后关闭 modal + 刷新
           setProtocol(undefined)
           onClose()

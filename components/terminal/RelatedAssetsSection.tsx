@@ -15,6 +15,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Tag, Tooltip, Empty, Button, Popconfirm, Modal, message, Avatar, Badge } from 'antd'
+import { confirm, success, info, error, warning } from '@/lib/utils/modal'
 import {
   AppstoreOutlined,
   TeamOutlined,
@@ -66,7 +67,7 @@ export function RelatedAssetsSection({
 
   // 挂载设备操作
   const delMountDev = (d: Uart.TerminalMountDevs) => {
-    Modal.confirm({
+    confirm({
       title: '解除挂载',
       content: `确认删除挂载设备: ${mac} / ${d.mountDev} (pid=${d.pid}) ?\n\n此操作不可逆。`,
       okText: '确认删除', okType: 'danger', cancelText: '取消',
@@ -93,7 +94,7 @@ export function RelatedAssetsSection({
     })
   }
   const handleUnbind = (user: string) => {
-    Modal.confirm({
+    confirm({
       title: `解绑用户 [${user}] ?`,
       content: '解绑后该用户无法访问此设备',
       okType: 'danger',

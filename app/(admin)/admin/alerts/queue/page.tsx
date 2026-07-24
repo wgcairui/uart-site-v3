@@ -24,6 +24,7 @@
 import {
   Button, Input, Modal, Select, Space, Table, Tag,
 } from 'antd'
+import { confirm, success, info, error, warning } from '@/lib/utils/modal'
 import type { ColumnsType } from 'antd/es/table'
 import dayjs from 'dayjs'
 import {
@@ -159,7 +160,7 @@ export const AdminAlertQueue: React.FC = () => {
     return approveAlertApproval(id, reason ? { reason } : {})
       .then((res) => {
         if (res.code) {
-          Modal.success({ content: '已批准, 告警将立即发送' })
+          success({ content: '已批准, 告警将立即发送' })
           triggerFetch()
         } else {
           throw new Error((res.data as any)?.error || res.message || '批准失败')
@@ -171,7 +172,7 @@ export const AdminAlertQueue: React.FC = () => {
     return rejectAlertApproval(id, { reason })
       .then((res) => {
         if (res.code) {
-          Modal.success({ content: '已拒绝' })
+          success({ content: '已拒绝' })
           triggerFetch()
         } else {
           throw new Error((res.data as any)?.error || res.message || '拒绝失败')
@@ -183,7 +184,7 @@ export const AdminAlertQueue: React.FC = () => {
     return cancelAlertApproval(id, reason ? { reason } : {})
       .then((res) => {
         if (res.code) {
-          Modal.success({ content: '已取消' })
+          success({ content: '已取消' })
           triggerFetch()
         } else {
           throw new Error((res.data as any)?.error || res.message || '取消失败')
@@ -192,7 +193,7 @@ export const AdminAlertQueue: React.FC = () => {
   }
 
   const onApprove = (record: Uart.UartAlertApprovalQueue) => {
-    Modal.confirm({
+    confirm({
       title: '批准告警',
       content: (
         <div>
@@ -208,7 +209,7 @@ export const AdminAlertQueue: React.FC = () => {
 
   const onReject = (record: Uart.UartAlertApprovalQueue) => {
     let reason = ''
-    Modal.confirm({
+    confirm({
       title: '拒绝告警',
       content: (
         <div>
@@ -234,7 +235,7 @@ export const AdminAlertQueue: React.FC = () => {
 
   const onCancel = (record: Uart.UartAlertApprovalQueue) => {
     let reason = ''
-    Modal.confirm({
+    confirm({
       title: '取消延迟告警',
       content: (
         <div>
@@ -255,7 +256,7 @@ export const AdminAlertQueue: React.FC = () => {
 
   const onBatchApprove = () => {
     if (selectedRowKeys.length === 0) return
-    Modal.confirm({
+    confirm({
       title: `批量批准 ${selectedRowKeys.length} 条告警`,
       content: <div>这 {selectedRowKeys.length} 条 pending 告警将立即通过 SMS/email 发送</div>,
       okText: '确定批量批准',
@@ -265,7 +266,7 @@ export const AdminAlertQueue: React.FC = () => {
           .then((res) => {
             if (res.code) {
               const r = res.data as any
-              Modal.success({
+              success({
                 content: `成功 ${r?.succeeded?.length || 0} 条, 失败 ${r?.failed?.length || 0} 条`,
               })
               setSelectedRowKeys([])
@@ -281,7 +282,7 @@ export const AdminAlertQueue: React.FC = () => {
   const onBatchReject = () => {
     if (selectedRowKeys.length === 0) return
     let reason = ''
-    Modal.confirm({
+    confirm({
       title: `批量拒绝 ${selectedRowKeys.length} 条告警`,
       content: (
         <Input.TextArea
@@ -300,7 +301,7 @@ export const AdminAlertQueue: React.FC = () => {
           .then((res) => {
             if (res.code) {
               const r = res.data as any
-              Modal.success({
+              success({
                 content: `成功 ${r?.succeeded?.length || 0} 条, 失败 ${r?.failed?.length || 0} 条`,
               })
               setSelectedRowKeys([])

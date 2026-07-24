@@ -1,6 +1,7 @@
 'use client'
 import { CopyOutlined, IeOutlined } from "@ant-design/icons";
-import { message, Modal, Tooltip } from "antd";
+import { message, Modal, Tooltip } from "antd"
+import { confirm, success, info, error, warning } from '@/lib/utils/modal';
 import React from "react";
 
 interface copy {
@@ -29,7 +30,7 @@ export const MyCopy: React.FC<copy> = props => {
         if (/^http/.test(content)) {
             window.open(content.split(' ')[0])
         } else {
-            Modal.info({ content })
+            info({ content })
         }
     }
 
