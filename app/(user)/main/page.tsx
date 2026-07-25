@@ -86,9 +86,10 @@ const UserIndex: React.FC = (props) => {
     }
 
     return (
-        <div className="bg-bento-canvas" style={{ position: 'relative', zIndex: 0 }}>
-            <PageHeader title="我的设备" subtitle="查看所有绑定设备、网关、聚合设备" />
+        <div className="bg-cr-canvas" style={{ position: 'relative', zIndex: 0 }}>
+            <PageHeader theme="control-room" title="我的设备" subtitle="查看所有绑定设备、网关、聚合设备" />
             <PageSummary
+                theme="control-room"
                 column={2}
                 items={[
                     { label: '网关总数', value: terminals.length, variant: 'primary' },
@@ -105,7 +106,7 @@ const UserIndex: React.FC = (props) => {
                     { label: '挂载设备', value: mountDevs.length, variant: 'info' },
                 ]}
             />
-            <Tabs activeKey={defalutKey} onTabClick={(key: any) => switchTab(key)} items={[
+            <Tabs className="v3-tabs-cr" activeKey={defalutKey} onTabClick={(key: any) => switchTab(key)} items={[
                 {
                     key: 'dev',
                     label: <span><IconFont type="icon-shebeizhuangtai" /> 我的设备</span>,
@@ -118,9 +119,10 @@ const UserIndex: React.FC = (props) => {
                                         // 2026-07-25: user 端 mobile-first 锁 375, device 卡永远 1 列 (避免 lg/xl/xxl 触发 3-4 列在容器内挤)
                                         <Col span={24} key={el.mac + el.pid}>
                                             <DevCard
+                                                theme="control-room"
                                                 img={devType[el.Type]}
                                                 title={<Space>
-                                                    <StatusTag variant={el.online ? 'online' : 'warning'} size="sm" />
+                                                    <StatusTag theme="control-room" variant={el.online ? 'online' : 'warning'} size="sm" />
                                                     {el.mountDev}
                                                 </Space>}
                                                 avatar={devTypeIcon[el.Type]}
@@ -160,9 +162,10 @@ const UserIndex: React.FC = (props) => {
                                         // 2026-07-25: user 端 mobile-first 锁 375, 网关卡永远 1 列
                                         <Col span={24} key={el.DevMac}>
                                             <DevCard
+                                                theme="control-room"
                                                 img={devDTU[el.PID || 'null']}
                                                 title={<Space>
-                                                    <StatusTag variant={el.online ? 'online' : 'warning'} size="sm" />
+                                                    <StatusTag theme="control-room" variant={el.online ? 'online' : 'warning'} size="sm" />
                                                     {el.name}
                                                 </Space>}
                                                 subtitle={dayjs(el.uptime).format("YY/M/D H:m:s")}
@@ -190,7 +193,7 @@ const UserIndex: React.FC = (props) => {
                                 })
                             }
                             <Col span={24} key="addModule" className="center">
-                                <Button shape="round" variant="primary" size="large" href="/main/addterminal">添加网关</Button>
+                                <Button theme="control-room" shape="round" variant="primary" size="large" href="/main/addterminal">添加网关</Button>
                             </Col>
                         </Row>
                     ),

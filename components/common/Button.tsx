@@ -16,16 +16,28 @@ import type { FC, ReactNode } from 'react'
  * 全部走 globals.css .btn-* class + token, 不再 inline style
  *
  * 规范: docs/style-guide.md v2 §4.6
+ *
+ * theme="control-room" 走 --cr-* token (user 端 2026-07-25)
  */
 
 export type AppButtonVariant = 'primary' | 'default' | 'ghost' | 'danger' | 'link'
+/**
+ * 主题变体 (2026-07-25)
+ * - `default`     → 现有浅色视觉 (admin 端 + 兼容)
+ * - `control-room`→ user 端专用暗色, 走 --cr-* token
+ */
+export type AppButtonTheme = 'default' | 'control-room'
 
 interface AppButtonProps extends Omit<ButtonProps, 'type' | 'variant'> {
   variant?: AppButtonVariant
   icon?: ReactNode
+  /**
+   * 视觉主题 (2026-07-25)
+   */
+  theme?: AppButtonTheme
 }
 
-const VARIANT_CLASS: Record<AppButtonVariant, string> = {
+const VARIANT_CLASS_DEFAULT: Record<AppButtonVariant, string> = {
   primary: 'btn-brand',
   default: 'btn-default',
   ghost:   'btn-ghost',
@@ -33,17 +45,28 @@ const VARIANT_CLASS: Record<AppButtonVariant, string> = {
   link:    'btn-link',
 }
 
+const VARIANT_CLASS_CR: Record<AppButtonVariant, string> = {
+  primary: 'btn-cr-primary',
+  default: 'btn-cr-default',
+  ghost:   'btn-cr-ghost',
+  danger:  'btn-cr-danger',
+  link:    'btn-cr-link',
+}
+
 export const Button: FC<AppButtonProps> = ({
   variant = 'default',
+  theme = 'default',
   children,
   className,
   ...rest
 }) => {
+  const isCR = theme === 'control-room'
+  const variantClass = isCR ? VARIANT_CLASS_CR[variant] : VARIANT_CLASS_DEFAULT[variant]
   return (
     <AntButton
       {...rest}
       type={variant === 'link' ? 'link' : 'default'}
-      className={`${VARIANT_CLASS[variant]} ${className ?? ''}`.trim()}
+      className={`${variantClass} ${className ?? ''}`.trim()}
     >
       {children}
     </AntButton>

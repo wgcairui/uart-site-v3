@@ -79,18 +79,26 @@ export default function UserLayout({ children }: { children: React.ReactNode }) 
         <main style={{ display: 'flex', flexDirection: 'column', width: '100vw', height: '100dvh', overflow: 'hidden' }}>
 <Suspense fallback={null}><TokenSync /></Suspense>
 
-            {/* Topbar — 2026-07-25: 锁 375px 宽, 跟 user-content-frame 对齐 (pear.us/cai mobile-first pattern)
-                - BrandLogo 极简化: 只显示 U 方块 + "UART" 文字 (去掉 "IoT Management" 副标题, 节省宽度)
-                - 3 个 nav item 永远隐藏 (走 hamburger drawer), 不再 desktop 显示 inline
-                - "使用教程" link 也移到 drawer, 避免 topbar 文字被压成 2 行
-                - 右侧: hamburger + UserDropDown (头像)
+            {/* Topbar — 2026-07-25 Control Room 主题
+                - 深色背景 (--cr-bg) + 黄色 accent 边框
+                - 右侧加 LIVE pulse 圆点 (签名元素) + hamburger + UserDropDown
+                - BrandLogo 走 control-room 主题: 黄色方块 + 白色文字
             */}
-            <header className="app-topbar app-topbar-user">
+            <header className="app-topbar-cr app-topbar-user">
                 {/* BrandLogo 默认带 padding: 16px 24px (admin 端用), 这里 -24px 左右抵消对齐 topbar padding */}
                 <div style={{ marginLeft: -24, marginRight: -16 }}>
-                    <BrandLogo href="/main" showSubtitle={false} size={32} />
+                    <BrandLogo href="/main" showSubtitle={false} size={32} theme="control-room" />
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    {/* 2026-07-25: 签名元素 — LIVE pulse 圆点 (整站唯一一处用 cr-pulse 动画) */}
+                    <span
+                        className="cr-live-indicator"
+                        role="status"
+                        aria-label="实时连接"
+                    >
+                        <span className="cr-live-dot" />
+                        <span className="cr-live-text">LIVE</span>
+                    </span>
                     <button
                         className="user-topbar-hamburger"
                         onClick={() => setMobileNavOpen(true)}
@@ -102,51 +110,51 @@ export default function UserLayout({ children }: { children: React.ReactNode }) 
                 </div>
             </header>
 
-            {/* 移动端菜单抽屉 */}
+            {/* 移动端菜单抽屉 — 2026-07-25 暗色版 */}
             {mobileNavOpen && (
                 <>
                     <div
-                        className="user-mobile-drawer-mask"
+                        className="user-mobile-drawer-mask-cr"
                         onClick={() => setMobileNavOpen(false)}
                     />
-                    <div className="user-mobile-drawer">
+                    <div className="user-mobile-drawer-cr">
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-                            <span style={{ fontSize: 14, fontWeight: 600 }}>菜单</span>
+                            <span style={{ fontSize: 14, fontWeight: 600, color: 'var(--cr-text-1)' }}>菜单</span>
                             <button
                                 onClick={() => setMobileNavOpen(false)}
-                                style={{ background: 'none', border: 'none', fontSize: 18, cursor: 'pointer', color: 'var(--ink-700)' }}
+                                style={{
+                                    background: 'none', border: 'none', fontSize: 22,
+                                    cursor: 'pointer', color: 'var(--cr-text-3)',
+                                    lineHeight: 1, padding: 4,
+                                }}
+                                aria-label="关闭"
                             >×</button>
                         </div>
                         <Link
                             href="/main"
                             onClick={() => setMobileNavOpen(false)}
-                            className={`app-topbar-menu-item ${pathname === '/main' ? 'active' : ''}`}
-                            style={{ padding: '12px 14px' }}
+                            className={`user-mobile-drawer-cr-item ${pathname === '/main' ? 'active' : ''}`}
                         >
                             <IconFont type="icon-changjingguanli" /> 所有设备
                         </Link>
                         <a
                             onClick={() => { setMobileNavOpen(false); nav('/main/alarm') }}
-                            className={`app-topbar-menu-item ${pathname?.startsWith('/main/alarm') ? 'active' : ''}`}
-                            style={{ padding: '12px 14px' }}
+                            className={`user-mobile-drawer-cr-item ${pathname?.startsWith('/main/alarm') ? 'active' : ''}`}
                         >
                             <IconFont type="icon-tixingshixin" /> 告警管理
                         </a>
                         <a
                             onClick={() => { setMobileNavOpen(false); nav('/main/userinfo') }}
-                            className={`app-topbar-menu-item ${pathname?.startsWith('/main/userinfo') ? 'active' : ''}`}
-                            style={{ padding: '12px 14px' }}
+                            className={`user-mobile-drawer-cr-item ${pathname?.startsWith('/main/userinfo') ? 'active' : ''}`}
                         >
                             用户信息
                         </a>
-                        {/* 2026-07-25: 使用教程从 topbar 移进 drawer, 节省 topbar 宽度 */}
                         <a
                             href="https://besiv-uart.oss-cn-hangzhou.aliyuncs.com/docs/ladisuart/tutorial-v2.5.pdf"
                             target="_blank"
                             rel="noreferrer"
                             onClick={() => setMobileNavOpen(false)}
-                            className="app-topbar-menu-item"
-                            style={{ padding: '12px 14px' }}
+                            className="user-mobile-drawer-cr-item"
                         >
                             📖 使用教程
                         </a>
@@ -154,7 +162,7 @@ export default function UserLayout({ children }: { children: React.ReactNode }) 
                 </>
             )}
 
-            {/* 模拟登录提示 — 2026-07-25: 移进 user-content-frame, 跟主内容一起 375px 居中 */}
+            {/* 模拟登录提示 — 2026-07-25: 移进 user-content-frame, 走 control-room 暗色版 */}
             {isSimulated && (
                 <div className="user-content-frame" style={{ paddingTop: 12, paddingBottom: 0 }}>
                     <Alert
@@ -162,7 +170,8 @@ export default function UserLayout({ children }: { children: React.ReactNode }) 
                         type="warning"
                         showIcon
                         closable
-                        style={{ borderRadius: 12 }}
+                        className="v3-alert-cr"
+                        style={{ borderRadius: 10 }}
                         onClose={() => {
                             clearSimulateToken()
                             sessionStorage.removeItem('simulated')
@@ -178,9 +187,9 @@ export default function UserLayout({ children }: { children: React.ReactNode }) 
                 <div className="user-content-frame">
                     <PageTransition>{children}</PageTransition>
                 </div>
-                <AbsButton>
+                <AbsButton theme="control-room">
                     <div style={{ padding: 16 }}>
-                        <div style={{ fontSize: 12, color: 'var(--ink-500)', marginBottom: 8 }}>
+                        <div style={{ fontSize: 11, color: 'var(--cr-text-3)', marginBottom: 8, fontFamily: 'var(--cr-font-mono)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
                             我的设备
                         </div>
                         {uts.map((el, key) => (
@@ -189,8 +198,10 @@ export default function UserLayout({ children }: { children: React.ReactNode }) 
                                 href={`/main/dev/${el.mac}${el.pid}`}
                                 style={{
                                     display: 'flex', alignItems: 'center', gap: 8,
-                                    padding: '8px 10px', borderRadius: 8, fontSize: 13,
-                                    color: 'var(--ink-700)', textDecoration: 'none',
+                                    padding: '10px 12px', borderRadius: 'var(--cr-radius-btn)', fontSize: 13,
+                                    color: 'var(--cr-text-2)', textDecoration: 'none',
+                                    background: 'transparent',
+                                    transition: 'background 150ms',
                                 }}
                             >
                                 {devTypeIcon[el.Type]}

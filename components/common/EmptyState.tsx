@@ -1,6 +1,7 @@
 'use client'
 
-import { Empty, Button } from 'antd'
+import { Empty } from 'antd'
+import { Button } from './Button'
 import type { ReactNode } from 'react'
 
 interface EmptyStateProps {
@@ -18,6 +19,14 @@ interface EmptyStateProps {
   icon?: ReactNode
   /** 高度（默认 360，居中显示） */
   minHeight?: number
+  /** 兼容 antd Empty 的 className 透传 (2026-07-25) */
+  className?: string
+  /**
+   * 视觉主题 (2026-07-25)
+   * - `default`     → 现有浅色视觉
+   * - `control-room`→ user 端暗色, 走 --cr-* token
+   */
+  theme?: 'default' | 'control-room'
 }
 
 /**
@@ -34,6 +43,8 @@ interface EmptyStateProps {
  * - 路由参数不完整
  *
  * 视觉规范见 docs/style-guide.md §4。
+ *
+ * theme="control-room" 走 --cr-* token (user 端 2026-07-25)
  */
 export function EmptyState({
   description = '暂无数据',
@@ -43,7 +54,12 @@ export function EmptyState({
   onSecondary,
   icon,
   minHeight = 360,
+  className,
+  theme = 'default',
 }: EmptyStateProps) {
+  const isCR = theme === 'control-room'
+  const descColor = isCR ? 'var(--cr-text-3)' : 'var(--ink-500)'
+
   return (
     <div
       style={{
@@ -56,17 +72,23 @@ export function EmptyState({
         gap: 16,
       }}
     >
-      {icon ?? <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="" />}
-      <div style={{ fontSize: 14, color: 'var(--ink-500)' }}>{description}</div>
+      {icon ?? (
+        <Empty
+          {...(isCR ? { className: `v3-empty-cr ${className ?? ''}`.trim() } : className ? { className } : {})}
+          image={Empty.PRESENTED_IMAGE_SIMPLE}
+          description=""
+        />
+      )}
+      <div style={{ fontSize: 14, color: descColor }}>{description}</div>
       {(actionLabel || secondaryLabel) && (
         <div style={{ display: 'flex', gap: 8, marginTop: 4 }}>
           {actionLabel && onAction && (
-            <Button type="primary" onClick={onAction}>
+            <Button theme={theme} variant="primary" onClick={onAction}>
               {actionLabel}
             </Button>
           )}
           {secondaryLabel && onSecondary && (
-            <Button onClick={onSecondary}>{secondaryLabel}</Button>
+            <Button theme={theme} onClick={onSecondary}>{secondaryLabel}</Button>
           )}
         </div>
       )}

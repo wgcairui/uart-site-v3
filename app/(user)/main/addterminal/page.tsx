@@ -240,8 +240,9 @@ const AddTerminal: React.FC = () => {
     // ── 渲染 ────────────────────────────────────────────────────────────────
 
     return (
-        <div className="bg-bento-canvas" style={{ position: 'relative', zIndex: 0 }}>
+        <div className="bg-cr-canvas" style={{ position: 'relative', zIndex: 0 }}>
             <PageHeader
+                theme="control-room"
                 title="添加设备"
                 subtitle="绑定新终端或为已有终端添加挂载设备"
                 breadcrumb={[
@@ -250,6 +251,7 @@ const AddTerminal: React.FC = () => {
                 ]}
                 extra={
                     <Button
+                        theme="control-room"
                         icon={<ReloadOutlined />}
                         onClick={() => {
                             setMac('')
@@ -265,6 +267,7 @@ const AddTerminal: React.FC = () => {
 
             {/* 总览 · 4 卡 (终端总数 / 在线 / 已挂载 / 协议数) */}
             <PageSummary
+                theme="control-room"
                 column={2}
                 items={[
                     {
@@ -293,7 +296,7 @@ const AddTerminal: React.FC = () => {
             />
 
             {/* Step 1 · 设备搜索 */}
-            <div className="bento-card" style={{ marginBottom: 24 }}>
+            <div className="bento-card-cr" style={{ marginBottom: 24 }}>
                 <div
                     style={{
                         display: 'flex',
@@ -311,11 +314,11 @@ const AddTerminal: React.FC = () => {
                     >
                         <SearchOutlined />
                     </span>
-                    <h3 style={{ fontSize: isMobile ? 14 : 16, fontWeight: 600, margin: 0 }}>
+                    <h3 style={{ fontSize: isMobile ? 14 : 16, fontWeight: 600, margin: 0, color: 'var(--cr-text-1)' }}>
                         Step 1 · 查找设备
                     </h3>
                 </div>
-                <Form layout="vertical" disabled={seachLoading}>
+                <Form className="v3-form-cr" layout="vertical" disabled={seachLoading}>
                     <Form.Item
                         label="设备编号 (MAC)"
                         extra="输入终端的 12 位 MAC 地址（不含分隔符），如 286B2E4BF8AB"
@@ -336,6 +339,7 @@ const AddTerminal: React.FC = () => {
                                 style={{ fontFamily: 'var(--font-mono)' }}
                             />
                             <Button
+                                theme="control-room"
                                 size="large"
                                 variant="primary"
                                 icon={<SearchOutlined />}
@@ -352,7 +356,7 @@ const AddTerminal: React.FC = () => {
             {/* Step 2 · 设备信息 (找到后) */}
             {seachLoading ? (
                 <div
-                    className="bento-card"
+                    className="bento-card-cr"
                     style={{
                         display: 'flex',
                         justifyContent: 'center',
@@ -360,12 +364,12 @@ const AddTerminal: React.FC = () => {
                         minHeight: 200,
                     }}
                 >
-                    <Spin tip="正在查找设备…" />
+                    <Spin className="v3-spin-cr" tip="正在查找设备…" />
                 </div>
             ) : ter ? (
                 <>
                     <div
-                        className="bento-card"
+                        className="bento-card-cr"
                         style={{ marginBottom: 24 }}
                     >
                         <div
@@ -391,11 +395,13 @@ const AddTerminal: React.FC = () => {
                                     fontWeight: 600,
                                     margin: 0,
                                     flex: 1,
+                                    color: 'var(--cr-text-1)',
                                 }}
                             >
                                 Step 2 · 设备信息
                             </h3>
                             <Button
+                                theme="control-room"
                                 variant="primary"
                                 onClick={bindTer}
                                 loading={bindLoading}
@@ -405,6 +411,7 @@ const AddTerminal: React.FC = () => {
                             </Button>
                         </div>
                         <KVList
+                            theme="control-room"
                             title={
                                 <span
                                     style={{
@@ -434,12 +441,14 @@ const AddTerminal: React.FC = () => {
                                             size={6}
                                         >
                                             <StatusTag
+                                                theme="control-room"
                                                 variant={ter.online ? 'online' : 'offline'}
                                                 size="sm"
                                                 text={ter.online ? '在线' : '离线'}
                                             />
                                             {ter.disable && (
                                                 <StatusTag
+                                                    theme="control-room"
                                                     variant="warning"
                                                     size="sm"
                                                     text="已禁用"
@@ -455,7 +464,7 @@ const AddTerminal: React.FC = () => {
 
                     {/* Step 3 · 挂载设备表单 */}
                     <div
-                        className="bento-card"
+                        className="bento-card-cr"
                         style={{ marginBottom: 24 }}
                     >
                         <div
@@ -480,12 +489,14 @@ const AddTerminal: React.FC = () => {
                                     fontSize: isMobile ? 14 : 16,
                                     fontWeight: 600,
                                     margin: 0,
+                                    color: 'var(--cr-text-1)',
                                 }}
                             >
                                 Step 3 · 添加挂载设备
                             </h3>
                         </div>
                         <Form
+                            className="v3-form-cr"
                             form={mountForm}
                             layout="vertical"
                             disabled={mountLoading}
@@ -554,6 +565,7 @@ const AddTerminal: React.FC = () => {
                             </div>
                             <Form.Item style={{ marginBottom: 0 }}>
                                 <Button
+                                    theme="control-room"
                                     variant="primary"
                                     size="large"
                                     icon={<PlusOutlined />}
@@ -569,12 +581,13 @@ const AddTerminal: React.FC = () => {
 
                     {/* 已挂载设备列表 */}
                     {mountDevs.length > 0 ? (
-                        <div className="bento-card">
+                        <div className="bento-card-cr">
                             <h3
                                 style={{
                                     fontSize: isMobile ? 14 : 16,
                                     fontWeight: 600,
                                     margin: '0 0 16px',
+                                    color: 'var(--cr-text-1)',
                                 }}
                             >
                                 已挂载设备 ({mountDevs.length})
@@ -592,7 +605,7 @@ const AddTerminal: React.FC = () => {
                                             key={i}
                                             style={{
                                                 padding: 12,
-                                                background: 'var(--bg-hover)',
+                                                background: 'var(--cr-bg-elev-2)',
                                                 borderRadius: 12,
                                             }}
                                         >
@@ -614,6 +627,7 @@ const AddTerminal: React.FC = () => {
                                                     {d.Type} · {d.protocol}
                                                 </span>
                                                 <StatusTag
+                                                    theme="control-room"
                                                     variant={
                                                         d.online
                                                             ? 'online'
@@ -625,7 +639,7 @@ const AddTerminal: React.FC = () => {
                                             <div
                                                 style={{
                                                     fontSize: 12,
-                                                    color: 'var(--ink-500)',
+                                                    color: 'var(--cr-text-3)',
                                                     fontFamily:
                                                         'var(--font-mono)',
                                                 }}
@@ -637,7 +651,7 @@ const AddTerminal: React.FC = () => {
                                 </div>
                             ) : (
                                 <table
-                                    className="v3-table"
+                                    className="v3-table-cr"
                                     style={{ width: '100%' }}
                                 >
                                     <thead>
@@ -665,6 +679,7 @@ const AddTerminal: React.FC = () => {
                                                 </td>
                                                 <td>
                                                     <StatusTag
+                                                        theme="control-room"
                                                         variant={
                                                             d.online
                                                                 ? 'online'
@@ -684,7 +699,8 @@ const AddTerminal: React.FC = () => {
             ) : (
                 <EmptyState
                     description="输入设备编号开始查找"
-                    minHeight={280}
+                        className="v3-empty-cr"
+                        minHeight={280}
                 />
             )}
         </div>

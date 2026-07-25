@@ -1973,3 +1973,1126 @@ html, body {
 .chat-pane-input-form-container {
   /* 旧版 ChatPane inputForm 容器（2026-06-27 改为 form 独立 section） */
 }
+
+/* =============================================================
+ * Control Room Theme — USER 端专用 (2026-07-25)
+ * 完整规范: docs/user-side-redesign-spec.md §2
+ * 跟现有 Bento+Aurora token 不冲突, --cr-* prefix 完全独立
+ * admin 端 / 登录页 / 工具页 全部不引用 --cr-*
+ * ============================================================= */
+
+:root {
+  /* 表面 (Surface) — 深色控制室 */
+  --cr-bg:          #0E0A1F;             /* 页面主背景 */
+  --cr-bg-elev-1:   #1A1230;             /* 一级卡片 (PageSummary / DevCard / 详情 header) */
+  --cr-bg-elev-2:   #251A40;             /* 二级卡片 (嵌套 / drawer / modal) */
+  --cr-bg-overlay:  rgba(14, 10, 31, 0.85);  /* drawer mask + modal 背景 */
+  --cr-border:      rgba(255, 255, 255, 0.08);
+  --cr-border-strong: rgba(255, 255, 255, 0.16);
+
+  /* 文字 (Text) */
+  --cr-text-1:      #F5F2FF;             /* 一级 (标题、关键数字) */
+  --cr-text-2:      #C8C2DC;             /* 二级 (正文) */
+  --cr-text-3:      #8A8499;             /* 三级 (副标签、说明) */
+  --cr-text-muted:  #5A556B;             /* placeholder / disabled */
+
+  /* Accent — Energy Flow (黄色) ★ 签名色 */
+  --cr-accent:        #F0B429;
+  --cr-accent-hover:  #FFD23F;
+  --cr-accent-active: #D4981E;
+  --cr-accent-soft:   rgba(240, 180, 41, 0.16);
+  --cr-accent-glow:   0 0 20px rgba(240, 180, 41, 0.4);
+
+  /* 状态色 (Status — 跟现有 semantic 对齐, 深色模式优化) */
+  --cr-status-online:   #34D399;
+  --cr-status-warning:  #FBBF24;
+  --cr-status-danger:   #F87171;
+  --cr-status-offline:  #9CA3AF;
+
+  /* 圆角 / 阴影 / 间距 */
+  --cr-radius-card:    16px;
+  --cr-radius-pill:    999px;
+  --cr-radius-btn:     10px;
+  --cr-shadow-card:    0 2px 12px rgba(0, 0, 0, 0.4);
+  --cr-shadow-card-hover: 0 8px 24px rgba(0, 0, 0, 0.6), 0 0 0 1px var(--cr-accent-soft);
+  --cr-gap-section:    16px;
+  --cr-pad-card:       20px;
+  --cr-pad-frame:      16px;
+
+  /* 字体 (跟 admin 端共用) */
+  --cr-font-display: var(--font-outfit), 'Inter', system-ui;
+  --cr-font-body:    var(--font-noto-sc), system-ui;
+  --cr-font-mono:    var(--font-jetbrains), ui-monospace;
+}
+
+/* =============================================================
+ * Control Room · LIVE pulse 关键帧
+ * 整站唯一一处在 topbar 右上角的"LIVE"指示, 2s ease-in-out 循环
+ * ============================================================= */
+@keyframes cr-pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50%      { opacity: 0.5; transform: scale(0.85); }
+}
+@keyframes cr-pulse-glow {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(240, 180, 41, 0.6); }
+  50%      { box-shadow: 0 0 0 6px rgba(240, 180, 41, 0); }
+}
+
+/* =============================================================
+ * Control Room · Canvas 顶层背景
+ * 替代 user 端所有 page 的 bg-bento-canvas
+ * ============================================================= */
+.bg-cr-canvas {
+  position: relative;
+  padding: 24px 0;  /* 横向 padding 由 .user-content-frame 控制 (16px) */
+  background:
+    radial-gradient(circle at 20% 0%, rgba(240, 180, 41, 0.06) 0%, transparent 50%),
+    radial-gradient(circle at 80% 100%, rgba(139, 92, 246, 0.08) 0%, transparent 50%),
+    var(--cr-bg);
+  min-height: 100%;
+  overflow: hidden;
+  color: var(--cr-text-2);
+}
+
+/* =============================================================
+ * Control Room · Topbar (深色 + LIVE pulse)
+ * ============================================================= */
+.app-topbar-cr {
+  height: 56px;
+  background: rgba(14, 10, 31, 0.85);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-bottom: 1px solid var(--cr-border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 var(--cr-pad-frame);
+  flex-shrink: 0;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+.app-topbar-cr.app-topbar-user {
+  /* 跟 .user-content-frame 对齐 375px 锁宽 */
+  max-width: 375px;
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: 16px !important;
+  padding-right: 16px !important;
+  box-sizing: border-box;
+}
+
+/* LIVE pulse 圆点 + 文字 (signature element) */
+.cr-live-indicator {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 8px;
+  border-radius: var(--cr-radius-pill);
+  background: var(--cr-accent-soft);
+  border: 1px solid var(--cr-accent);
+  user-select: none;
+}
+.cr-live-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--cr-accent);
+  animation: cr-pulse-glow 2s ease-in-out infinite;
+  flex-shrink: 0;
+}
+.cr-live-text {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--cr-accent);
+  letter-spacing: 0.1em;
+  font-family: var(--cr-font-mono);
+}
+
+/* topbar 内的 hamburger 按钮 — 深色版 */
+.app-topbar-cr .user-topbar-hamburger {
+  border: 1px solid var(--cr-border);
+  background: var(--cr-bg-elev-1);
+  color: var(--cr-text-1);
+}
+.app-topbar-cr .user-topbar-hamburger:hover {
+  border-color: var(--cr-accent);
+  color: var(--cr-accent);
+}
+
+/* =============================================================
+ * Control Room · Drawer (深色)
+ * ============================================================= */
+.user-mobile-drawer-cr {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 240px;
+  background: var(--cr-bg-elev-2);
+  border-left: 1px solid var(--cr-border);
+  z-index: 95;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  box-shadow: -8px 0 24px -8px rgba(0, 0, 0, 0.5);
+  color: var(--cr-text-2);
+}
+.user-mobile-drawer-mask-cr {
+  position: fixed;
+  inset: 0;
+  background: var(--cr-bg-overlay);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  z-index: 90;
+}
+.user-mobile-drawer-cr-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
+  border-radius: var(--cr-radius-btn);
+  font-size: 14px;
+  color: var(--cr-text-2);
+  text-decoration: none;
+  cursor: pointer;
+  transition: all 150ms cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  font-family: inherit;
+  background: transparent;
+  border: 0;
+  width: 100%;
+  text-align: left;
+}
+.user-mobile-drawer-cr-item:hover {
+  background: var(--cr-accent-soft);
+  color: var(--cr-accent);
+}
+.user-mobile-drawer-cr-item.active {
+  background: var(--cr-accent-soft);
+  color: var(--cr-accent);
+  font-weight: 600;
+}
+.user-mobile-drawer-cr-item.active::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 8px;
+  bottom: 8px;
+  width: 3px;
+  background: var(--cr-accent);
+  border-radius: 0 2px 2px 0;
+}
+
+/* =============================================================
+ * Control Room · PageHeader
+ * 替代现有 .app-page-header-* 在 user 端 (admin 端不动)
+ * ============================================================= */
+.app-page-header-cr {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  margin-bottom: 24px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--cr-border);
+  gap: 12px;
+}
+.app-page-header-cr-title {
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: -0.015em;
+  color: var(--cr-text-1);
+  margin: 0;
+  font-family: var(--cr-font-display);
+}
+.app-page-header-cr-subtitle {
+  font-size: 13px;
+  color: var(--cr-text-3);
+  margin-top: 4px;
+  font-family: var(--cr-font-mono);
+}
+.app-page-header-cr-extra {
+  display: flex;
+  gap: 12px;
+  flex-shrink: 0;
+}
+.app-page-header-cr-meta {
+  margin-top: 16px;
+  padding-top: 12px;
+  border-top: 1px solid var(--cr-border);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px 28px;
+}
+
+/* =============================================================
+ * Control Room · PageSummary (stat card 暗色)
+ * ============================================================= */
+.stat-card-cr {
+  background-color: var(--cr-bg-elev-1);
+  border: 1px solid var(--cr-border);
+  border-radius: var(--cr-radius-card);
+  padding: var(--cr-pad-card);
+  box-shadow: var(--cr-shadow-card);
+  transition: transform 250ms cubic-bezier(0.4, 0, 0.2, 1),
+              box-shadow 250ms cubic-bezier(0.4, 0, 0.2, 1);
+  cursor: default;
+  position: relative;
+  overflow: hidden;
+}
+.stat-card-cr-clickable { cursor: pointer; }
+.stat-card-cr-clickable:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--cr-shadow-card-hover);
+  border-color: var(--cr-border-strong);
+}
+.stat-card-cr-label {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--cr-text-3);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  font-family: var(--cr-font-mono);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.stat-card-cr-label .stat-card-cr-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.stat-card-cr-value {
+  font-size: 24px;
+  font-weight: 700;
+  line-height: 1.1;
+  margin-top: 8px;
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: 'tnum';
+  letter-spacing: -0.02em;
+  color: var(--cr-text-1);
+  font-family: var(--cr-font-display);
+}
+.stat-card-cr-extra {
+  font-size: 12px;
+  color: var(--cr-text-3);
+  margin-top: 8px;
+  font-weight: 500;
+  font-family: var(--cr-font-mono);
+}
+.stat-card-cr-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: var(--cr-radius-btn);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  flex-shrink: 0;
+}
+.stat-card-cr.active {
+  background: var(--cr-accent-soft);
+  border-color: var(--cr-accent);
+}
+.stat-card-cr.active .stat-card-cr-value {
+  color: var(--cr-accent);
+}
+
+/* =============================================================
+ * Control Room · DevCard (user 端设备卡 · 暗色)
+ * 替代现有 .v3-dev-card 在 user 端
+ * ============================================================= */
+.v3-dev-card-cr {
+  background: var(--cr-bg-elev-1) !important;
+  border: 1px solid var(--cr-border) !important;
+  border-radius: var(--cr-radius-card) !important;
+  box-shadow: var(--cr-shadow-card) !important;
+  color: var(--cr-text-2) !important;
+  margin: 12px 0 !important;
+}
+.v3-dev-card-cr:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--cr-shadow-card-hover) !important;
+  border-color: var(--cr-border-strong) !important;
+}
+.v3-dev-card-cr .ant-card-cover {
+  border-radius: 15px 15px 0 0 !important;
+  overflow: hidden;
+  background: var(--cr-bg-elev-2) !important;
+}
+.v3-dev-card-cr .ant-card-meta-title {
+  color: var(--cr-text-1) !important;
+  font-weight: 600 !important;
+  font-size: 15px !important;
+}
+.v3-dev-card-cr .ant-card-meta-description {
+  color: var(--cr-text-3) !important;
+  font-size: 12px !important;
+  font-family: var(--cr-font-mono) !important;
+}
+.v3-dev-card-cr .ant-card-actions {
+  background: var(--cr-bg-elev-2) !important;
+  border-top: 1px solid var(--cr-border) !important;
+}
+.v3-dev-card-cr .ant-card-actions > li {
+  color: var(--cr-text-3) !important;
+}
+.v3-dev-card-cr .ant-card-actions > li > span:hover {
+  color: var(--cr-accent) !important;
+}
+
+/* =============================================================
+ * Control Room · StatusTag (暗色背景版本)
+ * ============================================================= */
+.status-tag-cr {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: var(--cr-radius-pill);
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1.4;
+  white-space: nowrap;
+  font-family: var(--cr-font-body);
+  border: 1px solid transparent;
+}
+.status-tag-cr-sm { font-size: 11px; padding: 3px 8px; }
+.status-tag-cr .status-dot-cr {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.status-tag-cr-online {
+  background: rgba(52, 211, 153, 0.12);
+  color: var(--cr-status-online);
+  border-color: rgba(52, 211, 153, 0.3);
+}
+.status-tag-cr-online .status-dot-cr {
+  background: var(--cr-status-online);
+  animation: cr-pulse 2s ease-in-out infinite;
+}
+
+.status-tag-cr-offline {
+  background: rgba(248, 113, 113, 0.12);
+  color: var(--cr-status-danger);
+  border-color: rgba(248, 113, 113, 0.3);
+}
+.status-tag-cr-offline .status-dot-cr { background: var(--cr-status-danger); }
+
+.status-tag-cr-warning {
+  background: rgba(251, 191, 36, 0.12);
+  color: var(--cr-status-warning);
+  border-color: rgba(251, 191, 36, 0.3);
+}
+.status-tag-cr-warning .status-dot-cr { background: var(--cr-status-warning); }
+
+.status-tag-cr-error {
+  background: rgba(248, 113, 113, 0.18);
+  color: var(--cr-status-danger);
+  border-color: rgba(248, 113, 113, 0.4);
+}
+.status-tag-cr-error .status-dot-cr { background: var(--cr-status-danger); }
+
+.status-tag-cr-info {
+  background: rgba(240, 180, 41, 0.10);
+  color: var(--cr-accent);
+  border-color: rgba(240, 180, 41, 0.25);
+}
+.status-tag-cr-info .status-dot-cr { background: var(--cr-accent); }
+
+.status-tag-cr-idle {
+  background: rgba(156, 163, 175, 0.10);
+  color: var(--cr-status-offline);
+  border-color: rgba(156, 163, 175, 0.25);
+}
+.status-tag-cr-idle .status-dot-cr { background: var(--cr-status-offline); }
+
+/* =============================================================
+ * Control Room · Button (5 variant · 暗色版)
+ * ============================================================= */
+.btn-cr-primary {
+  background: var(--cr-accent);
+  color: #0E0A1F;
+  border: 0;
+  font-weight: 600;
+  border-radius: var(--cr-radius-btn);
+  padding: 9px 18px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: transform 150ms cubic-bezier(0.4, 0, 0.2, 1),
+              box-shadow 250ms cubic-bezier(0.4, 0, 0.2, 1),
+              background 150ms cubic-bezier(0.4, 0, 0.2, 1);
+  font-family: inherit;
+}
+.btn-cr-primary:hover {
+  background: var(--cr-accent-hover);
+  transform: translateY(-1px);
+  box-shadow: var(--cr-accent-glow);
+}
+.btn-cr-primary:active {
+  background: var(--cr-accent-active);
+  transform: scale(0.98);
+}
+.btn-cr-primary:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.btn-cr-default {
+  background: transparent;
+  color: var(--cr-text-1);
+  border: 1px solid var(--cr-border);
+  border-radius: var(--cr-radius-btn);
+  padding: 9px 18px;
+  font-size: 14px;
+  cursor: pointer;
+  font-weight: 500;
+  font-family: inherit;
+  transition: all 150ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+.btn-cr-default:hover {
+  border-color: var(--cr-accent);
+  color: var(--cr-accent);
+}
+.btn-cr-default:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.btn-cr-ghost {
+  background: transparent;
+  color: var(--cr-text-3);
+  border: 0;
+  border-radius: var(--cr-radius-btn);
+  padding: 9px 18px;
+  font-size: 14px;
+  cursor: pointer;
+  font-weight: 500;
+  font-family: inherit;
+  transition: all 150ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+.btn-cr-ghost:hover {
+  background: var(--cr-accent-soft);
+  color: var(--cr-accent);
+}
+
+.btn-cr-danger {
+  background: var(--cr-status-danger);
+  color: #fff;
+  border: 0;
+  border-radius: var(--cr-radius-btn);
+  padding: 9px 18px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 150ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+.btn-cr-danger:hover {
+  background: #ef4444;
+}
+
+.btn-cr-link {
+  background: transparent;
+  border: 0;
+  color: var(--cr-accent);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  padding: 4px 8px;
+  font-family: inherit;
+}
+.btn-cr-link:hover { color: var(--cr-accent-hover); }
+
+/* =============================================================
+ * Control Room · BrandLogo (暗色版)
+ * ============================================================= */
+.brand-logo-cr-block {
+  background: var(--cr-accent) !important;
+  background-image: none !important;
+  color: #0E0A1F !important;
+  box-shadow: 0 0 12px rgba(240, 180, 41, 0.3);
+}
+.brand-logo-cr-text {
+  color: var(--cr-text-1) !important;
+  background-image: none !important;
+  -webkit-text-fill-color: var(--cr-text-1) !important;
+}
+
+/* =============================================================
+ * Control Room · BentoCard (替代 .bento-card 在 user 端)
+ * ============================================================= */
+.bento-card-cr {
+  background: var(--cr-bg-elev-1);
+  border: 1px solid var(--cr-border);
+  border-radius: var(--cr-radius-card);
+  padding: var(--cr-pad-card);
+  box-shadow: var(--cr-shadow-card);
+  color: var(--cr-text-2);
+}
+
+/* =============================================================
+ * Control Room · v3-device-header (暗色)
+ * ============================================================= */
+.v3-device-header-cr {
+  background: var(--cr-bg-elev-1) !important;
+  border: 1px solid var(--cr-border) !important;
+  border-radius: var(--cr-radius-card) !important;
+  color: var(--cr-text-2) !important;
+  box-shadow: var(--cr-shadow-card) !important;
+}
+.v3-device-header-cr h2 {
+  color: var(--cr-text-1) !important;
+  font-family: var(--cr-font-display);
+}
+.v3-device-header-cr-mac {
+  font-family: var(--cr-font-mono);
+  font-size: 12px;
+  color: var(--cr-text-2) !important;
+  background: var(--cr-bg-elev-2) !important;
+  padding: 2px 8px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background 150ms cubic-bezier(0.4, 0, 0.2, 1);
+  border: 1px solid var(--cr-border);
+}
+.v3-device-header-cr-mac:hover {
+  background: var(--cr-accent-soft) !important;
+  color: var(--cr-accent) !important;
+}
+
+/* =============================================================
+ * Control Room · v3-table (antd Table 暗色)
+ * ============================================================= */
+.v3-table-cr .ant-table {
+  background: transparent !important;
+  border-radius: var(--cr-radius-card);
+  overflow: hidden;
+  color: var(--cr-text-2) !important;
+}
+.v3-table-cr .ant-table-thead > tr > th {
+  background: var(--cr-bg-elev-2) !important;
+  color: var(--cr-text-3) !important;
+  font-weight: 600 !important;
+  font-size: 11px !important;
+  letter-spacing: 0.05em !important;
+  text-transform: uppercase !important;
+  border-bottom: 1px solid var(--cr-border) !important;
+  font-family: var(--cr-font-mono) !important;
+  padding: 12px 16px !important;
+}
+.v3-table-cr .ant-table-tbody > tr > td {
+  background: transparent !important;
+  color: var(--cr-text-2) !important;
+  border-bottom: 1px solid var(--cr-border) !important;
+  padding: 12px 16px !important;
+  font-size: 13px !important;
+}
+.v3-table-cr .ant-table-tbody > tr:hover > td {
+  background: var(--cr-accent-soft) !important;
+}
+.v3-table-cr .ant-table-tbody > tr:last-child > td {
+  border-bottom: none !important;
+}
+.v3-table-cr .ant-pagination .ant-pagination-item-active {
+  background: var(--cr-accent) !important;
+  border-color: var(--cr-accent) !important;
+}
+.v3-table-cr .ant-pagination .ant-pagination-item-active a {
+  color: #0E0A1F !important;
+}
+.v3-table-cr .ant-pagination .ant-pagination-item {
+  background: var(--cr-bg-elev-1) !important;
+  border-color: var(--cr-border) !important;
+}
+.v3-table-cr .ant-pagination .ant-pagination-item a {
+  color: var(--cr-text-2) !important;
+}
+.v3-table-cr .ant-pagination .ant-pagination-item:hover {
+  border-color: var(--cr-accent) !important;
+}
+.v3-table-cr .ant-pagination .ant-pagination-item:hover a {
+  color: var(--cr-accent) !important;
+}
+
+/* =============================================================
+ * Control Room · Descriptions
+ * ============================================================= */
+.v3-descriptions-cr .ant-descriptions-item-label {
+  color: var(--cr-text-3) !important;
+  font-size: 12px !important;
+  font-family: var(--cr-font-mono) !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.05em !important;
+}
+.v3-descriptions-cr .ant-descriptions-item-content {
+  color: var(--cr-text-1) !important;
+  font-size: 14px !important;
+}
+.v3-descriptions-cr .ant-descriptions-item {
+  border-bottom: 1px solid var(--cr-border) !important;
+}
+
+/* =============================================================
+ * Control Room · Form / Input / Select
+ * ============================================================= */
+.v3-form-cr .ant-input,
+.v3-form-cr .ant-input-affix-wrapper,
+.v3-form-cr .ant-select-selector,
+.v3-form-cr .ant-picker {
+  background: var(--cr-bg-elev-2) !important;
+  border-color: var(--cr-border) !important;
+  color: var(--cr-text-1) !important;
+  border-radius: var(--cr-radius-btn) !important;
+  font-family: var(--cr-font-body) !important;
+}
+.v3-form-cr .ant-input::placeholder,
+.v3-form-cr .ant-input-affix-wrapper input::placeholder {
+  color: var(--cr-text-muted) !important;
+}
+.v3-form-cr .ant-input:focus,
+.v3-form-cr .ant-input-affix-wrapper:focus,
+.v3-form-cr .ant-input-affix-wrapper-focused,
+.v3-form-cr .ant-select-focused .ant-select-selector,
+.v3-form-cr .ant-picker-focused {
+  background: var(--cr-bg-elev-1) !important;
+  border-color: var(--cr-accent) !important;
+  box-shadow: 0 0 0 3px var(--cr-accent-soft) !important;
+}
+.v3-form-cr .ant-form-item-label > label {
+  color: var(--cr-text-2) !important;
+  font-size: 12px !important;
+  font-weight: 500 !important;
+  font-family: var(--cr-font-mono) !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.05em !important;
+}
+.v3-form-cr .ant-form-item-extra {
+  color: var(--cr-text-3) !important;
+  font-size: 11px !important;
+  font-family: var(--cr-font-mono) !important;
+}
+.v3-form-cr .ant-select-selection-item,
+.v3-form-cr .ant-select-selection-placeholder {
+  color: var(--cr-text-1) !important;
+}
+.v3-form-cr .ant-picker-input > input {
+  color: var(--cr-text-1) !important;
+}
+
+/* =============================================================
+ * Control Room · Tabs
+ * ============================================================= */
+.v3-tabs-cr .ant-tabs-tab {
+  color: var(--cr-text-3) !important;
+  font-weight: 500 !important;
+}
+.v3-tabs-cr .ant-tabs-tab.ant-tabs-tab-active .ant-tabs-tab-btn {
+  color: var(--cr-accent) !important;
+  font-weight: 600 !important;
+}
+.v3-tabs-cr .ant-tabs-ink-bar {
+  background: var(--cr-accent) !important;
+  height: 2px !important;
+  box-shadow: 0 0 8px var(--cr-accent-soft);
+}
+.v3-tabs-cr .ant-tabs-nav::before {
+  border-bottom-color: var(--cr-border) !important;
+}
+
+/* =============================================================
+ * Control Room · Modal
+ * ============================================================= */
+.v3-modal-cr .ant-modal-content {
+  background: var(--cr-bg-elev-2) !important;
+  border: 1px solid var(--cr-border) !important;
+  border-radius: var(--cr-radius-card) !important;
+  color: var(--cr-text-2) !important;
+  box-shadow: 0 20px 60px -10px rgba(0, 0, 0, 0.6) !important;
+}
+.v3-modal-cr .ant-modal-header {
+  background: transparent !important;
+  border-bottom: 1px solid var(--cr-border) !important;
+}
+.v3-modal-cr .ant-modal-title {
+  color: var(--cr-text-1) !important;
+  font-family: var(--cr-font-display);
+}
+.v3-modal-cr .ant-modal-close-x {
+  color: var(--cr-text-3) !important;
+}
+.v3-modal-cr .ant-modal-mask {
+  background: var(--cr-bg-overlay) !important;
+}
+
+/* =============================================================
+ * Control Room · Empty / Spin
+ * ============================================================= */
+.v3-empty-cr .ant-empty-description {
+  color: var(--cr-text-3) !important;
+}
+.v3-empty-cr .ant-empty-img-default-path-1,
+.v3-empty-cr .ant-empty-img-default-path-2,
+.v3-empty-cr .ant-empty-img-default-path-3 {
+  fill: var(--cr-bg-elev-2) !important;
+}
+.v3-spin-cr .ant-spin-text {
+  color: var(--cr-text-3) !important;
+  font-family: var(--cr-font-mono);
+}
+.v3-spin-cr .ant-spin-dot-item {
+  background: var(--cr-accent) !important;
+}
+
+/* =============================================================
+ * Control Room · Alert
+ * ============================================================= */
+.v3-alert-cr.ant-alert-warning {
+  background: rgba(251, 191, 36, 0.10) !important;
+  border: 1px solid rgba(251, 191, 36, 0.3) !important;
+  color: var(--cr-status-warning) !important;
+  border-radius: var(--cr-radius-btn) !important;
+}
+.v3-alert-cr.ant-alert-warning .ant-alert-icon {
+  color: var(--cr-status-warning) !important;
+}
+.v3-alert-cr.ant-alert-warning .ant-alert-message {
+  color: var(--cr-status-warning) !important;
+  font-weight: 500;
+}
+
+/* =============================================================
+ * Control Room · Tag (antd Tag 暗色版)
+ * ============================================================= */
+.v3-tag-cr.ant-tag {
+  background: var(--cr-bg-elev-2) !important;
+  border-color: var(--cr-border) !important;
+  color: var(--cr-text-1) !important;
+  font-family: var(--cr-font-mono);
+  font-size: 12px;
+}
+
+/* =============================================================
+ * Control Room · absButton (浮动"我的设备"按钮)
+ * ============================================================= */
+.abs-btn-cr {
+  position: fixed;
+  bottom: 24px;
+  right: 20px;
+  z-index: 30;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: var(--cr-accent);
+  color: #0E0A1F;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  border: 0;
+  box-shadow: 0 4px 16px rgba(240, 180, 41, 0.4), 0 0 0 0 rgba(240, 180, 41, 0.5);
+  font-family: inherit;
+  transition: all 250ms cubic-bezier(0.4, 0, 0.2, 1);
+  animation: cr-pulse-glow 3s ease-in-out infinite;
+}
+.abs-btn-cr:hover {
+  transform: scale(1.08);
+  box-shadow: 0 6px 20px rgba(240, 180, 41, 0.6);
+}
+.abs-btn-cr .abs-btn-icon {
+  width: 18px;
+  height: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 250ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+.abs-btn-cr .abs-btn-icon.open {
+  transform: rotate(180deg);
+}
+@media screen and (max-width: 476px) {
+  .abs-btn-cr { display: flex; }
+}
+.abs-panel-cr {
+  display: none;
+  position: fixed;
+  top: 56px;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: var(--cr-bg-elev-2);
+  border-top: 1px solid var(--cr-border);
+  z-index: 25;
+  overflow-y: auto;
+  pointer-events: none;
+  transition: opacity 250ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+@media screen and (max-width: 476px) {
+  .abs-panel-cr.show { display: block; pointer-events: auto; }
+}
+
+/* =============================================================
+ * Control Room · userinfo 账号 openid 长串
+ * ============================================================= */
+.userinfo-account-code-cr {
+  font-family: var(--cr-font-mono);
+  font-size: 12px;
+  word-break: break-all;
+  overflow-wrap: anywhere;
+  background: var(--cr-bg-elev-2);
+  color: var(--cr-text-1);
+  padding: 2px 8px;
+  border-radius: 4px;
+  cursor: pointer;
+  display: inline-block;
+  max-width: 100%;
+  line-height: 1.6;
+  border: 1px solid var(--cr-border);
+  transition: all 150ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+.userinfo-account-code-cr:hover {
+  background: var(--cr-accent-soft);
+  color: var(--cr-accent);
+  border-color: var(--cr-accent);
+}
+
+/* =============================================================
+ * Control Room · mobile 移动端响应式 (locked 375)
+ * ============================================================= */
+@media (max-width: 480px) {
+  .stat-card-cr-value {
+    font-size: 22px;
+  }
+  .stat-card-cr-label {
+    font-size: 10px;
+  }
+  .app-page-header-cr-title {
+    font-size: 20px;
+  }
+  .app-page-header-cr {
+    margin-bottom: 16px;
+  }
+}
+
+/* =============================================================
+ * Control Room · scrollbar (深色友好)
+ * ============================================================= */
+.bg-cr-canvas ::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+.bg-cr-canvas ::-webkit-scrollbar-track {
+  background: var(--cr-bg);
+}
+.bg-cr-canvas ::-webkit-scrollbar-thumb {
+  background: var(--cr-border-strong);
+  border-radius: 4px;
+}
+.bg-cr-canvas ::-webkit-scrollbar-thumb:hover {
+  background: var(--cr-accent);
+}
+
+/* =============================================================
+ * Control Room · v3-device-hero (深色 aurora 风格)
+ * ============================================================= */
+.v3-device-hero-cr {
+  background: linear-gradient(135deg, #1e1b4b 0%, #312e81 50%, #6d28d9 100%) !important;
+  color: #fff !important;
+  border: 1px solid var(--cr-border) !important;
+  border-radius: var(--cr-radius-card) !important;
+  box-shadow: var(--cr-shadow-card) !important;
+  position: relative;
+  overflow: hidden;
+}
+.v3-device-hero-cr h2 {
+  color: #fff !important;
+  font-family: var(--cr-font-display);
+}
+.v3-device-hero-cr .ant-tag {
+  background: rgba(255, 255, 255, 0.10) !important;
+  border: 1px solid rgba(255, 255, 255, 0.20) !important;
+  color: rgba(255, 255, 255, 0.85) !important;
+}
+
+/* =============================================================
+ * Control Room · device-actions-v3 (深色)
+ * ============================================================= */
+.device-actions-v3-cr {
+  background: var(--cr-bg-elev-1) !important;
+  border: 1px solid var(--cr-border) !important;
+  border-radius: var(--cr-radius-card) !important;
+  color: var(--cr-text-2) !important;
+  box-shadow: var(--cr-shadow-card) !important;
+}
+.device-actions-v3-cr h3 {
+  color: var(--cr-text-1) !important;
+}
+.device-actions-v3-cr .device-action-btn-v3 {
+  background: var(--cr-bg-elev-2) !important;
+  border: 1px solid var(--cr-border) !important;
+  color: var(--cr-text-1) !important;
+}
+.device-actions-v3-cr .device-action-btn-v3:hover {
+  background: var(--cr-accent-soft) !important;
+  border-color: var(--cr-accent) !important;
+  color: var(--cr-accent) !important;
+}
+.device-actions-v3-cr .device-action-btn-v3 .ico {
+  background: rgba(240, 180, 41, 0.12) !important;
+  color: var(--cr-accent) !important;
+}
+.device-actions-v3-cr .device-action-btn-v3 .arrow {
+  color: var(--cr-text-3) !important;
+}
+.device-actions-v3-cr .device-action-btn-v3.primary {
+  background: var(--cr-accent) !important;
+  color: #0E0A1F !important;
+  border: 0 !important;
+}
+.device-actions-v3-cr .device-action-btn-v3.primary:hover {
+  background: var(--cr-accent-hover) !important;
+  box-shadow: var(--cr-accent-glow) !important;
+}
+.device-actions-v3-cr .device-action-btn-v3.primary .ico {
+  background: rgba(14, 10, 31, 0.20) !important;
+  color: #0E0A1F !important;
+}
+.device-actions-v3-cr .device-action-btn-v3.primary .arrow {
+  color: #0E0A1F !important;
+}
+.device-actions-v3-cr .device-action-btn-v3.danger {
+  background: rgba(248, 113, 113, 0.10) !important;
+  border-color: rgba(248, 113, 113, 0.25) !important;
+  color: var(--cr-status-danger) !important;
+}
+.device-actions-v3-cr .device-actions-section-label {
+  color: var(--cr-text-3) !important;
+}
+.device-actions-v3-cr .device-actions-links {
+  color: var(--cr-text-3) !important;
+  border-top: 1px solid var(--cr-border);
+}
+.device-actions-v3-cr .device-actions-links .links-label {
+  color: var(--cr-text-muted) !important;
+}
+.device-actions-v3-cr .device-actions-links a {
+  color: var(--cr-accent) !important;
+}
+.device-actions-v3-cr .device-actions-links a:hover {
+  color: var(--cr-accent-hover) !important;
+}
+.device-actions-v3-cr .device-actions-links .dot {
+  color: var(--cr-text-muted) !important;
+}
+.device-actions-v3-cr .device-actions-status {
+  background: var(--cr-bg-elev-2) !important;
+  border: 1px solid var(--cr-border) !important;
+}
+.device-actions-v3-cr .status-row {
+  border-bottom: 1px dashed var(--cr-border) !important;
+}
+.device-actions-v3-cr .status-label {
+  color: var(--cr-text-3) !important;
+}
+.device-actions-v3-cr .status-value {
+  color: var(--cr-text-1) !important;
+}
+.device-actions-v3-cr .status-value.ok {
+  color: var(--cr-status-online) !important;
+}
+.device-actions-v3-cr .status-value.warn {
+  color: var(--cr-status-warning) !important;
+}
+.device-actions-v3-cr .device-actions-danger {
+  background: rgba(248, 113, 113, 0.05) !important;
+  border: 1px solid rgba(248, 113, 113, 0.20) !important;
+}
+.device-actions-v3-cr .danger-label {
+  color: var(--cr-status-danger) !important;
+}
+.device-actions-v3-cr .danger-btn {
+  background: rgba(248, 113, 113, 0.10) !important;
+  border: 1px solid rgba(248, 113, 113, 0.20) !important;
+  color: var(--cr-status-danger) !important;
+}
+.device-actions-v3-cr .danger-btn:hover:not(:disabled) {
+  background: rgba(248, 113, 113, 0.18) !important;
+  border-color: rgba(248, 113, 113, 0.40) !important;
+}
+
+/* =============================================================
+ * Control Room · live-controls-v3 (深色)
+ * ============================================================= */
+.live-controls-v3-cr {
+  background: var(--cr-bg-elev-1) !important;
+  border: 1px solid var(--cr-border) !important;
+  border-radius: var(--cr-radius-card) !important;
+  color: var(--cr-text-2) !important;
+  box-shadow: var(--cr-shadow-card) !important;
+}
+.live-controls-v3-cr .live-controls-title {
+  color: var(--cr-text-1) !important;
+}
+.live-controls-v3-cr .ctrl-tile {
+  background: var(--cr-bg-elev-2) !important;
+  border: 1px solid var(--cr-border) !important;
+}
+.live-controls-v3-cr .ctrl-tile:hover {
+  background: var(--cr-accent-soft) !important;
+  border-color: var(--cr-accent) !important;
+}
+.live-controls-v3-cr .ctrl-tile-lbl {
+  color: var(--cr-text-3) !important;
+}
+.live-controls-v3-cr .ctrl-tile-val {
+  color: var(--cr-text-1) !important;
+}
+.live-controls-v3-cr .ctrl-tile-unit {
+  color: var(--cr-text-3) !important;
+}
+.live-controls-v3-cr .ctrl-tile-foot {
+  color: var(--cr-text-3) !important;
+}
+
+/* =============================================================
+ * Control Room · trend-chart-v3 (深色)
+ * ============================================================= */
+.trend-chart-v3-cr {
+  background: var(--cr-bg-elev-1) !important;
+  border: 1px solid var(--cr-border) !important;
+  border-radius: var(--cr-radius-card) !important;
+  color: var(--cr-text-2) !important;
+  box-shadow: var(--cr-shadow-card) !important;
+}
+.trend-chart-v3-cr h3 {
+  color: var(--cr-text-1) !important;
+}
+.trend-chart-v3-cr .sub {
+  color: var(--cr-text-3) !important;
+}
+
+/* =============================================================
+ * Control Room · SectionTitle / KVList
+ * ============================================================= */
+.app-section-title-cr {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 16px;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--cr-text-1);
+}
+.app-section-title-cr .app-section-title-icon {
+  font-size: 18px;
+  color: var(--cr-accent);
+}
+
+.kv-list-cr {
+  background: transparent;
+}

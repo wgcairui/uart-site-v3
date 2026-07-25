@@ -36,16 +36,16 @@ function TerminalInner() {
 
   if (loading) {
     return (
-      <div className="bg-bento-canvas" style={{ padding: 80, textAlign: 'center' }}>
-        <Spin size="large" />
+      <div className="bg-cr-canvas" style={{ padding: 80, textAlign: 'center' }}>
+        <Spin className="v3-spin-cr" size="large" />
       </div>
     )
   }
 
   if (!terminal) {
     return (
-      <div className="bg-bento-canvas" style={{ padding: 80, textAlign: 'center', color: 'var(--ink-400)' }}>
-        <Empty description="找不到该终端的数据" />
+      <div className="bg-cr-canvas" style={{ padding: 80, textAlign: 'center', color: 'var(--ink-400)' }}>
+        <Empty className="v3-empty-cr" description="找不到该终端的数据" />
       </div>
     )
   }
@@ -55,7 +55,7 @@ function TerminalInner() {
   const mountDevs = Array.isArray(terminal.mountDevs) ? terminal.mountDevs : []
 
   return (
-    <div className="bg-bento-canvas" style={{ position: 'relative', zIndex: 0 }}>
+    <div className="bg-cr-canvas" style={{ position: 'relative', zIndex: 0 }}>
       {/* ─── 1. 薄导航条 (返回 + 面包屑, 标题让给 hero) ─── */}
       <nav
         style={{
@@ -91,7 +91,7 @@ function TerminalInner() {
 
       {/* ─── 2. device hero 紫渐变 (跟 admin terminal 一致) ─── */}
       <div
-        className="bento-card v3-device-hero"
+        className="bento-card-cr v3-device-hero-cr"
         style={{
           marginBottom: 20,
           padding: '20px 28px',
@@ -137,6 +137,7 @@ function TerminalInner() {
             </div>
           </div>
           <StatusTag
+            theme="control-room"
             variant={online ? 'online' : 'offline'}
             text={online ? '实时连接' : '离线'}
             pulse={online}
@@ -202,7 +203,7 @@ function QuickNavCard({ terminal, onNav }: { terminal: Uart.Terminal; onNav: (pa
 
   return (
     <div
-      className="device-actions-v3"
+      className="device-actions-v3 device-actions-v3-cr"
       style={{ height: '100%' }}
     >
       <h3>设备快捷导航</h3>

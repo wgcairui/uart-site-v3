@@ -74,9 +74,9 @@ function DevInner() {
     if (!terminal || !mountDev) return <Empty />
 
     return (
-        <div className="bg-bento-canvas" style={{ position: 'relative', zIndex: 0 }}>
+        <div className="bg-cr-canvas" style={{ position: 'relative', zIndex: 0 }}>
             {/* 精简 device header — 1 行布局: 名 + meta + 状态 + 切换设备 */}
-            <div className="bento-card v3-device-header" style={{ marginBottom: 20, padding: '18px 24px' }}>
+            <div className="bento-card-cr v3-device-header-cr" style={{ marginBottom: 20, padding: '18px 24px' }}>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16, flexWrap: 'wrap' }}>
                     <div style={{ minWidth: 0, flex: '1 1 auto' }}>
                         <h2 style={{
@@ -102,7 +102,7 @@ function DevInner() {
                             <Tooltip title="点击复制 DevMac">
                                 <code
                                     onClick={copyMac}
-                                    className="v3-device-header-mac"
+                                    className="v3-device-header-cr-mac"
                                 >
                                     {terminal.DevMac}
                                 </code>
@@ -121,6 +121,7 @@ function DevInner() {
                     </div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexShrink: 0 }}>
                         <StatusTag
+                            theme="control-room"
                             variant={terminal.online ? 'online' : 'offline'}
                             text={terminal.online ? '实时连接' : '离线'}
                             pulse={!!terminal.online}
@@ -131,6 +132,7 @@ function DevInner() {
                                     key: String(pid),
                                     label: (
                                         <Button
+                                            theme="control-room"
                                             variant="link"
                                             onClick={() => nav('/main/dev/' + encodeURIComponent(terminal.DevMac) + '/' + pid)}
                                         >
@@ -139,7 +141,7 @@ function DevInner() {
                                     ),
                                 })),
                             }}>
-                                <Button>
+                                <Button theme="control-room">
                                     切换设备 <DownOutlined />
                                 </Button>
                             </Dropdown>
@@ -162,6 +164,7 @@ function DevInner() {
             </div>
 
             <Tabs
+                className="v3-tabs-cr"
                 activeKey={activeKey}
                 onChange={handleTabChange}
                 items={[

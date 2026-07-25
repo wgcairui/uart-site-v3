@@ -61,8 +61,9 @@ const UserConstant: FC = () => {
     // 路由参数缺失 → 居中 EmptyState
     if (!param.get('mac') || !param.get('pid')) {
         return (
-            <div className="bg-bento-canvas" style={{ position: 'relative', zIndex: 0 }}>
+            <div className="bg-cr-canvas" style={{ position: 'relative', zIndex: 0 }}>
                 <PageHeader
+                    theme="control-room"
                     title="协议常量"
                     subtitle="为挂载设备配置显示参数、阈值与告警状态"
                     breadcrumb={[
@@ -70,7 +71,7 @@ const UserConstant: FC = () => {
                         { title: '协议常量' },
                     ]}
                 />
-                <div className="bento-card">
+                <div className="bento-card-cr">
                     <EmptyState
                         icon={<SettingOutlined style={{ fontSize: 48, color: 'var(--ink-400)' }} />}
                         description="请从设备详情页进入此页"
@@ -91,8 +92,9 @@ const UserConstant: FC = () => {
 
     if (loading) {
         return (
-            <div className="bg-bento-canvas" style={{ position: 'relative', zIndex: 0 }}>
+            <div className="bg-cr-canvas" style={{ position: 'relative', zIndex: 0 }}>
                 <PageHeader
+                    theme="control-room"
                     title="协议常量"
                     breadcrumb={[
                         { title: '首页', href: '/main' },
@@ -100,7 +102,7 @@ const UserConstant: FC = () => {
                     ]}
                 />
                 <div
-                    className="bento-card"
+                    className="bento-card-cr"
                     style={{
                         display: 'flex',
                         justifyContent: 'center',
@@ -108,7 +110,7 @@ const UserConstant: FC = () => {
                         minHeight: 320,
                     }}
                 >
-                    <Spin tip="正在加载设备配置…" />
+                    <Spin className="v3-spin-cr" tip="正在加载设备配置…" />
                 </div>
             </div>
         )
@@ -116,18 +118,19 @@ const UserConstant: FC = () => {
 
     if (!mountDev) {
         return (
-            <div className="bg-bento-canvas" style={{ position: 'relative', zIndex: 0 }}>
+            <div className="bg-cr-canvas" style={{ position: 'relative', zIndex: 0 }}>
                 <PageHeader
+                    theme="control-room"
                     title="协议常量"
                     breadcrumb={[
                         { title: '首页', href: '/main' },
                         { title: '协议常量' },
                     ]}
                 />
-                <div className="bento-card">
+                <div className="bento-card-cr">
                     <Empty
                         description={
-                            <span style={{ color: 'var(--ink-500)' }}>
+                            <span style={{ color: 'var(--cr-text-3)' }}>
                                 设备不存在或已被删除
                             </span>
                         }
@@ -138,7 +141,7 @@ const UserConstant: FC = () => {
     }
 
     return (
-        <div className="bg-bento-canvas" style={{ position: 'relative', zIndex: 0 }}>
+        <div className="bg-cr-canvas" style={{ position: 'relative', zIndex: 0 }}>
             <PageHeader
                 title={mountDev.protocol || '协议常量'}
                 subtitle={`PID: ${mountDev.pid} · ${mountDev.mountDev || mountDev.Type}`}
@@ -151,7 +154,7 @@ const UserConstant: FC = () => {
                         href={`/main?mac=${encodeURIComponent(mountDev.mountDev || '')}`}
                         style={{
                             fontSize: 13,
-                            color: 'var(--color-primary)',
+                            color: 'var(--cr-accent)',
                             display: 'inline-flex',
                             alignItems: 'center',
                             gap: 4,
@@ -165,6 +168,7 @@ const UserConstant: FC = () => {
 
             {/* PageSummary 4 卡 (协议 / 设备 / PID / 在线状态) */}
             <PageSummary
+                theme="control-room"
                 column={2}
                 items={[
                     {
@@ -186,6 +190,7 @@ const UserConstant: FC = () => {
                         label: '状态',
                         value: (
                             <StatusTag
+                                theme="control-room"
                                 variant={mountDev.online ? 'online' : 'offline'}
                                 size="sm"
                             />
@@ -196,8 +201,9 @@ const UserConstant: FC = () => {
             />
 
             {/* 配置 Tabs (bento-card 容器) */}
-            <div className="bento-card" style={{ padding: 0 }}>
+            <div className="bento-card-cr" style={{ padding: 0 }}>
                 <Tabs
+                    className="v3-tabs-cr"
                     style={{ padding: isMobile ? '0 12px' : '0 24px' }}
                     {...(isMobile ? { tabBarStyle: { margin: 0, fontSize: 13 } } : {})}
                     items={[
