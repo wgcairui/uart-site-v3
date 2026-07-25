@@ -169,3 +169,8 @@ docs/
 - **migration-guide.md**：v2 → v3 内部重构完成时补充记录
 
 文档版本号约定：v1 = 方案 C 旧版（已归档），v2 = 当前 2+3 混合方案。
+
+## Admin Summary Tier 1 (2026-07-25, 决策 24)
+- §4.11 StatCard family: 4 variant prop API + 视觉规则
+- §5.6 StatCard review checklist: 4 variant 必填项 + danger button 优先级
+- 已知 gap: useDashboardStat hook 签名 vs BFF client envelope 错位 (W4-W7 workaround 在 page 层, 后续 PR 修)

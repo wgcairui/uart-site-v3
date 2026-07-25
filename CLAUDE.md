@@ -391,3 +391,12 @@ const alarms = Array.isArray(rawAlarms) ? rawAlarms : []
 const items = data.items
 const alarms = await getAlarm(...)
 ```
+
+## Admin Summary Tier 1 (2026-07-25, 决策 24)
+- BE: uart-server PR #113, 7 个新 dashboard endpoint + 60s Redis cache
+- FE: uart-site-v3 PR #71 (infra) + #72 #73 #74 #77 (4 page workers)
+- 新增 `types/admin-summary.ts` (7 个响应 DTO 镜像 BE)
+- 新增 `lib/api/admin-summary/{routes,client}.ts` (7 个 typed BFF wrapper)
+- 新增 `lib/hooks/useDashboardStat.ts` (usePromise 薄包装, 默认值兜底 + trial-mode 静默降级)
+- 新增 `components/admin/StatCard/` (4-variant discriminated union by `kind`)
+- PageSummary 100% 不变 (向后兼容 30+ 现存调用方)

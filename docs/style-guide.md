@@ -739,6 +739,121 @@ import { Button } from '@/components/common/Button'
 - 中间：搜索框（`bg-ink-50 border-0 rounded-xl px-4 py-2`）
 - 右侧：通知铃铛 + 用户头像（`rounded-full bg-brand-gradient shadow-avatar`）
 
+### 4.11 `StatCard` family (admin actionable stat card, 2026-07-25 / W3)
+
+**位置**：`components/admin/StatCard/`
+**配对**：`docs/components.md §5.6`（review checklist） + `components/admin/StatCard/StatCard.types.ts`（4-variant discriminated union）
+
+4 个 variant 共用一个 `.stat-card` 视觉壳，行为差异通过 `kind` 字段在编译期保证互斥。**不**复用 PageSummary 内部 renderer（导出成本高）—— 复制 50 行 shell + 共享 CSS class 保持视觉一致。
+
+#### 4.11.1 4 variant prop API
+
+```ts
+type StatCardProps =
+  | StatCardFilterProps     // kind: 'filter'
+  | StatCardNavigateProps   // kind: 'navigate'
+  | StatCardActionProps     // kind: 'action'
+  | StatCardDrilldownProps  // kind: 'drilldown'
+```
+
+| variant | 行为 | 必填 prop | 互斥 prop（写了 TS 报错）|
+|---|---|---|---|
+| **`filter`** | 点击 = 切换 query filter（多选叠加）| `active: boolean` + `onToggle: () => void` | `href` / `actions` / `popoverContent` |
+| **`navigate`** | 点击 = 跳转到详情/列表页（next/link SSR prefetch）| `href: string` | `active` / `actions` / `popoverContent` |
+| **`action`** | 底部 1-3 个 action button（destructive bulk 操作用）| `actions: StatCardAction[]`（每个含 `key/label/onClick`，可选 `danger/icon/loading`）| `href` / `active` / `popoverContent` |
+| **`drilldown`** | hover/click 弹 Popover 显示明细（mini chart / top list / 时间桶）| `popoverContent: (ctx) => ReactNode`（**render-prop**，不是 ReactNode）| `href` / `actions` / `active` |
+
+**统一基础 prop**（4 variant 都有）：`label: string` / `value: ReactNode` / `extra?: ReactNode` / `icon?: ReactNode` / `variant?: SummaryVariant` / `color?: string` / `loading?: boolean` / `error?: string`
+
+#### 4.11.2 视觉规则（共享 .stat-card CSS 跟 PageSummary 对齐）
+
+```tsx
+<div className="stat-card">      {/* 跟 PageSummary 同 rounded-2xl + shadow-sm + hover lift */}
+  <div className="stat-card-label">{label}</div>     {/* font-xs text-ink-500 uppercase tracking-wider */}
+  <div className="stat-card-value" style={{ color: resolvedColor }}>{value}</div>  {/* text-3xl font-bold tabular-nums */}
+  {extra && <div className="stat-card-extra">{extra}</div>}
+  {icon && <div className="stat-card-icon">{icon}</div>}  {/* 40×40 rounded-xl + bg-{variant}-50 */}
+  {footer && <div className="stat-card-footer">{footer}</div>}  {/* 仅 action variant */}
+</div>
+```
+
+**4 variant 视觉差异**：
+
+| variant | 角标 / overlay | 卡片整体包装 |
+|---|---|---|
+| `filter` | `active=true` 时 1px `outline` + `bg-{variant}-50` 高亮 | 无（直接 `<div>`）|
+| `navigate` | 右上角 `<ArrowRightOutlined />` 12px | `next/link` wrapper（SSR prefetch）|
+| `action` | 底部 `<Space>` 包 1-3 个 `<Button size="small">` | 无；footer 内 `e.stopPropagation()` 阻止冒泡到 card onClick |
+| `drilldown` | 右上角 `<DownOutlined />` 12px | antd `<Popover trigger="click"\|"hover">` wrapper |
+
+**加载 / 错误态**：所有 variant 通用
+- `loading=true` → value 透明度 0.4（不阻塞布局，无 Skeleton 闪烁）
+- `error="..."` → 显示 `—` + 1px `borderColor: var(--color-warning)`
+
+#### 4.11.3 何时用 StatCard vs PageSummary（决策规则）
+
+| 场景 | 用什么 | 理由 |
+|---|---|---|
+| 现有 30+ 调用方 0 影响（device list / protocol list / log list 的 KPI 卡） | **`<PageSummary>`** | 不破坏向后兼容，调用方 0 改动 |
+| 新建 admin 列表页的 KPI 卡 + 多选叠加筛选 | **`<StatCard kind="filter">`** | 跟 PageSummary `onClick + active` 等价，但 type 显式，新代码推荐 |
+| KPI 卡要跳转到子列表 / 详情页（"离线 12" → /admin/node/terminal?status=offline） | **`<StatCard kind="navigate">`** | 走 next/link SSR prefetch，比 router.push 快首屏 |
+| KPI 卡配 1-3 个 destructive 批量操作（"清空告警" / "全部批准"） | **`<StatCard kind="action">`** | 把 action 钉在 card 底部；如果是整页级 action 走 `PageHeader.extra` |
+| KPI 数字 + hover 显示明细（severity 分布 / top 5 mac / 24h trend） | **`<StatCard kind="drilldown">`** | popover 内嵌 mini chart 不占主区空间 |
+| 大 Hero KPI（首屏大数字 + 渐变背景）| **`<BentoCard variant="hero">` + 内嵌数字** | 走 hero 视觉，不是 stat card |
+
+**反例**：
+- ❌ 现有 PageSummary 调用方迁移到 StatCard filter variant —— 零收益纯成本（PageSummary 0 改 30+ 调用方不受影响）
+- ❌ `<StatCard kind="navigate">` 但 href 写死当前页（应该用 filter variant 改 query）
+- ❌ drilldown 的 `popoverContent` 传 ReactNode 而非 render-prop —— 会失去 `ctx.data` 注入能力
+- ❌ action variant 写 4+ button（应该拆到 PageHeader.extra 或加 Dropdown）
+
+#### 4.11.4 防御性 pattern（BFF 兜底 / trial-mode 降级 + known gap）
+
+**配对 hook**：`lib/hooks/useDashboardStat.ts`（薄包装 `usePromise`）
+
+```ts
+const { data: sevDist, loading } = useDashboardStat(
+  () => getAlarmSeverityDistribution('24h'),
+  [],   // deps
+  []    // initValue — 必传，不允许 undefined
+)
+// data: AlarmSeverityDistributionResp = [] （空数组兜底, 永远不是 undefined）
+```
+
+3 层防御：
+
+1. **默认值兜底**：`initValue` 必传（TS 强约束），`data` 永远是 `T` 不会是 `undefined` —— page 不用写 `data?.x ?? 0` 模板代码
+2. **universalResult 解套**：BE 返 `{ code, data, message }`，hook 自动解 `code === 0` 返真实 data，其他情况静默返 `initValue`
+3. **trial-mode 静默降级**：无真实 user 数据的 trial 模式 BFF 返 403，hook `try/catch` 静默捕获，page 显示 `—` 不崩
+
+**⚠️ 已知 gap（2026-07-25 / W3 → W4-W7 workaround）**：
+
+`useDashboardStat` hook 签名是
+```ts
+fn: () => Promise<{ data: { code: number; data: TResult; ... } }>  // 双层套壳
+```
+
+但 BFF client `getXxx()` 实际返
+```ts
+Promise<{ data: { code: number; data: TResult; ... } }>             // 也是双层? 还是单层?
+```
+
+> **W3 实际签名是双层**（`useDashboardStat` line 45 写的是 `Promise<{ data: { code, data } }>`），BFF client `Get<universalResult<TResp>>(URL)` 返 `Promise<{ data: universalResult<TResp> }>`（也是双层），**类型上对齐**。但 W4-W7 4 个 page 实际写的是
+> ```ts
+> useDashboardStat(() => ({ data: await getXxx() }), [])
+> ```
+> 即 page 层用 `() => ({ data: ... })` wrapper 包了一层。BFF client 直接返 `Promise<universalResult<T>>`（单层）时，hook 拿不到 `result.data` 会 undefined。
+>
+> **当前 workaround**：W4-W7 page 层用 `async () => ({ data: await getXxx() })` wrapper 适配 —— 看起来多一层但 page 实际拿到的 `data` 是解套后的 `TResult`，对。
+>
+> **后续 PR 修法**（不在本期）：修 hook 签名为
+> ```ts
+> fn: () => Promise<universalResult<TResult>>  // 单层
+> ```
+> 去掉 page 层 wrapper。W4-W7 4 个 page 的 wrapper 是临时垫片。
+
+详细 hook 行为 / 限流 / cache 策略见 `lib/hooks/useDashboardStat.ts` JSDoc 头部。
+
 ---
 
 ## 5. 状态反馈规范
