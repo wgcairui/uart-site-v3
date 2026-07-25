@@ -504,6 +504,10 @@ export const Nodes: React.FC = () => {
                     active={statFilter.includes('hasToken')}
                     onToggle={() => toggleStatFilter('hasToken')}
                 />
+                {/* W6 review fix · 跟 server getTerminals filters 格式对齐
+                    原 href "?status=offline&mountNode=__offline__" 用了 placeholder mountNode=__offline__ (server 不能 match)
+                    改成跟 page 现有 apiQuery.filters 同格式 (filters[xxx]=yyy)
+                    当前 destination page 还不解析 URL 到 filters, 但格式对齐方便后续 parse */}
                 <StatCard
                     kind="navigate"
                     label="无心跳节点"
@@ -511,7 +515,7 @@ export const Nodes: React.FC = () => {
                     variant="danger"
                     icon={<DisconnectOutlined />}
                     extra={nodeLoadLoading ? '加载中…' : `${nodeLoad.offline} 节点 socket 已断`}
-                    href="/admin/node/terminal?status=offline&mountNode=__offline__"
+                    href="/admin/node/terminal?filters[status]=offline"
                 />
             </div>
 

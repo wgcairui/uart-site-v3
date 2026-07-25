@@ -13,7 +13,7 @@
  * - bento-card 用现成 .glass-card + .bento-card 玻璃感, 6 项 KV grid
  */
 
-import { Button, message, Modal, Space } from 'antd'
+import { Button, message, Modal, Progress, Space } from 'antd'
 import { confirm, success, info, error, warning } from '@/lib/utils/modal'
 import {
     ReloadOutlined,
@@ -76,18 +76,32 @@ export const NodeDetail: React.FC = () => {
         [],
         { fresh: 0, stale: 0, dead: 0, never: 0, total: 0 },
     )
-    const totalAlarms30d = useMemo(
-        () => (Array.isArray(alarmTrend) ? alarmTrend.reduce((acc, b) => acc + (b.total || 0), 0) : 0),
-        [alarmTrend],
-    )
-    const totalCritical30d = useMemo(
-        () => (Array.isArray(alarmTrend) ? alarmTrend.reduce((acc, b) => acc + (b.critical || 0), 0) : 0),
-        [alarmTrend],
-    )
 
     const node = useMemo(
         () => (Array.isArray(nodes) ? nodes.find((n) => n.Name === nodeId) : null),
         [nodes, nodeId],
+    )
+
+    // W6 review fix · 详情页客户端 filter (BFF /alarms/trend 暂时不支持 nodeName param)
+    // 短期方案: page 端用 .filter(d => d.nodeName === node.Name) 客户端过滤,
+    //          值/popover 都走过滤后 data
+    // 长期方案: BE 给 getAlarmTrend / getDataFreshness 加 nodeName param (单独 PR)
+    // ⚠️ 当前 BFF 响应 AlarmTrendBucket { bucket, critical, warning, info, total } 无 nodeName 字段,
+    //    过滤后 = []. 详情页 trend 值 = 0, popover MiniSparkline 走 "暂无数据" 兜底.
+    //    BE 加 nodeName param 后, 过滤会从 [] 变为实际 per-node buckets, 全链路自动正确.
+    const nodeFilteredAlarmTrend = useMemo(
+        () => (Array.isArray(alarmTrend) && node
+            ? alarmTrend.filter((b: any) => b.nodeName === node.Name)
+            : []),
+        [alarmTrend, node],
+    )
+    const totalAlarms30d = useMemo(
+        () => (Array.isArray(nodeFilteredAlarmTrend) ? nodeFilteredAlarmTrend.reduce((acc, b) => acc + (b.total || 0), 0) : 0),
+        [nodeFilteredAlarmTrend],
+    )
+    const totalCritical30d = useMemo(
+        () => (Array.isArray(nodeFilteredAlarmTrend) ? nodeFilteredAlarmTrend.reduce((acc, b) => acc + (b.critical || 0), 0) : 0),
+        [nodeFilteredAlarmTrend],
     )
 
     if (!node) return null
@@ -383,7 +397,7 @@ export const NodeDetail: React.FC = () => {
                     value={totalAlarms30d}
                     variant="warning"
                     icon={<AlertOutlined />}
-                    data={alarmTrend}
+                    data={nodeFilteredAlarmTrend}
                     trigger="hover"
                     popoverContent={({ data: trend }) => (
                         <div style={{ minWidth: 280 }}>
@@ -416,17 +430,31 @@ export const NodeDetail: React.FC = () => {
                             <div style={{ fontSize: 12, color: 'var(--ink-500)', marginBottom: 8 }}>
                                 4 档分桶 (BFF /data/freshness) · 总设备 {(fr as DataFreshnessResp)?.total ?? 0}
                             </div>
-                            <MiniSparkline
-                                data={[
-                                    { bucket: 'fresh', total: (fr as DataFreshnessResp)?.fresh ?? 0 },
-                                    { bucket: 'stale', total: (fr as DataFreshnessResp)?.stale ?? 0 },
-                                    { bucket: 'dead', total: (fr as DataFreshnessResp)?.dead ?? 0 },
-                                    { bucket: 'never', total: (fr as DataFreshnessResp)?.never ?? 0 },
-                                ]}
-                                color="#06b6d4"
-                                height={50}
-                                width={240}
+                            {/* antd Progress 4 段离散显示 — 替代 MiniSparkline (4 scalar 喂 sparkline 错误) */}
+                            <Progress
+                                percent={100}
+                                steps={4}
+                                strokeColor={['#10b981', '#f59e0b', '#ef4444', '#7c8aa0']}
+                                showInfo={false}
+                                size="small"
                             />
+                            {[
+                                { k: 'fresh', label: '新鲜 (<5min)', color: '#10b981' },
+                                { k: 'stale', label: '陈旧 (5-30min)', color: '#f59e0b' },
+                                { k: 'dead', label: '失活 (30-60min)', color: '#ef4444' },
+                                { k: 'never', label: '从未上报', color: '#7c8aa0' },
+                            ].map(b => {
+                                const v = (fr as DataFreshnessResp)?.[b.k as keyof DataFreshnessResp] ?? 0
+                                return (
+                                    <div key={b.k} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 12, padding: '4px 0' }}>
+                                        <span style={{ color: b.color }}>● {b.label}</span>
+                                        <span style={{ fontFamily: 'var(--font-mono)' }}>{String(v)}</span>
+                                    </div>
+                                )
+                            })}
+                            <div style={{ marginTop: 6, fontSize: 11, color: 'var(--ink-500)', fontStyle: 'italic' }}>
+                                全系统数据 · per-node filter 待 BE 支持
+                            </div>
                         </div>
                     )}
                 />

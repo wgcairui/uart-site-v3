@@ -1,5 +1,5 @@
 'use client'
-import { Button, Col, Row, Spin, Tabs, Modal, Divider, Form, Input, Tag, message } from "antd";
+import { Button, Col, Progress, Row, Spin, Tabs, Modal, Divider, Form, Input, Tag, message } from "antd";
 import React, { useState, useMemo } from "react";
 import {
     ApiOutlined, NodeIndexOutlined, AppstoreOutlined, DeploymentUnitOutlined,
@@ -18,7 +18,6 @@ import { PageHeader } from "@/components/common/PageHeader";
 import { PageSummary } from "@/components/common/PageSummary";
 import { StatCardsRow } from "@/components/common/StatCardsRow";
 import { StatCard } from "@/components/admin/StatCard";
-import { MiniSparkline } from "@/components/common/MiniSparkline";
 import { StatSection } from "@/components/common/StatSection";
 import { AnomalousDevicesCard } from "@/components/terminal/AnomalousDevicesCard";
 
@@ -318,6 +317,14 @@ export default function Terminals() {
                             <div style={{ fontSize: 12, color: 'var(--ink-500)', marginBottom: 8 }}>
                                 4 档分桶 (BFF /data/freshness) · 总设备 {(fr as any)?.total ?? 0}
                             </div>
+                            {/* antd Progress 4 段离散显示 — 替代 MiniSparkline (4 scalar 喂 sparkline 错误) */}
+                            <Progress
+                                percent={100}
+                                steps={4}
+                                strokeColor={['#10b981', '#f59e0b', '#ef4444', '#7c8aa0']}
+                                showInfo={false}
+                                size="small"
+                            />
                             {[
                                 { k: 'fresh', label: '新鲜 (<5min)', color: '#10b981' },
                                 { k: 'stale', label: '陈旧 (5-30min)', color: '#f59e0b' },
@@ -332,19 +339,6 @@ export default function Terminals() {
                                     </div>
                                 )
                             })}
-                            <div style={{ marginTop: 8, paddingTop: 8, borderTop: '1px solid var(--ink-100)' }}>
-                                <MiniSparkline
-                                    data={[
-                                        { bucket: 'fresh', total: (fr as any)?.fresh ?? 0 },
-                                        { bucket: 'stale', total: (fr as any)?.stale ?? 0 },
-                                        { bucket: 'dead', total: (fr as any)?.dead ?? 0 },
-                                        { bucket: 'never', total: (fr as any)?.never ?? 0 },
-                                    ]}
-                                    color="#06b6d4"
-                                    height={50}
-                                    width={240}
-                                />
-                            </div>
                         </div>
                     )}
                 />
