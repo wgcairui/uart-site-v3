@@ -79,43 +79,22 @@ export default function UserLayout({ children }: { children: React.ReactNode }) 
         <main style={{ display: 'flex', flexDirection: 'column', width: '100vw', height: '100vh', overflow: 'hidden' }}>
 <Suspense fallback={null}><TokenSync /></Suspense>
 
-            {/* Topbar */}
-            <header className="app-topbar">
-                <div style={{ display: 'flex', alignItems: 'center', gap: 32 }}>
-                    <BrandLogo href="/main" />
-                    <nav className="user-topbar-nav" style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                        <Link
-                            href="/main"
-                            className={`app-topbar-menu-item ${pathname === '/main' ? 'active' : ''}`}
-                        >
-                            <IconFont type="icon-changjingguanli" /> 所有设备
-                        </Link>
-                        <a
-                            onClick={() => nav('/main/alarm')}
-                            className={`app-topbar-menu-item ${pathname?.startsWith('/main/alarm') ? 'active' : ''}`}
-                        >
-                            <IconFont type="icon-tixingshixin" /> 告警管理
-                        </a>
-                        <a
-                            onClick={() => nav('/main/userinfo')}
-                            className={`app-topbar-menu-item ${pathname?.startsWith('/main/userinfo') ? 'active' : ''}`}
-                        >
-                            用户信息
-                        </a>
-                    </nav>
+            {/* Topbar — 2026-07-25: 锁 375px 宽, 跟 user-content-frame 对齐 (pear.us/cai mobile-first pattern)
+                - BrandLogo 极简化: 只显示 U 方块 + "UART" 文字 (去掉 "IoT Management" 副标题, 节省宽度)
+                - 3 个 nav item 永远隐藏 (走 hamburger drawer), 不再 desktop 显示 inline
+                - "使用教程" link 也移到 drawer, 避免 topbar 文字被压成 2 行
+                - 右侧: hamburger + UserDropDown (头像)
+            */}
+            <header className="app-topbar app-topbar-user">
+                {/* BrandLogo 默认带 padding: 16px 24px (admin 端用), 这里 -24px 左右抵消对齐 topbar padding */}
+                <div style={{ marginLeft: -24, marginRight: -16 }}>
+                    <BrandLogo href="/main" showSubtitle={false} size={32} />
                 </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                    <a
-                        href="https://besiv-uart.oss-cn-hangzhou.aliyuncs.com/docs/ladisuart/tutorial-v2.5.pdf"
-                        className="app-topbar-menu-item"
-                        title="小程序使用教程 PDF"
-                    >
-                        📖 使用教程
-                    </a>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                     <button
                         className="user-topbar-hamburger"
                         onClick={() => setMobileNavOpen(true)}
-                        aria-label="menu"
+                        aria-label="菜单"
                     >
                         <IconFont type="icon-changjingguanli" />
                     </button>
@@ -160,25 +139,38 @@ export default function UserLayout({ children }: { children: React.ReactNode }) 
                         >
                             用户信息
                         </a>
+                        {/* 2026-07-25: 使用教程从 topbar 移进 drawer, 节省 topbar 宽度 */}
+                        <a
+                            href="https://besiv-uart.oss-cn-hangzhou.aliyuncs.com/docs/ladisuart/tutorial-v2.5.pdf"
+                            target="_blank"
+                            rel="noreferrer"
+                            onClick={() => setMobileNavOpen(false)}
+                            className="app-topbar-menu-item"
+                            style={{ padding: '12px 14px' }}
+                        >
+                            📖 使用教程
+                        </a>
                     </div>
                 </>
             )}
 
-            {/* 模拟登录提示 */}
+            {/* 模拟登录提示 — 2026-07-25: 移进 user-content-frame, 跟主内容一起 375px 居中 */}
             {isSimulated && (
-                <Alert
-                    title="模拟登录模式 - 当前以管理员身份登录用户账号"
-                    type="warning"
-                    showIcon
-                    closable
-                    style={{ margin: '12px 32px 0', borderRadius: 12 }}
-                    onClose={() => {
-                        clearSimulateToken()
-                        sessionStorage.removeItem('simulated')
-                        useUserStore.getState().setSimulated(false)
-                        router.push('/admin')
-                    }}
-                />
+                <div className="user-content-frame" style={{ paddingTop: 12, paddingBottom: 0 }}>
+                    <Alert
+                        title="模拟登录模式 - 当前以管理员身份登录用户账号"
+                        type="warning"
+                        showIcon
+                        closable
+                        style={{ borderRadius: 12 }}
+                        onClose={() => {
+                            clearSimulateToken()
+                            sessionStorage.removeItem('simulated')
+                            useUserStore.getState().setSimulated(false)
+                            router.push('/admin')
+                        }}
+                    />
+                </div>
             )}
 
             {/* 主内容 - 375px 锁定宽度容器 (mobile-first, desktop 居中) */}
