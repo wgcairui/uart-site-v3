@@ -4,21 +4,25 @@ import type { ReactNode } from 'react';
 import type { SummaryVariant } from '@/lib/utils/designTokens';
 
 /**
- * StatCard 4-variant discriminated union
+ * StatCard 3-variant discriminated union
  *
- * 4 个 actionable types, 互斥 (用 `kind` 区分, 编译期阻止混用):
+ * 3 个 actionable types, 互斥 (用 `kind` 区分, 编译期阻止混用):
  * - filter:    点击 = 切换 query filter (跟 PageSummary 的 onClick + active 等价, 但语义显式)
  * - navigate:  点击 = 跳转到详情/列表页 (用 next/router 走 SSR prefetch)
- * - action:    passive number + 卡片底部 1-3 个 action button (destructive bulk 操作用)
  * - drilldown: hover/click 弹 Popover 显示明细 (mini chart / top list / 时间桶)
+ *
+ * ~~action~~ variant (passive number + 卡片底部 1-3 个 action button, 2026-07-24 计划
+ * 列入) 在 W3 review 阶段被 A+C 一致判定为 dead: 跨 6 PR 10 page 统计 kind 分布
+ * filter:25 / drilldown:11 / navigate:10 / action:0. 实际场景里"卡内 destructive 批量操作"
+ * 全部走 PageHeader.extra / Drawer footer, 没人用 card 底部 button. 删.
  *
  * 配对: types/admin-summary.ts (7 个 BFF 响应类型)
  * 配对: docs/components.md §3.3 (StatCard family review checklist)
  *
  * 设计原则:
  * - PageSummary 100% 不变 (向后兼容, 30+ 现存调用方零影响)
- * - 4 variant 共享 .stat-card CSS 视觉 (跟 PageSummary 一致)
- * - 4 variant 必须用 `kind` 显式声明, TS 编译期保证 prop 互斥
+ * - 3 variant 共享 .stat-card CSS 视觉 (跟 PageSummary 一致)
+ * - 3 variant 必须用 `kind` 显式声明, TS 编译期保证 prop 互斥
  * - 每个 variant 的 prop 集合最小化, 不引入通用 field
  *
  * 不在本期:
@@ -96,45 +100,7 @@ export interface StatCardNavigateProps extends StatCardBase {
 }
 
 // ---------------------------------------------------------------------------
-// 3. Action variant
-// ---------------------------------------------------------------------------
-
-/**
- * passive number + 卡片底部 1-3 个 action button
- *
- * destructive bulk 操作用 (如 alerts/queue 的批量批准/拒绝, 已用 PageHeader.extra 实现了;
- * 这种 variant 适用于把 action 直接钉在 card 底部的场景, 例如 "清空告警" / "重启所有超时")
- *
- * 用法:
- * ```tsx
- * <StatCard
- *   kind="action"
- *   label="待处理告警"
- *   value={42}
- *   variant="warning"
- *   actions={[
- *     { key: 'approve', label: '全部批准', onClick: approveAll },
- *     { key: 'reject', label: '全部拒绝', onClick: rejectAll, danger: true },
- *   ]}
- * />
- * ```
- */
-export interface StatCardAction {
-  key: string;
-  label: string;
-  icon?: ReactNode;
-  onClick: () => void;
-  danger?: boolean;
-  loading?: boolean;
-}
-
-export interface StatCardActionProps extends StatCardBase {
-  kind: 'action';
-  actions: StatCardAction[];
-}
-
-// ---------------------------------------------------------------------------
-// 4. Drilldown variant
+// 3. Drilldown variant
 // ---------------------------------------------------------------------------
 
 /**
@@ -175,5 +141,4 @@ export interface StatCardDrilldownProps extends StatCardBase {
 export type StatCardProps =
   | StatCardFilterProps
   | StatCardNavigateProps
-  | StatCardActionProps
   | StatCardDrilldownProps;

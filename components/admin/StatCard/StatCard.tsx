@@ -3,13 +3,12 @@
 import type { StatCardProps } from './StatCard.types';
 import { StatCardFilter } from './StatCardFilter';
 import { StatCardNavigate } from './StatCardNavigate';
-import { StatCardAction } from './StatCardAction';
 import { StatCardDrilldown } from './StatCardDrilldown';
 
 /**
- * StatCard — 4-variant discriminated union dispatcher
+ * StatCard — 3-variant discriminated union dispatcher
  *
- * 4 variant 共享 .stat-card 视觉 (跟 PageSummary 一致),
+ * 3 variant 共享 .stat-card 视觉 (跟 PageSummary 一致),
  * 行为差异通过 `kind` 字段在编译期保证.
  *
  * 用法:
@@ -37,8 +36,6 @@ export function StatCard(props: StatCardProps) {
       return <StatCardFilter {...props} />;
     case 'navigate':
       return <StatCardNavigate {...props} />;
-    case 'action':
-      return <StatCardAction {...props} />;
     case 'drilldown':
       return <StatCardDrilldown {...props} />;
   }
