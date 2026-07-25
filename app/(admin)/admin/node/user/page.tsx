@@ -2,6 +2,7 @@
 import React, { useCallback, useMemo, useState } from "react";
 import {
     deleteUser, getUser, sendUserSocketInfo, users as getUsers, runingState,
+    loguserlogins,
 } from "@/lib/api/fetchRoot"
 import {
     Avatar, Button, message, Modal, Table, Tag, Space, Tooltip, Input, Spin, Collapse,
@@ -136,14 +137,40 @@ export const User: React.FC = () => {
     const { data: engagement } = useDashboardStat<UserEngagementResp>(fetchEngagement, [], [])
     const engagementList: UserEngagementResp = Array.isArray(engagement) ? engagement : []
 
+    // W7-fix: 7d 活跃 filter 客户端 workaround
+    // server 端 active7d filter 暂未支持 (单独 PR), 这里用 loguserlogins 拉 7d 时间窗内登录用户去重
+    // 预取 (页加载时即拉, 不依赖 toggle, 避免点开卡要等 fetch)
+    // 防御: fetch 失败 (e.g. 无权限) 时 active7dLoaded=false, filter 不会启用, 退化为 no-op
+    const SEVEN_DAYS_MS = 7 * 24 * 60 * 60 * 1000
+    const { data: loginsData, err: loginsErr } = usePromise(async () => {
+        const now = Date.now()
+        const r = await loguserlogins(
+            new Date(now - SEVEN_DAYS_MS).toISOString(),
+            new Date(now).toISOString(),
+            { page: 1, pageSize: 1500, needTotal: false }
+        )
+        return (r as any)?.data?.items ?? []
+    }, [])
+    const active7dUsers = useMemo(() => {
+        const s = new Set<string>()
+        ;(loginsData ?? []).forEach((it: any) => {
+            if (it?.user) s.add(it.user)
+        })
+        return s
+    }, [loginsData])
+    // 只有 fetch 完成 + 无 error 才算 loaded (避免半数据时 filter 误判)
+    const active7dLoaded = !loginsErr && Array.isArray(loginsData)
+
     const users = useMemo(
         () => (userData?.items ?? []) as Uart.UserInfo[],
         [userData?.items],
     );
     const pagination = userData?.pagination ?? { total: 0 };
 
-    // === 客户端二次过滤: userGroup / wx 状态 / rgtype ===
+    // === 客户端二次过滤: userGroup / wx 状态 / rgtype / 7d 活跃 ===
     // (server 端已按 query.search 过滤, 这里只做当前页内细分)
+    // 7d 活跃: 走客户端 active7dUsers Set, 仅在 data loaded + 无 err 时启用
+    // (未 loaded 时 filter 不生效, 退化为 no-op, 避免半数据误判)
     const filteredUsers = useMemo(() => {
         return users.filter(u => {
             if (groupFilter !== 'all') {
@@ -157,9 +184,10 @@ export const User: React.FC = () => {
                 if (wxFilter === 'none' && (u.wxId || u.wpId)) return false
             }
             if (rgTypeFilter !== 'all' && u.rgtype !== rgTypeFilter) return false
+            if (active7dLoaded && statFilter.includes('active7d') && !active7dUsers.has(u.user)) return false
             return true
         })
-    }, [users, groupFilter, wxFilter, rgTypeFilter])
+    }, [users, groupFilter, wxFilter, rgTypeFilter, statFilter, active7dLoaded, active7dUsers])
 
     const hasAnyFilter = groupFilter !== 'all' || wxFilter !== 'all' || rgTypeFilter !== 'all' || statFilter.length > 0 || Object.keys(searchFields).length > 0 || searchKw !== ''
 
@@ -478,17 +506,10 @@ export const User: React.FC = () => {
                                         </div>
                                     )}
                                 </div>
-                                <div style={{ width: 240, flexShrink: 0 }}>
-                                    <StatCard
-                                        kind="navigate"
-                                        label="查看全部"
-                                        value={engagementList.length}
-                                        variant="info"
-                                        icon={<TrophyOutlined />}
-                                        extra="按 engagement 排序 →"
-                                        href="/admin/node/user?sortBy=engagement"
-                                    />
-                                </div>
+                                {/* W7-fix: 删 StatCard (kind="navigate" + href="?sortBy=engagement")
+                                     - "engagement" 不是 server 端 user list 接受的 sort 字段 (server 仅 createdAt/user/userGroup)
+                                     - 跳同页 + cosmetic 跳转, UI 在假装, ship 出去会误导用户
+                                     - Top 10 列表本身已占满 flex:1, 删右侧卡后视觉更聚焦 */}
                             </div>
                         ),
                     }]}
