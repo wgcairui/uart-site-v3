@@ -278,6 +278,13 @@ export const LogAlarm: React.FC = () => {
     /** 触发 fetch 的签名: filters / date / page / pageSize 任一变化都重新拉 */
     const [fetchKey, setFetchKey] = useState(0)
 
+    /** StatCard severity 多选 toggle helper (W6/W7 模式, 替代 3 处 inline setState) */
+    const toggleStatFilter = (key: AlarmSeverity) => {
+        setSeverityFilter((prev) =>
+            prev.includes(key) ? prev.filter((k) => k !== key) : [...prev, key]
+        )
+    }
+
     // 移动端 detection
     const [isMobile, setIsMobile] = useState(false)
     useEffect(() => {
@@ -513,9 +520,7 @@ export const LogAlarm: React.FC = () => {
                     variant="danger"
                     icon={<FireOutlined />}
                     active={severityFilter.includes('critical')}
-                    onToggle={() => setSeverityFilter((prev) =>
-                        prev.includes('critical') ? prev.filter((k) => k !== 'critical') : [...prev, 'critical']
-                    )}
+                    onToggle={() => toggleStatFilter('critical')}
                     extra="critical tag 累加"
                 />
                 <StatCard
@@ -525,9 +530,7 @@ export const LogAlarm: React.FC = () => {
                     variant="warning"
                     icon={<BellOutlined />}
                     active={severityFilter.includes('warning')}
-                    onToggle={() => setSeverityFilter((prev) =>
-                        prev.includes('warning') ? prev.filter((k) => k !== 'warning') : [...prev, 'warning']
-                    )}
+                    onToggle={() => toggleStatFilter('warning')}
                     extra="warning tag 累加"
                 />
                 <StatCard
@@ -537,9 +540,7 @@ export const LogAlarm: React.FC = () => {
                     variant="info"
                     icon={<BellOutlined />}
                     active={severityFilter.includes('info')}
-                    onToggle={() => setSeverityFilter((prev) =>
-                        prev.includes('info') ? prev.filter((k) => k !== 'info') : [...prev, 'info']
-                    )}
+                    onToggle={() => toggleStatFilter('info')}
                     extra="info tag 累加"
                 />
             </div>

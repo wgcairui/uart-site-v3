@@ -97,6 +97,13 @@ export const AdminAlertQueue: React.FC = () => {
   const [statFilter, setStatFilter] = useState<StatusKey[]>([])
   const [fetchKey, setFetchKey] = useState(0)
 
+  /** StatCard status 多选 toggle helper (W6/W7 模式, 替代 4 处 inline setState) */
+  const toggleStatFilter = (key: StatusKey) => {
+    setStatFilter((prev) =>
+      prev.includes(key) ? prev.filter((k) => k !== key) : [...prev, key]
+    )
+  }
+
   // 详情 Modal
   const [detailModal, setDetailModal] = useState<{ open: boolean; record: Uart.UartAlertApprovalQueue | null }>({
     open: false,
@@ -470,9 +477,7 @@ export const AdminAlertQueue: React.FC = () => {
             value={stats?.pending ?? '—'}
             variant="warning"
             active={statFilter.includes('pending')}
-            onToggle={() => setStatFilter((prev) =>
-              prev.includes('pending') ? prev.filter((k) => k !== 'pending') : [...prev, 'pending']
-            )}
+            onToggle={() => toggleStatFilter('pending')}
           />
           <StatCard
             kind="filter"
@@ -480,9 +485,7 @@ export const AdminAlertQueue: React.FC = () => {
             value={stats?.approved ?? '—'}
             variant="success"
             active={statFilter.includes('approved')}
-            onToggle={() => setStatFilter((prev) =>
-              prev.includes('approved') ? prev.filter((k) => k !== 'approved') : [...prev, 'approved']
-            )}
+            onToggle={() => toggleStatFilter('approved')}
           />
           <StatCard
             kind="filter"
@@ -490,9 +493,7 @@ export const AdminAlertQueue: React.FC = () => {
             value={stats?.rejected ?? '—'}
             variant="danger"
             active={statFilter.includes('rejected')}
-            onToggle={() => setStatFilter((prev) =>
-              prev.includes('rejected') ? prev.filter((k) => k !== 'rejected') : [...prev, 'rejected']
-            )}
+            onToggle={() => toggleStatFilter('rejected')}
           />
           <StatCard
             kind="filter"
@@ -500,9 +501,7 @@ export const AdminAlertQueue: React.FC = () => {
             value={stats?.autoSent ?? '—'}
             variant="primary"
             active={statFilter.includes('auto_sent')}
-            onToggle={() => setStatFilter((prev) =>
-              prev.includes('auto_sent') ? prev.filter((k) => k !== 'auto_sent') : [...prev, 'auto_sent']
-            )}
+            onToggle={() => toggleStatFilter('auto_sent')}
           />
           {/* 2 张 24h time-bucket: server 端没暴露 bucket filter, 用 StatCard filter 兜底为 refresh */}
           <StatCard
