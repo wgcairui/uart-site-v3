@@ -1,20 +1,24 @@
 'use client'
-import { Button, Col, Row, Spin, Tabs, Modal, Divider, Form, Input, Tag, message } from "antd";
+import { Button, Col, Progress, Row, Spin, Tabs, Modal, Divider, Form, Input, Tag, message } from "antd";
 import React, { useState, useMemo } from "react";
 import {
     ApiOutlined, NodeIndexOutlined, AppstoreOutlined, DeploymentUnitOutlined,
     ShareAltOutlined, PieChartOutlined, ClockCircleOutlined,
     CalculatorOutlined, DatabaseOutlined, StopOutlined, EnvironmentOutlined,
+    ThunderboltOutlined, FieldTimeOutlined, DisconnectOutlined,
 } from '@ant-design/icons'
 import { TerminalsTable } from "@/components/terminal/TerminalsTable";
 import { getTerminalStats, addRegisterTerminal, getTerminalDetailedStats } from "@/lib/api/fetchRoot";
 import { usePromise } from "@/lib/hooks/usePromise";
+import { useDashboardStat } from "@/lib/hooks/useDashboardStat";
+import { getDataFreshness } from "@/lib/api/admin-summary/client";
 import { ModalConfirm } from "@/lib/utils/util";
 import { NodesSelects } from "@/components/node/NodesSelects";
 import { PageHeader } from "@/components/common/PageHeader";
 import { PageSummary } from "@/components/common/PageSummary";
-import { StatSection } from "@/components/common/StatSection";
 import { StatCardsRow } from "@/components/common/StatCardsRow";
+import { StatCard } from "@/components/admin/StatCard";
+import { StatSection } from "@/components/common/StatSection";
 import { AnomalousDevicesCard } from "@/components/terminal/AnomalousDevicesCard";
 
 const TerminalAddDTU: React.FC = () => {
@@ -69,6 +73,14 @@ const TerminalAddDTU: React.FC = () => {
 export default function Terminals() {
     const [registerModalOpen, setRegisterModalOpen] = useState(false)
     const [terminals, setterminals] = useState<Uart.Terminal[]>([])
+    // W6 · stat card 联动 filter (在线/离线/停用 三档多选叠加)
+    // 多选叠加语义: 点 'online' 只看在线, 'offline' 只看离线, 'disable' 只看停用.
+    // 不同 key 间不互斥 (理论上不会同时点 online + offline, 但允许).
+    // 通过 extraQuery.filters 桥接到 TerminalsTable 内部 pageReq.filters
+    const [statFilter, setStatFilter] = useState<string[]>([])
+    const toggleStatFilter = (key: string) => {
+        setStatFilter(prev => prev.includes(key) ? prev.filter(k => k !== key) : [...prev, key])
+    }
 
     /**
      * 终端统计双源: getTerminalStats (4 个 distribution) + getTerminalDetailedStats (9 维 scalar + 1 分布)
@@ -139,6 +151,26 @@ export default function Terminals() {
     const distinctNodeCount = statsNodes.length
     const distinctPidCount = statsPids.length
 
+    // W6 · BFF dashboard/data/freshness — 4 档分桶 (fresh<5min / stale<30min / dead<60min / never)
+    // 供 StatCard drilldown 展示
+    // W3 fix: useDashboardStat 签名改单层 universalResult, 直接调 BFF client 即可, 无 wrapper.
+    // trial mode 403 → hook catch + initValue 兜底 (分桶全 0, StatCard 显示"暂无数据").
+    const { data: freshness } = useDashboardStat(
+        () => getDataFreshness(),
+        [],
+        { fresh: 0, stale: 0, dead: 0, never: 0, total: 0 },
+    )
+
+    // W6 · statFilter → TerminalsTable server-side filter 桥
+    // online/offline 走 boolean 字符串, disable 也走 boolean (server disable 字段)
+    const extraQueryFilters = useMemo<Record<string, string[]>>(() => {
+        const f: Record<string, string[]> = {}
+        if (statFilter.includes('online')) f.online = ['true']
+        if (statFilter.includes('offline')) f.online = ['false']
+        if (statFilter.includes('disable')) f.disable = ['true']
+        return f
+    }, [statFilter])
+
     const items = [
         {
             key: 'list',
@@ -148,6 +180,7 @@ export default function Terminals() {
                     readyData={setterminals}
                     statsNodes={statsNodes}
                     statsPids={statsPids}
+                    extraQuery={statFilter.length > 0 ? { filters: extraQueryFilters } : {}}
                     extraActions={
                         <Button type="primary" size="small" onClick={() => setRegisterModalOpen(true)} className="btn-brand">
                             批量注册设备
@@ -196,34 +229,119 @@ export default function Terminals() {
                     { title: '终端' },
                 ]}
             />
-            {/* PageSummary 主卡 6 张: 总数/在线/离线/共享数/在线率/停用 (server PR #108 加 停用, warning variant) */}
-            <div style={{ marginBottom: 24 }}>
-                <PageSummary
-                    items={[
-                        { label: '设备总数', value: serverStats.total, variant: 'primary' },
-                        { label: '在线', value: serverStats.online, variant: 'success' },
-                        { label: '离线', value: serverStats.offline, variant: 'warning' },
-                        {
-                            label: '共享数',
-                            value: serverStats.shared,
-                            variant: 'info',
-                            icon: <ShareAltOutlined />,
-                        },
-                        {
-                            label: '在线率',
-                            value: `${serverStats.onlineRate}%`,
-                            variant: 'info',
-                            icon: <PieChartOutlined />,
-                            extra: serverStats.total > 0 ? `${serverStats.online} / ${serverStats.total}` : undefined,
-                        },
-                        {
-                            label: '停用',
-                            value: serverStats.disable,
-                            variant: 'warning',
-                            icon: <StopOutlined />,
-                            extra: serverStats.total > 0 ? `${Math.round((serverStats.disable / serverStats.total) * 100)}% 停用率` : undefined,
-                        },
-                    ]}
+            {/* W6 · StatCard 7 张 (主行 6 张 + 数据新鲜度 1 张) — filter + drilldown variant
+                - 设备总数 (filter, primary)    — active=未过滤, 点击清空 statFilter
+                - 在线 (filter, success)        — toggle 'online', 联动 server online=true
+                - 离线 (filter, warning)        — toggle 'offline', 联动 server online=false
+                - 共享数 (filter/info, passive)  — ops 关注度低, 不联动, 仅展示
+                - 在继率 (filter, info)         — passive 展示
+                - 停用 (filter, warning)        — toggle 'disable', 联动 server disable=true
+                - 数据新鲜度 (drilldown, info)   — hover 4 档分布 sparkline
+                PageSummary 6 张在下面作为静态镜像 (visual diff A/B 用, 后可弃). */}
+            <div
+                style={{
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+                    gap: 16,
+                    marginBottom: 24,
+                }}
+            >
+                <StatCard
+                    kind="filter"
+                    label="设备总数"
+                    value={serverStats.total}
+                    variant="primary"
+                    icon={<ApiOutlined />}
+                    active={statFilter.length === 0}
+                    onToggle={() => setStatFilter([])}
+                />
+                <StatCard
+                    kind="filter"
+                    label="在线"
+                    value={serverStats.online}
+                    variant="success"
+                    icon={<ApiOutlined />}
+                    extra={serverStats.total > 0 ? `${serverStats.online} / ${serverStats.total}` : '—'}
+                    active={statFilter.includes('online')}
+                    onToggle={() => toggleStatFilter('online')}
+                />
+                <StatCard
+                    kind="filter"
+                    label="离线"
+                    value={serverStats.offline}
+                    variant="warning"
+                    icon={<DisconnectOutlined />}
+                    extra={serverStats.total > 0 ? `${Math.round((serverStats.offline / serverStats.total) * 100)}% 离线率` : '—'}
+                    active={statFilter.includes('offline')}
+                    onToggle={() => toggleStatFilter('offline')}
+                />
+                <StatCard
+                    kind="filter"
+                    label="共享数"
+                    value={serverStats.shared}
+                    variant="info"
+                    icon={<ShareAltOutlined />}
+                    extra={serverStats.total > 0 ? `${Math.round((serverStats.shared / serverStats.total) * 100)}% 共享率` : '—'}
+                    active={false}
+                    onToggle={() => {/* 共享数 passive, 不联动 filter */}}
+                />
+                <StatCard
+                    kind="filter"
+                    label="在线率"
+                    value={`${serverStats.onlineRate}%`}
+                    variant="info"
+                    icon={<PieChartOutlined />}
+                    extra={serverStats.total > 0 ? `${serverStats.online} / ${serverStats.total}` : undefined}
+                    active={false}
+                    onToggle={() => {/* 在线率是公式指标, 不联动 filter */}}
+                />
+                <StatCard
+                    kind="filter"
+                    label="停用"
+                    value={serverStats.disable}
+                    variant="warning"
+                    icon={<StopOutlined />}
+                    extra={serverStats.total > 0 ? `${Math.round((serverStats.disable / serverStats.total) * 100)}% 停用率` : undefined}
+                    active={statFilter.includes('disable')}
+                    onToggle={() => toggleStatFilter('disable')}
+                />
+                <StatCard
+                    kind="drilldown"
+                    label="数据新鲜度"
+                    value={freshness.fresh}
+                    variant="success"
+                    icon={<FieldTimeOutlined />}
+                    data={freshness}
+                    trigger="hover"
+                    popoverContent={({ data: fr }) => (
+                        <div style={{ minWidth: 260 }}>
+                            <div style={{ fontSize: 12, color: 'var(--ink-500)', marginBottom: 8 }}>
+                                4 档分桶 (BFF /data/freshness) · 总设备 {(fr as any)?.total ?? 0}
+                            </div>
+                            {/* antd Progress 4 段离散显示 — 替代 MiniSparkline (4 scalar 喂 sparkline 错误) */}
+                            <Progress
+                                percent={100}
+                                steps={4}
+                                strokeColor={['#10b981', '#f59e0b', '#ef4444', '#7c8aa0']}
+                                showInfo={false}
+                                size="small"
+                            />
+                            {[
+                                { k: 'fresh', label: '新鲜 (<5min)', color: '#10b981' },
+                                { k: 'stale', label: '陈旧 (5-30min)', color: '#f59e0b' },
+                                { k: 'dead', label: '失活 (30-60min)', color: '#ef4444' },
+                                { k: 'never', label: '从未上报', color: '#7c8aa0' },
+                            ].map(b => {
+                                const v = (fr as any)?.[b.k] ?? 0
+                                return (
+                                    <div key={b.k} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 12, padding: '4px 0' }}>
+                                        <span style={{ color: b.color }}>● {b.label}</span>
+                                        <span style={{ fontFamily: 'var(--font-mono)' }}>{v}</span>
+                                    </div>
+                                )
+                            })}
+                        </div>
+                    )}
                 />
             </div>
             {/* 2nd row 副卡 6 张: 节点数/总挂载/平均挂载/超时挂载/AT 启用/经纬度

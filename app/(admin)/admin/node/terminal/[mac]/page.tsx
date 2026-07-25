@@ -1,15 +1,19 @@
 'use client'
 
-import { Suspense, useEffect, useCallback, useState } from "react";
+import { Suspense, useEffect, useCallback, useState, useMemo } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
-import { Spin, Tabs } from "antd";
+import { Progress, Spin, Tabs } from "antd";
 import {
   ThunderboltOutlined,
   AlertOutlined,
   ScheduleOutlined,
+  FieldTimeOutlined,
+  SendOutlined,
 } from '@ant-design/icons'
 import { usePromise } from "@/lib/hooks/usePromise";
+import { useDashboardStat } from "@/lib/hooks/useDashboardStat";
 import { getTerminal } from "@/lib/api/fetch";
+import { getAlarmTrend, getDataFreshness } from "@/lib/api/admin-summary/client";
 import { useTerminalUpdate } from "@/lib/hooks/useTerminalData";
 import { DeviceActions } from "@/components/common/DeviceActions";
 import { TerminalOverview } from "@/components/terminal/TerminalOverview";
@@ -18,6 +22,9 @@ import { DebugConsole } from "@/components/terminal/DebugConsole";
 import { MonitorCenter } from "@/components/log/MonitorCenter";
 import { AutomationCenter } from "@/components/terminal/AutomationCenter";
 import { HeartbeatPanel } from "@/components/terminal/HeartbeatPanel";
+import { StatCard } from "@/components/admin/StatCard";
+import { MiniSparkline } from "@/components/common/MiniSparkline";
+import type { AlarmTrendResp, DataFreshnessResp } from "@/types/admin-summary";
 
 type TabKey = 'debug' | 'monitor' | 'automation'
 
@@ -60,6 +67,41 @@ function TerminalDetailPageInner() {
     }, undefined, [mac]);
 
     const ter = useTerminalUpdate([mac]);
+
+    // W6 · 详情页 KPI 3 张: 7d 告警 / 7d 指令 / 数据新鲜度
+    // trial mode 403 → useDashboardStat catch + initValue 兜底,
+    // 7d trend 空数组 → MiniSparkline "暂无数据" 兜底
+    // W3 fix: useDashboardStat 签名改单层 universalResult, 直接调 BFF client 即可, 无 wrapper.
+    const { data: alarmTrend7d } = useDashboardStat<AlarmTrendResp>(
+        () => getAlarmTrend(168, 'hour'),
+        [],
+        [],
+    )
+    const { data: freshness } = useDashboardStat<DataFreshnessResp>(
+        () => getDataFreshness(),
+        [],
+        { fresh: 0, stale: 0, dead: 0, never: 0, total: 0 },
+    )
+    // W6 review fix · 详情页客户端 filter (BFF /alarms/trend 暂时不支持 mac param)
+    // 短期方案: page 端用 .filter(d => d.mac === mac) 客户端过滤, 值/popover 都走过滤后 data
+    // 长期方案: BE 给 getAlarmTrend / getDataFreshness 加 mac param (单独 PR, 不在本 PR 范围)
+    // ⚠️ 当前 BFF 响应 AlarmTrendBucket { bucket, critical, warning, info, total } 无 mac 字段,
+    //    过滤后 = []. 详情页 trend 值 = 0, popover MiniSparkline 走 "暂无数据" 兜底.
+    //    BE 加 mac param 后, 过滤会从 [] 变为实际 per-mac buckets, 全链路自动正确.
+    const macFilteredAlarmTrend = useMemo(
+        () => (Array.isArray(alarmTrend7d)
+            ? alarmTrend7d.filter((b: any) => b.mac === mac)
+            : []),
+        [alarmTrend7d, mac],
+    )
+    const totalAlarms7d = useMemo(
+        () => (Array.isArray(macFilteredAlarmTrend) ? macFilteredAlarmTrend.reduce((acc, b) => acc + (b.total || 0), 0) : 0),
+        [macFilteredAlarmTrend],
+    )
+    const totalCritical7d = useMemo(
+        () => (Array.isArray(macFilteredAlarmTrend) ? macFilteredAlarmTrend.reduce((acc, b) => acc + (b.critical || 0), 0) : 0),
+        [macFilteredAlarmTrend],
+    )
 
     useEffect(() => {
         if (ter.data) fecth();
@@ -138,6 +180,97 @@ function TerminalDetailPageInner() {
                     {/* §2 Heartbeat 3 层 (实时 / 状态历史 / 长期心跳) — feat/terminal-heartbeat-ui 2026-07-21 ship */}
                     <div style={{ marginBottom: 20 }}>
                         <HeartbeatPanel mac={data.DevMac} />
+                    </div>
+
+                    {/* W6 · 详情页 KPI 3 张: 7d 告警 / 7d 指令 / 数据新鲜度
+                        插在 HeartbeatPanel 之后, Overview + Actions 之前
+                        - 7d 告警 (drilldown, warning) — hover 显示 7d hourly trend sparkline
+                        - 7d 指令 (navigate, info)     — 跳到 monitor tab (?tab=monitor) 看命令历史
+                        - 数据新鲜度 (drilldown, success) — hover 显示 4 档分桶 sparkline */}
+                    <div
+                        style={{
+                            display: 'grid',
+                            gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
+                            gap: 16,
+                            marginBottom: 20,
+                        }}
+                    >
+                        <StatCard
+                            kind="drilldown"
+                            label="7d 告警"
+                            value={totalAlarms7d}
+                            variant="warning"
+                            icon={<AlertOutlined />}
+                            data={macFilteredAlarmTrend}
+                            trigger="hover"
+                            popoverContent={({ data: trend }) => (
+                                <div style={{ minWidth: 280 }}>
+                                    <div style={{ fontSize: 12, color: 'var(--ink-500)', marginBottom: 8 }}>
+                                        7d 告警 trend (BFF /alarms/trend 168h hour)
+                                    </div>
+                                    <MiniSparkline
+                                        data={(trend as AlarmTrendResp) ?? []}
+                                        color="#f59e0b"
+                                        height={60}
+                                        width={260}
+                                    />
+                                    <div style={{ marginTop: 8, paddingTop: 8, borderTop: '1px solid var(--ink-100)', display: 'flex', justifyContent: 'space-between', fontSize: 11, color: 'var(--ink-500)' }}>
+                                        <span>critical {totalCritical7d}</span>
+                                        <span>7d 合计 {totalAlarms7d}</span>
+                                    </div>
+                                </div>
+                            )}
+                        />
+                        <StatCard
+                            kind="navigate"
+                            label="7d 指令"
+                            value="查看"
+                            variant="info"
+                            icon={<SendOutlined />}
+                            extra="跳监控 tab 看命令历史"
+                            href={`/admin/node/terminal/${encodeURIComponent(mac)}?tab=monitor`}
+                        />
+                        <StatCard
+                            kind="drilldown"
+                            label="数据新鲜度"
+                            value={freshness.fresh}
+                            variant="success"
+                            icon={<FieldTimeOutlined />}
+                            data={freshness}
+                            trigger="hover"
+                            popoverContent={({ data: fr }) => (
+                                <div style={{ minWidth: 260 }}>
+                                    <div style={{ fontSize: 12, color: 'var(--ink-500)', marginBottom: 8 }}>
+                                        4 档分桶 (BFF /data/freshness) · 总设备 {(fr as DataFreshnessResp)?.total ?? 0}
+                                    </div>
+                                    {/* antd Progress 4 段离散显示 — 替代 MiniSparkline (4 scalar 喂 sparkline 错误) */}
+                                    <Progress
+                                        percent={100}
+                                        steps={4}
+                                        strokeColor={['#10b981', '#f59e0b', '#ef4444', '#7c8aa0']}
+                                        showInfo={false}
+                                        size="small"
+                                    />
+                                    {[
+                                        { k: 'fresh', label: '新鲜 (<5min)', color: '#10b981' },
+                                        { k: 'stale', label: '陈旧 (5-30min)', color: '#f59e0b' },
+                                        { k: 'dead', label: '失活 (30-60min)', color: '#ef4444' },
+                                        { k: 'never', label: '从未上报', color: '#7c8aa0' },
+                                    ].map(b => {
+                                        const v = (fr as DataFreshnessResp)?.[b.k as keyof DataFreshnessResp] ?? 0
+                                        return (
+                                            <div key={b.k} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 12, padding: '4px 0' }}>
+                                                <span style={{ color: b.color }}>● {b.label}</span>
+                                                <span style={{ fontFamily: 'var(--font-mono)' }}>{String(v)}</span>
+                                            </div>
+                                        )
+                                    })}
+                                    <div style={{ marginTop: 6, fontSize: 11, color: 'var(--ink-500)', fontStyle: 'italic' }}>
+                                        全系统数据 · per-mac filter 待 BE 支持
+                                    </div>
+                                </div>
+                            )}
+                        />
                     </div>
 
                     {/* §3 Overview + Actions (12-col grid) */}

@@ -13,12 +13,14 @@
  * - bento-card 用现成 .glass-card + .bento-card 玻璃感, 6 项 KV grid
  */
 
-import { Button, message, Modal, Space } from 'antd'
+import { Button, message, Modal, Progress, Space } from 'antd'
 import { confirm, success, info, error, warning } from '@/lib/utils/modal'
 import {
     ReloadOutlined,
     SafetyCertificateOutlined,
     ClusterOutlined,
+    AlertOutlined,
+    BugOutlined,
 } from '@ant-design/icons'
 import dayjs from 'dayjs'
 import relativeTime from 'dayjs/plugin/relativeTime'
@@ -30,10 +32,15 @@ import { Log } from '@/components/log/log'
 import { RotateTokenModal } from '@/components/node/RotateTokenModal'
 import { PageHeader } from '@/components/common/PageHeader'
 import { PageSummary } from '@/components/common/PageSummary'
+import { StatCard } from '@/components/admin/StatCard'
+import { MiniSparkline } from '@/components/common/MiniSparkline'
 import { StatusTag } from '@/components/common/StatusTag'
 import { LiveControls } from '@/components/common/LiveControls'
 import { Nodes as getNodes, lognodes, nodeRestart, rotateNodeToken } from '@/lib/api/fetchRoot'
 import { usePromise } from '@/lib/hooks/usePromise'
+import { useDashboardStat } from '@/lib/hooks/useDashboardStat'
+import { getAlarmTrend, getDataFreshness } from '@/lib/api/admin-summary/client'
+import type { AlarmTrendResp, DataFreshnessResp } from '@/types/admin-summary'
 
 dayjs.extend(relativeTime)
 dayjs.locale('zh-cn')
@@ -54,9 +61,47 @@ export const NodeDetail: React.FC = () => {
         return Array.isArray(el.data) ? el.data : []
     }, [] as Uart.NodeClient[])
 
+    // W6 · 详情页 KPI: 30d 告警 trend + 数据新鲜度
+    // ⚠️ hooks 必须放在 if (!node) return null 之前, 否则 react-hooks/rules-of-hooks 报
+    // "called conditionally" (跟现有 usePromise / useMemo 同位置)
+    // trial mode 时 BFF 403, useDashboardStat catch + initValue 兜底,
+    // 30d trend 返空数组 → MiniSparkline 显示 "暂无数据" 而非图表错误
+    const { data: alarmTrend } = useDashboardStat<AlarmTrendResp>(
+        () => getAlarmTrend(720, 'day'),
+        [],
+        [],
+    )
+    const { data: freshness } = useDashboardStat<DataFreshnessResp>(
+        () => getDataFreshness(),
+        [],
+        { fresh: 0, stale: 0, dead: 0, never: 0, total: 0 },
+    )
+
     const node = useMemo(
         () => (Array.isArray(nodes) ? nodes.find((n) => n.Name === nodeId) : null),
         [nodes, nodeId],
+    )
+
+    // W6 review fix · 详情页客户端 filter (BFF /alarms/trend 暂时不支持 nodeName param)
+    // 短期方案: page 端用 .filter(d => d.nodeName === node.Name) 客户端过滤,
+    //          值/popover 都走过滤后 data
+    // 长期方案: BE 给 getAlarmTrend / getDataFreshness 加 nodeName param (单独 PR)
+    // ⚠️ 当前 BFF 响应 AlarmTrendBucket { bucket, critical, warning, info, total } 无 nodeName 字段,
+    //    过滤后 = []. 详情页 trend 值 = 0, popover MiniSparkline 走 "暂无数据" 兜底.
+    //    BE 加 nodeName param 后, 过滤会从 [] 变为实际 per-node buckets, 全链路自动正确.
+    const nodeFilteredAlarmTrend = useMemo(
+        () => (Array.isArray(alarmTrend) && node
+            ? alarmTrend.filter((b: any) => b.nodeName === node.Name)
+            : []),
+        [alarmTrend, node],
+    )
+    const totalAlarms30d = useMemo(
+        () => (Array.isArray(nodeFilteredAlarmTrend) ? nodeFilteredAlarmTrend.reduce((acc, b) => acc + (b.total || 0), 0) : 0),
+        [nodeFilteredAlarmTrend],
+    )
+    const totalCritical30d = useMemo(
+        () => (Array.isArray(nodeFilteredAlarmTrend) ? nodeFilteredAlarmTrend.reduce((acc, b) => acc + (b.critical || 0), 0) : 0),
+        [nodeFilteredAlarmTrend],
     )
 
     if (!node) return null
@@ -293,40 +338,127 @@ export const NodeDetail: React.FC = () => {
                 }
             />
 
-            {/* ─── 3. 4 KPI PageSummary (注册设备 / 在线设备 / 最大连接 / 在线率) ─── */}
-            <PageSummary
-                items={[
-                    {
-                        label: '注册设备',
-                        value: regCount,
-                        variant: 'primary',
-                    },
-                    {
-                        label: '在线设备',
-                        value: (
-                            <Space size={6}>
-                                {onlineCount}
-                                <StatusTag
-                                    variant={isOnline ? 'online' : 'offline'}
-                                    size="sm"
-                                    pulse={isOnline}
-                                />
-                            </Space>
-                        ),
-                        variant: 'success',
-                    },
-                    {
-                        label: '最大连接数',
-                        value: maxConn,
-                        variant: 'info',
-                    },
-                    {
-                        label: '在线率',
-                        value: `${onlineRate}%`,
-                        variant: onlineRate >= 50 ? 'success' : 'danger',
-                    },
-                ]}
-            />
+            {/* ─── 3. 6 KPI 顶部汇总 (注册设备 / 在线设备 / 最大连接 / 在线率 / 30d 告警 / 30d 错误) ───
+                W6 · 4 张基础 + 2 张 drilldown (告警 + 数据新鲜度)
+                30d 告警: hover 显示 30d trend sparkline
+                数据新鲜度: hover 显示 4 档分桶 + sparkline (复用 common/MiniSparkline) */}
+            <div
+                style={{
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+                    gap: 16,
+                    marginBottom: 24,
+                }}
+            >
+                <StatCard
+                    kind="filter"
+                    label="注册设备"
+                    value={regCount}
+                    variant="primary"
+                    active={false}
+                    onToggle={() => {/* passive, 仅展示 */}}
+                />
+                <StatCard
+                    kind="filter"
+                    label="在线设备"
+                    value={(
+                        <Space size={6}>
+                            {onlineCount}
+                            <StatusTag
+                                variant={isOnline ? 'online' : 'offline'}
+                                size="sm"
+                                pulse={isOnline}
+                            />
+                        </Space>
+                    )}
+                    variant="success"
+                    active={false}
+                    onToggle={() => {/* passive, 仅展示 */}}
+                />
+                <StatCard
+                    kind="filter"
+                    label="最大连接数"
+                    value={maxConn}
+                    variant="info"
+                    active={false}
+                    onToggle={() => {/* passive, 仅展示 */}}
+                />
+                <StatCard
+                    kind="filter"
+                    label="在线率"
+                    value={`${onlineRate}%`}
+                    variant={onlineRate >= 50 ? 'success' : 'danger'}
+                    active={false}
+                    onToggle={() => {/* 公式指标, 不联动 filter */}}
+                />
+                <StatCard
+                    kind="drilldown"
+                    label="30d 告警"
+                    value={totalAlarms30d}
+                    variant="warning"
+                    icon={<AlertOutlined />}
+                    data={nodeFilteredAlarmTrend}
+                    trigger="hover"
+                    popoverContent={({ data: trend }) => (
+                        <div style={{ minWidth: 280 }}>
+                            <div style={{ fontSize: 12, color: 'var(--ink-500)', marginBottom: 8 }}>
+                                30d 告警 trend (BFF /alarms/trend 720h day)
+                            </div>
+                            <MiniSparkline
+                                data={(trend as AlarmTrendResp) ?? []}
+                                color="#f59e0b"
+                                height={60}
+                                width={260}
+                            />
+                            <div style={{ marginTop: 8, paddingTop: 8, borderTop: '1px solid var(--ink-100)', display: 'flex', justifyContent: 'space-between', fontSize: 11, color: 'var(--ink-500)' }}>
+                                <span>critical {totalCritical30d}</span>
+                                <span>30d 合计 {totalAlarms30d}</span>
+                            </div>
+                        </div>
+                    )}
+                />
+                <StatCard
+                    kind="drilldown"
+                    label="数据新鲜度"
+                    value={freshness.fresh}
+                    variant="success"
+                    icon={<BugOutlined />}
+                    data={freshness}
+                    trigger="hover"
+                    popoverContent={({ data: fr }) => (
+                        <div style={{ minWidth: 260 }}>
+                            <div style={{ fontSize: 12, color: 'var(--ink-500)', marginBottom: 8 }}>
+                                4 档分桶 (BFF /data/freshness) · 总设备 {(fr as DataFreshnessResp)?.total ?? 0}
+                            </div>
+                            {/* antd Progress 4 段离散显示 — 替代 MiniSparkline (4 scalar 喂 sparkline 错误) */}
+                            <Progress
+                                percent={100}
+                                steps={4}
+                                strokeColor={['#10b981', '#f59e0b', '#ef4444', '#7c8aa0']}
+                                showInfo={false}
+                                size="small"
+                            />
+                            {[
+                                { k: 'fresh', label: '新鲜 (<5min)', color: '#10b981' },
+                                { k: 'stale', label: '陈旧 (5-30min)', color: '#f59e0b' },
+                                { k: 'dead', label: '失活 (30-60min)', color: '#ef4444' },
+                                { k: 'never', label: '从未上报', color: '#7c8aa0' },
+                            ].map(b => {
+                                const v = (fr as DataFreshnessResp)?.[b.k as keyof DataFreshnessResp] ?? 0
+                                return (
+                                    <div key={b.k} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 12, padding: '4px 0' }}>
+                                        <span style={{ color: b.color }}>● {b.label}</span>
+                                        <span style={{ fontFamily: 'var(--font-mono)' }}>{String(v)}</span>
+                                    </div>
+                                )
+                            })}
+                            <div style={{ marginTop: 6, fontSize: 11, color: 'var(--ink-500)', fontStyle: 'italic' }}>
+                                全系统数据 · per-node filter 待 BE 支持
+                            </div>
+                        </div>
+                    )}
+                />
+            </div>
 
             {/* ─── 4. LiveControls 6 tile (实时数据 · 3s refresh) ─── */}
             <div style={{ marginBottom: 20 }}>
