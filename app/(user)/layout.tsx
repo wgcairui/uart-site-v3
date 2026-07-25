@@ -76,7 +76,7 @@ export default function UserLayout({ children }: { children: React.ReactNode }) 
 
     return (
         <ErrorBoundary>
-        <main style={{ display: 'flex', flexDirection: 'column', width: '100vw', height: '100vh', overflow: 'hidden' }}>
+        <main style={{ display: 'flex', flexDirection: 'column', width: '100vw', height: '100dvh', overflow: 'hidden' }}>
 <Suspense fallback={null}><TokenSync /></Suspense>
 
             {/* Topbar — 2026-07-25: 锁 375px 宽, 跟 user-content-frame 对齐 (pear.us/cai mobile-first pattern)
