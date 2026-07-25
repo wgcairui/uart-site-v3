@@ -1,6 +1,6 @@
 'use client'
 /**
- * admin 报警日志页 (v3 hybrid v4 设计语言 · 2026-07-20)
+ * admin 报警日志页 (v3 hybrid v4 设计语言 · 2026-07-20, W4 2026-07-25 接入 StatCard + severity 分布)
  *
  * v4 改版 (cairui 13:48 拍 6 维筛选 + server-errors layout + 顶部 4 卡时间分桶):
  * 1) 顶部 4 卡改成 "总数 / 月新增 / 周新增 / 日新增", 走 server agg 接口
@@ -11,14 +11,23 @@
  *    (server feat/alarm-filter-ui, buildMongoFilter 模式)
  * 4) tag 分布 (跟筛选联动) — 从 server agg 接口拿, 不再用 client 端 items.reduce
  *
+ * W4 改造 (2026-07-25):
+ * - 顶部 4 卡 time-bucket 改用 StatCard kind="filter" 视觉
+ * - 新增 3 张 severity 分布 (critical/warning/info) 来自 dashboard.alarms/severity-distribution
+ *   点击 = toggle severity 多选 filter, 跟现有 Select 联动
+ * - StatCard 4 variant: filter (本页 7 张都用) / navigate / action / drilldown
+ *   详见 components/admin/StatCard/StatCard.types.ts
+ *
  * 视觉:
- * - 顶部 PageSummary 4 卡 (总数 / 月新增 / 周新增 / 日新增)
+ * - 顶部 StatCard row 1: 4 time-bucket (总数 / 月新增 / 周新增 / 日新增)
+ * - 顶部 StatCard row 2: 3 severity (critical / warning / info)
  * - 桌面 (>= 768px): 6 维筛选条 + tag 分布 + 5 列 Table
  * - 移动 (< 768px): 简化筛选 (时间快选) + cards 视图
  *
- * 数据流 (一次 page render 触发 2 个 server 请求):
+ * 数据流 (一次 page render 触发 3 个 server 请求):
  * - loguartterminaldatatransfinites(date, query): items[≤200] + pagination.total
  * - logAlarmTimeBucket(date): 4 个真实 total + tag 分布
+ * - dashboard.alarms/severity-distribution (W4 新增): critical/warning/info count
  */
 
 import { Button, Input, Select, Space, Spin, Table, Tag } from 'antd'
@@ -40,8 +49,11 @@ import {
 import { getColumnSearchProp, generateTableKey } from '@/lib/utils/tableCommon'
 import { MyDatePickerRange } from '@/components/common/MyDatePickerRange'
 import { PageHeader } from '@/components/common/PageHeader'
-import { PageSummary } from '@/components/common/PageSummary'
 import { EmptyState } from '@/components/common/EmptyState'
+import { StatCard } from '@/components/admin/StatCard'
+import { useDashboardStat } from '@/lib/hooks/useDashboardStat'
+import { getAlarmSeverityDistribution } from '@/lib/api/admin-summary/client'
+import type { AlarmSeverityDistributionResp, AlarmSeverity } from '@/types/admin-summary'
 import { AlarmDetailModal } from './_components/AlarmDetailModal'
 
 dayjs.extend(relativeTime)
@@ -261,6 +273,8 @@ export const LogAlarm: React.FC = () => {
 
     // 筛选 state
     const [filters, setFilters] = useState<AlarmFilters>(EMPTY_FILTERS)
+    /** StatCard severity filter (3 张 severity 卡共用, multi-select toggle) */
+    const [severityFilter, setSeverityFilter] = useState<AlarmSeverity[]>([])
     /** 触发 fetch 的签名: filters / date / page / pageSize 任一变化都重新拉 */
     const [fetchKey, setFetchKey] = useState(0)
 
@@ -275,16 +289,27 @@ export const LogAlarm: React.FC = () => {
         return () => mq.removeEventListener('change', update)
     }, [])
 
-    // 一次 page render 拉 2 个 server 接口:
+    // 一次 page render 拉 3 个 server 接口:
     // 1) transfinite list (受 filters + date 影响, 拿 items + total)
     // 2) time bucket (受 filters + date 影响, 拿 4 卡真实 total + tag 分布)
-    // 2 个接口都受同样筛选影响, 所以时间桶的 total 跟列表 total 含义一致
+    // 3) dashboard.alarms/severity-distribution (W4 新增, 24h 窗口, 拿 3 张 severity 卡 count)
+    //    跟时间桶/列表无关, 始终展示最近 24h 严重度分布
     const [items, setItems] = useState<Uart.uartAlarmObject[]>([])
     const [realTotal, setRealTotal] = useState(0)
     const [bucket, setBucket] = useState<Uart.UartAlarmTimeBucket>({
         total: 0, month: 0, week: 0, day: 0, tags: [],
     })
     const [loading, setLoading] = useState(false)
+
+    // Severity 分布 (24h 窗口, 来自 dashboard.alarms/severity-distribution)
+    // useDashboardStat: trial mode / 403 自动降级, page 不崩
+    // 注: BFF client 已返 universalResult (code/data/status), useDashboardStat 期望外层 data envelope
+    // 所以这里包一层 { data: <BFF response> } 让 hook 内部 result.data.code 访问
+    const { data: sevDist } = useDashboardStat<AlarmSeverityDistributionResp>(
+        async () => ({ data: await getAlarmSeverityDistribution('24h') }),
+        [],
+        []
+    )
 
     // 详情 Modal (跟 mail/sms 模式一致: 列表移出详情列, 点击行弹窗)
     const [detailModal, setDetailModal] = useState<{ open: boolean; record: Uart.uartAlarmObject | null }>({
@@ -301,11 +326,13 @@ export const LogAlarm: React.FC = () => {
             pageSize: MAX_ITEMS,
             needTotal: true,
         }
+        // severity 合并: severityFilter (StatCard toggle) + filters.severity (Select) 取并集
+        const mergedSeverity = Array.from(new Set([...severityFilter, ...filters.severity]))
         // 透传 filters (5 维业务筛选, server 端走 buildMongoFilter 白名单)
-        if (filters.isOk.length || filters.severity.length || filters.protocol.length || filters.tag.length) {
+        if (filters.isOk.length || mergedSeverity.length || filters.protocol.length || filters.tag.length) {
             req.filters = {
                 ...(filters.isOk.length ? { isOk: filters.isOk as ('true' | 'false')[] } : {}),
-                ...(filters.severity.length ? { severity: filters.severity } : {}),
+                ...(mergedSeverity.length ? { severity: mergedSeverity } : {}),
                 ...(filters.protocol.length ? { protocol: filters.protocol } : {}),
                 ...(filters.tag.length ? { tag: filters.tag } : {}),
             }
@@ -347,7 +374,7 @@ export const LogAlarm: React.FC = () => {
 
         return () => { cancelled = true }
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [date, fetchKey])
+    }, [date, severityFilter, fetchKey])
 
     // 桌面分页切片
     const pagedItems = useMemo(() => {
@@ -369,6 +396,16 @@ export const LogAlarm: React.FC = () => {
         items.forEach((it) => { if ((it as any).tag) s.add((it as any).tag) })
         return Array.from(s).sort()
     }, [items, bucket.tags])
+
+    // Severity 分布 count (来自 sevDist: dashboard.alarms/severity-distribution 24h)
+    // 同一 severity 可能有多个 tag, 把所有 tag 的 count 累加
+    const severityCounts = useMemo(() => {
+        const acc: Record<AlarmSeverity, number> = { critical: 0, warning: 0, info: 0 }
+        for (const d of sevDist) {
+            if (d && d.severity in acc) acc[d.severity] += d.count
+        }
+        return acc
+    }, [sevDist])
 
     // 触发 fetch 的 wrapper
     const triggerFetch = () => {
@@ -409,39 +446,103 @@ export const LogAlarm: React.FC = () => {
                 ]}
             />
 
-            <PageSummary
-                column={4}
-                items={[
-                    {
-                        label: '告警总数',
-                        value: bucket.total,
-                        variant: 'primary',
-                        icon: <BellOutlined />,
-                        extra: `${date[0].format('MM-DD HH:mm')} ~ ${date[1].format('MM-DD HH:mm')}`,
-                    },
-                    {
-                        label: '本月新增',
-                        value: bucket.month,
-                        variant: 'success',
-                        icon: <CalendarOutlined />,
-                        extra: `自然月 (${dayjs().startOf('month').format('MM-DD')} → ${date[1].format('MM-DD')})`,
-                    },
-                    {
-                        label: '本周新增',
-                        value: bucket.week,
-                        variant: 'warning',
-                        icon: <CalendarOutlined />,
-                        extra: `自然周 (周一 ${dayjs().startOf('week').format('MM-DD')} → ${date[1].format('MM-DD')})`,
-                    },
-                    {
-                        label: '今日新增',
-                        value: bucket.day,
-                        variant: 'danger',
-                        icon: <CalendarOutlined />,
-                        extra: `今天 (${dayjs().startOf('day').format('MM-DD HH:mm')} → ${date[1].format('MM-DD HH:mm')})`,
-                    },
-                ]}
-            />
+            {/* Row 1: 4 张 time-bucket StatCard (server 端没暴露 bucket filter, 用 kind="filter" 兜底 refresh) */}
+            <div
+                style={{
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(4, minmax(0, 1fr))',
+                    gap: 12,
+                    marginBottom: 12,
+                }}
+            >
+                <StatCard
+                    kind="filter"
+                    label="告警总数"
+                    value={bucket.total}
+                    variant="primary"
+                    icon={<BellOutlined />}
+                    active={false}
+                    onToggle={() => { setPage(1); setFetchKey((k) => k + 1) }}
+                    extra={`${date[0].format('MM-DD HH:mm')} ~ ${date[1].format('MM-DD HH:mm')}`}
+                />
+                <StatCard
+                    kind="filter"
+                    label="本月新增"
+                    value={bucket.month}
+                    variant="success"
+                    icon={<CalendarOutlined />}
+                    active={false}
+                    onToggle={() => { setPage(1); setFetchKey((k) => k + 1) }}
+                    extra={`自然月 (${dayjs().startOf('month').format('MM-DD')} → ${date[1].format('MM-DD')})`}
+                />
+                <StatCard
+                    kind="filter"
+                    label="本周新增"
+                    value={bucket.week}
+                    variant="warning"
+                    icon={<CalendarOutlined />}
+                    active={false}
+                    onToggle={() => { setPage(1); setFetchKey((k) => k + 1) }}
+                    extra={`自然周 (周一 ${dayjs().startOf('week').format('MM-DD')} → ${date[1].format('MM-DD')})`}
+                />
+                <StatCard
+                    kind="filter"
+                    label="今日新增"
+                    value={bucket.day}
+                    variant="danger"
+                    icon={<CalendarOutlined />}
+                    active={false}
+                    onToggle={() => { setPage(1); setFetchKey((k) => k + 1) }}
+                    extra={`今天 (${dayjs().startOf('day').format('MM-DD HH:mm')} → ${date[1].format('MM-DD HH:mm')})`}
+                />
+            </div>
+
+            {/* Row 2: 3 张 severity StatCard (来自 dashboard.alarms/severity-distribution, 24h 窗口) */}
+            <div
+                style={{
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(3, minmax(0, 1fr))',
+                    gap: 12,
+                    marginBottom: 16,
+                }}
+            >
+                <StatCard
+                    kind="filter"
+                    label="严重告警 (24h)"
+                    value={severityCounts.critical}
+                    variant="danger"
+                    icon={<FireOutlined />}
+                    active={severityFilter.includes('critical')}
+                    onToggle={() => setSeverityFilter((prev) =>
+                        prev.includes('critical') ? prev.filter((k) => k !== 'critical') : [...prev, 'critical']
+                    )}
+                    extra="critical tag 累加"
+                />
+                <StatCard
+                    kind="filter"
+                    label="警告 (24h)"
+                    value={severityCounts.warning}
+                    variant="warning"
+                    icon={<BellOutlined />}
+                    active={severityFilter.includes('warning')}
+                    onToggle={() => setSeverityFilter((prev) =>
+                        prev.includes('warning') ? prev.filter((k) => k !== 'warning') : [...prev, 'warning']
+                    )}
+                    extra="warning tag 累加"
+                />
+                <StatCard
+                    kind="filter"
+                    label="提示 (24h)"
+                    value={severityCounts.info}
+                    variant="info"
+                    icon={<BellOutlined />}
+                    active={severityFilter.includes('info')}
+                    onToggle={() => setSeverityFilter((prev) =>
+                        prev.includes('info') ? prev.filter((k) => k !== 'info') : [...prev, 'info']
+                    )}
+                    extra="info tag 累加"
+                />
+            </div>
 
             {/* 桌面 6 维筛选条 (server-errors 风格) */}
             {!isMobile && (
