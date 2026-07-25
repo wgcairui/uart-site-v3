@@ -17,7 +17,6 @@ import dayjs from "dayjs";
 import { useRouter } from "next/navigation";
 import { BrandLogo } from "@/components/common/BrandLogo";
 import { ErrorBoundary } from "@/components/common/ErrorBoundary";
-import { PageTransition } from "@/components/common/PageTransition";
 
 function TokenSync() {
     useToken()
@@ -173,10 +172,16 @@ export default function UserLayout({ children }: { children: React.ReactNode }) 
                 </div>
             )}
 
-            {/* 主内容 - 375px 锁定宽度容器 (mobile-first, desktop 居中) */}
+            {/* 主内容 - 375px 锁定宽度容器 (mobile-first, desktop 居中)
+                2026-07-25: 移除 PageTransition wrapper
+                原因: page-in 200ms fade-in 动画在 iOS Safari 截图/快速 reload 时, main 区域
+                会卡在 opacity:0 200ms+, 用户看到"下半部分空白". animation 'both' fill mode + 200ms
+                duration 是理论上, 实际 iOS Safari 渲染时机不稳定.
+                admin 端 PageTransition 仍保留 (desktop 不会有这个问题)
+            */}
             <main className="scroll-area" style={{ flex: 1, position: 'relative' }}>
                 <div className="user-content-frame">
-                    <PageTransition>{children}</PageTransition>
+                    {children}
                 </div>
                 <AbsButton>
                     <div style={{ padding: 16 }}>
