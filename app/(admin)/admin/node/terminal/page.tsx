@@ -153,9 +153,10 @@ export default function Terminals() {
 
     // W6 · BFF dashboard/data/freshness — 4 档分桶 (fresh<5min / stale<30min / dead<60min / never)
     // 供 StatCard drilldown 展示
-    // W3 useDashboardStat 类型签名跟 BFF 实际响应套壳不匹配, 用 as any 兼容 (待 W8 修)
+    // W3 fix: useDashboardStat 签名改单层 universalResult, 直接调 BFF client 即可, 无 wrapper.
+    // trial mode 403 → hook catch + initValue 兜底 (分桶全 0, StatCard 显示"暂无数据").
     const { data: freshness } = useDashboardStat(
-        () => getDataFreshness() as any,
+        () => getDataFreshness(),
         [],
         { fresh: 0, stale: 0, dead: 0, never: 0, total: 0 },
     )

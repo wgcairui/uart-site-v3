@@ -227,11 +227,10 @@ export const Nodes: React.FC = () => {
 
     // W6 · BFF dashboard/nodes/load — 4 档分桶 (healthy / warning / overloaded / offline)
     // 供 drilldown StatCard 展示用
-    // W3 useDashboardStat 期望 fn 返 { data: { code, data } } 双层套壳, 但 BFF 实际返
-    // universalResult<NodeLoadResp> (单层套壳). 用 as any 兼容类型, runtime 行为
-    // 由 hook 内部 try-catch + initValue 兜底 (详情见 W8 类型签名修正待办).
+    // W3 fix: useDashboardStat 签名改单层 universalResult, 直接调 BFF client 即可, 无 wrapper.
+    // trial mode 403 → hook catch + initValue 兜底 (分桶全 0, StatCard 显示"暂无数据").
     const { data: nodeLoad, loading: nodeLoadLoading } = useDashboardStat(
-        () => getNodeLoad() as any,
+        () => getNodeLoad(),
         [],
         { healthy: 0, warning: 0, overloaded: 0, offline: 0, total: 0 },
     )

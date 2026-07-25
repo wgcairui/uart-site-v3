@@ -67,12 +67,12 @@ export const NodeDetail: React.FC = () => {
     // trial mode 时 BFF 403, useDashboardStat catch + initValue 兜底,
     // 30d trend 返空数组 → MiniSparkline 显示 "暂无数据" 而非图表错误
     const { data: alarmTrend } = useDashboardStat<AlarmTrendResp>(
-        () => getAlarmTrend(720, 'day') as any,
+        () => getAlarmTrend(720, 'day'),
         [],
         [],
     )
     const { data: freshness } = useDashboardStat<DataFreshnessResp>(
-        () => getDataFreshness() as any,
+        () => getDataFreshness(),
         [],
         { fresh: 0, stale: 0, dead: 0, never: 0, total: 0 },
     )

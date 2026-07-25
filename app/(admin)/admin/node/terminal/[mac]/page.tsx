@@ -71,14 +71,14 @@ function TerminalDetailPageInner() {
     // W6 · 详情页 KPI 3 张: 7d 告警 / 7d 指令 / 数据新鲜度
     // trial mode 403 → useDashboardStat catch + initValue 兜底,
     // 7d trend 空数组 → MiniSparkline "暂无数据" 兜底
-    // W3 useDashboardStat 类型签名跟 BFF 实际响应套壳不匹配, 用 as any 兼容 (待 W8 修)
+    // W3 fix: useDashboardStat 签名改单层 universalResult, 直接调 BFF client 即可, 无 wrapper.
     const { data: alarmTrend7d } = useDashboardStat<AlarmTrendResp>(
-        () => getAlarmTrend(168, 'hour') as any,
+        () => getAlarmTrend(168, 'hour'),
         [],
         [],
     )
     const { data: freshness } = useDashboardStat<DataFreshnessResp>(
-        () => getDataFreshness() as any,
+        () => getDataFreshness(),
         [],
         { fresh: 0, stale: 0, dead: 0, never: 0, total: 0 },
     )
