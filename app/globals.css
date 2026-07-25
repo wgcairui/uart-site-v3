@@ -1463,6 +1463,22 @@ html, body {
 }
 
 /* =============================================================
+ * user 端 dev/[id] 详情页 8/4 grid 永远 1 列 stack
+ * 2026-07-25 · user-dev-detail-stack
+ * - 12-col grid + span 8 / span 4 在 375 锁宽下: 8/12=66%×375=250, 4/12=33%×375=125
+ * - 125px 给 DeviceActions 太挤, 按钮文字 (立即读取一次数据 / 发送 AT 指令) 全部单字竖列
+ * - user 端 mobile-first 永远 1 列: live 在上, actions 在下, 都吃满 375 宽
+ * ============================================================= */
+.user-content-frame .dev-detail-grid {
+  grid-template-columns: 1fr !important;
+  gap: 16px !important;
+}
+.user-content-frame .dev-detail-live,
+.user-content-frame .dev-detail-actions {
+  grid-column: span 1 !important;
+}
+
+/* =============================================================
  * TrendChart v3 · 24h area chart (hybrid Page B)
  * ============================================================= */
 
