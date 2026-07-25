@@ -3,8 +3,9 @@
 /**
  * 用户详情页 — v3 hybrid (Page B · 1:1 镜像设备详情模板)
  *
- * 视觉: user hero 紫渐变 + PageSummary 4 KPI + UserOverview + UserActions
- *       + BoundTerminalsStrip + Tabs (items prop) + MigrateUserResourcesModal
+ * 视觉: user hero 紫渐变 + PageSummary 4 KPI + StatCard row 3 KPI (W3 4-variant)
+ *       + UserOverview + UserActions + BoundTerminalsStrip + Tabs (items prop)
+ *       + MigrateUserResourcesModal
  * 兼容: 复用 PageHeader / PageSummary / StatusTag / BentoCard
  * 用户实体: Uart.UserInfo (字段: user/userId/userGroup/name/mail/tel/status/...)
  *
@@ -14,18 +15,31 @@
  * - BentoCard 替代手写 bento-card 容器 + padding
  * - baseTabs / terminalTabs 不用 useMemo (avoid React Compiler 警告)
  * - boundList Array.isArray() 兜底, trial mode 缺数据也漂亮渲染
+ * - W7 (2026-07-25): PageSummary 保留 4 基础卡; 第 2 行加 3 张 StatCard (drilldown×2
+ *   + navigate×1) 接 admin summary BFF (getUserEngagement + getAlarmTrend), 详见
+ *   types/admin-summary.ts + components/admin/StatCard/ (W3 4-variant)
  */
 
-import { Suspense, useEffect, useCallback, useState } from 'react'
+import { Suspense, useEffect, useCallback, useState, useMemo } from 'react'
 import { useParams, useRouter, useSearchParams } from 'next/navigation'
 import { Spin, Tabs } from 'antd'
+import {
+    AlertOutlined,
+    MessageOutlined,
+    LoginOutlined,
+} from '@ant-design/icons'
+import dayjs from 'dayjs'
+import relativeTime from 'dayjs/plugin/relativeTime'
+import 'dayjs/locale/zh-cn'
 
 import { PageHeader } from '@/components/common/PageHeader'
 import { PageSummary } from '@/components/common/PageSummary'
 import { StatusTag } from '@/components/common/StatusTag'
 import { BentoCard } from '@/components/common/BentoCard'
+import { StatCard } from '@/components/admin/StatCard'
 import { usePromise } from '@/lib/hooks/usePromise'
-import { BindDev, getUser } from '@/lib/api/fetchRoot'
+import { useDashboardStat } from '@/lib/hooks/useDashboardStat'
+import { BindDev, getUser, getUserOnlineStat } from '@/lib/api/fetchRoot'
 import { getTerminal } from '@/lib/api/fetch'
 import { useTerminalUpdate } from '@/lib/hooks/useTerminalData'
 import { TerminalAT } from '@/components/terminal/TerminalAT'
@@ -44,6 +58,103 @@ import { MigrateUserResourcesModal } from '@/components/admin/MigrateUserResourc
 import { UserOverview } from '@/components/user/UserOverview'
 import { UserActions } from '@/components/user/UserActions'
 import { BoundTerminalsStrip } from '@/components/user/BoundTerminalsStrip'
+import { getUserEngagement, getAlarmTrend } from '@/lib/api/admin-summary/client'
+import type {
+    AlarmTrendBucket,
+    AlarmTrendResp,
+    UserEngagementItem,
+    UserEngagementResp,
+} from '@/types/admin-summary'
+
+dayjs.extend(relativeTime)
+dayjs.locale('zh-cn')
+
+/**
+ * 7d 告警 trend 迷你图 — drilldown popover 内容
+ * 渲染 SVG 双线 (critical/warning/info stack) + 总量 header
+ */
+function AlarmTrendSparkline({ data }: { data?: AlarmTrendResp }) {
+    const buckets = Array.isArray(data) ? data : []
+    if (buckets.length === 0) {
+        return <div style={{ width: 320, padding: 24, color: 'var(--ink-500)', fontSize: 12, textAlign: 'center' }}>暂无 7d 告警数据</div>
+    }
+    const w = 320, h = 120
+    const padL = 32, padR = 8, padT = 12, padB = 22
+    const chartW = w - padL - padR, chartH = h - padT - padB
+    const max = Math.max(1, ...buckets.map((b) => b.total))
+    const xStep = chartW / Math.max(1, buckets.length - 1)
+    const pts = buckets.map((b, i) => [padL + i * xStep, padT + chartH * (1 - b.total / max)] as const)
+    const polyPts = pts.map((p) => p.join(',')).join(' ')
+    const totalC = buckets.reduce((s, b) => s + b.critical, 0)
+    const totalW = buckets.reduce((s, b) => s + b.warning, 0)
+    const totalI = buckets.reduce((s, b) => s + b.info, 0)
+    return (
+        <div style={{ width: w, padding: 8 }}>
+            <div style={{ display: 'flex', gap: 12, fontSize: 11, marginBottom: 8 }}>
+                <span style={{ color: 'var(--ink-500)' }}>7d 总计</span>
+                <span style={{ color: '#ef4444', fontWeight: 600 }}>critical {totalC}</span>
+                <span style={{ color: '#f59e0b', fontWeight: 600 }}>warning {totalW}</span>
+                <span style={{ color: '#06b6d4', fontWeight: 600 }}>info {totalI}</span>
+            </div>
+            <svg width={w} height={h} viewBox={`0 0 ${w} ${h}`} style={{ width: '100%', height: 'auto' }}>
+                {[0, 0.5, 1].map((p, i) => (
+                    <line key={i} x1={padL} x2={w - padR} y1={padT + chartH * p} y2={padT + chartH * p} stroke="var(--ink-100)" strokeWidth="1" strokeDasharray={p === 0 ? '0' : '2 3'} />
+                ))}
+                <polyline points={polyPts} fill="none" stroke="#8b5cf6" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                {pts.map((p, i) => (
+                    <circle key={i} cx={p[0]} cy={p[1]} r="2" fill="#8b5cf6" />
+                ))}
+                {buckets.length > 0 && (
+                    <>
+                        <text x={padL} y={h - 6} fontSize="9" fill="var(--ink-500)" fontFamily="var(--font-mono)">
+                            {dayjs(buckets[0]!.bucket).format('MM-DD')}
+                        </text>
+                        <text x={w - padR} y={h - 6} fontSize="9" fill="var(--ink-500)" textAnchor="end" fontFamily="var(--font-mono)">
+                            {dayjs(buckets[buckets.length - 1]!.bucket).format('MM-DD')}
+                        </text>
+                    </>
+                )}
+            </svg>
+        </div>
+    )
+}
+
+/**
+ * 7d 短信分布 — drilldown popover 内容
+ * 当前用户 smsCount7d vs 排行里其他用户分布
+ */
+function SmsDistribution({ value, peers }: { value: number; peers: UserEngagementItem[] }) {
+    const smsValues = peers.map((p) => p.smsCount7d).filter((n) => n > 0).sort((a, b) => b - a)
+    const rank = smsValues.findIndex((n) => n <= value)
+    const percentile = smsValues.length > 0 ? Math.round(((smsValues.length - rank) / smsValues.length) * 100) : 0
+    const max = smsValues[0] || 1
+    const top5 = peers.slice(0, 5)
+    return (
+        <div style={{ width: 320, padding: 8 }}>
+            <div style={{ display: 'flex', gap: 12, fontSize: 11, marginBottom: 8 }}>
+                <span style={{ color: 'var(--ink-500)' }}>7d 短信</span>
+                <span style={{ color: '#06b6d4', fontWeight: 600 }}>{value} 条</span>
+                {smsValues.length > 0 && (
+                    <span style={{ color: 'var(--ink-500)' }}>Top {percentile}%</span>
+                )}
+            </div>
+            <div style={{ fontSize: 11, color: 'var(--ink-500)', marginBottom: 4 }}>前 5 名排行</div>
+            {top5.map((p, i) => (
+                <div key={p.user + i} style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 11, marginBottom: 2 }}>
+                    <span style={{ width: 18, color: 'var(--ink-500)', fontFamily: 'var(--font-mono)' }}>#{i + 1}</span>
+                    <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.user}</span>
+                    <div style={{ width: 80, height: 6, background: 'var(--ink-100)', borderRadius: 3, overflow: 'hidden' }}>
+                        <div style={{ width: `${(p.smsCount7d / max) * 100}%`, height: '100%', background: '#06b6d4' }} />
+                    </div>
+                    <span style={{ width: 36, textAlign: 'right', fontFamily: 'var(--font-mono)', color: 'var(--ink-700)' }}>{p.smsCount7d}</span>
+                </div>
+            ))}
+            {top5.length === 0 && (
+                <div style={{ color: 'var(--ink-500)', fontSize: 12, textAlign: 'center', padding: 12 }}>暂无 7d 短信数据</div>
+            )}
+        </div>
+    )
+}
 
 interface TerminalInfosProps {
     mac: string
@@ -122,6 +233,28 @@ function UserInfoInner() {
         return (data?.UTs || []) as Uart.Terminal[]
     }, [] as Uart.Terminal[], [user])
 
+    // 用户在线状态 (existing API: getUserOnlineStat 返 boolean)
+    const { data: userOnline } = usePromise(async () => {
+        const { data } = await getUserOnlineStat(user)
+        return !!data
+    }, false, [user])
+
+    // W7: admin summary BFF — 拉 engagement 排行找当前用户位置
+    // BFF client 直接返 universalResult<T> 单层 { code, data, message? }, hook 已解套,
+    // inline arrow 直接传 BFF call 即可 (PR #71 rebase 删 W3 旧 wrapper workaround)
+    const { data: engagement } = useDashboardStat<UserEngagementResp>(
+        () => getUserEngagement(50),
+        [],
+        []
+    )
+
+    // W7: 7d 告警 trend (drilldown popover 用)
+    const { data: alarmTrend } = useDashboardStat<AlarmTrendResp>(
+        () => getAlarmTrend(168, 'hour'),
+        [],
+        []
+    )
+
     // 不用 useCallback, usePromise 每次 render 都返回新的 fecth 引用, 包了也无效
     const refreshAll = () => {
         bindUts.fecth()
@@ -133,6 +266,26 @@ function UserInfoInner() {
     const onlineCount = boundList.filter((t) => t.online).length
     const isActive = data?.status !== false
     const userGroup = data?.userGroup || 'user'
+
+    // 找到当前用户在 engagement 排行里的位置 (top 50 内, trial mode 兜底空数组)
+    // useMemo 稳定引用, 避免下游 useMemo dep 触发 lint warning
+    const engagementList = useMemo<UserEngagementItem[]>(
+        () => (Array.isArray(engagement) ? engagement : []),
+        [engagement]
+    )
+    const me = useMemo(
+        () => engagementList.find((e) => e.user === user) || null,
+        [engagementList, user]
+    )
+    const userAlarmCount7d = me?.alarmCount7d ?? 0
+    const userSmsCount7d = me?.smsCount7d ?? 0
+    const lastLogin = me?.lastLogin
+
+    // 7d 告警 trend buckets (Array.isArray 兜底)
+    const trendBuckets = useMemo<AlarmTrendBucket[]>(
+        () => (Array.isArray(alarmTrend) ? alarmTrend : []),
+        [alarmTrend]
+    )
 
     // tabs (不用 useMemo, 避免 React Compiler preserve-manual-memoization 警告)
     const baseTabs = data ? [
@@ -229,9 +382,55 @@ function UserInfoInner() {
                         label: '在线设备',
                         value: onlineCount,
                         variant: onlineCount > 0 ? 'success' : 'warning',
+                        extra: userOnline ? '用户在线' : undefined,
                     },
                 ]}
             />
+
+            {/* ─── 3b. W7 · StatCard row 3 KPI (drilldown×2 + navigate×1) ───
+                 接 admin summary BFF: getUserEngagement (me 行) + getAlarmTrend
+                 - 7d 告警: drilldown popover 显示 7d trend 迷你图
+                 - 7d 短信: drilldown popover 显示排行分布
+                 - 最近登录: navigate 跳 ?tab=login-log (LoginLogTab key) */}
+            <div className="page-summary-grid" style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(3, 1fr)',
+                gap: 20,
+                marginBottom: 32,
+            }}>
+                <StatCard
+                    kind="drilldown"
+                    label="7d 告警"
+                    value={userAlarmCount7d}
+                    variant={userAlarmCount7d > 10 ? 'danger' : userAlarmCount7d > 0 ? 'warning' : 'success'}
+                    icon={<AlertOutlined />}
+                    data={trendBuckets}
+                    trigger="hover"
+                    popoverContent={({ data }) => (
+                        <AlarmTrendSparkline data={data as AlarmTrendResp} />
+                    )}
+                />
+                <StatCard
+                    kind="drilldown"
+                    label="7d 短信"
+                    value={userSmsCount7d}
+                    variant="info"
+                    icon={<MessageOutlined />}
+                    data={engagementList}
+                    trigger="hover"
+                    popoverContent={() => (
+                        <SmsDistribution value={userSmsCount7d} peers={engagementList} />
+                    )}
+                />
+                <StatCard
+                    kind="navigate"
+                    label="最近登录"
+                    value={lastLogin ? dayjs(lastLogin).fromNow() : '从未登录'}
+                    variant={lastLogin ? 'success' : 'info'}
+                    icon={<LoginOutlined />}
+                    href={`/admin/node/user/info/${encodeURIComponent(user)}?tab=login-log`}
+                />
+            </div>
 
             {/* ─── 4. UserOverview + UserActions (8+4 响应式 grid) ─── */}
             <div className="user-detail-grid">

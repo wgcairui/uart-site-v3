@@ -2,9 +2,10 @@
 import React, { useMemo, useState } from "react";
 import {
     deleteUser, getUser, sendUserSocketInfo, users as getUsers, runingState,
+    loguserlogins,
 } from "@/lib/api/fetchRoot"
 import {
-    Avatar, Button, message, Modal, Table, Tag, Space, Tooltip, Input, Spin,
+    Avatar, Button, message, Modal, Table, Tag, Space, Tooltip, Input, Spin, Collapse,
 } from "antd"
 import { confirm, success, info, error, warning } from '@/lib/utils/modal';
 import {
@@ -12,7 +13,7 @@ import {
     EyeOutlined, DeleteOutlined, MessageOutlined,
     CloudSyncOutlined, UserAddOutlined, TeamOutlined,
     FireOutlined, ThunderboltOutlined, CrownOutlined, WechatOutlined,
-    MailOutlined, PhoneOutlined,
+    MailOutlined, PhoneOutlined, TrophyOutlined,
 } from "@ant-design/icons";
 import { MigrateUserResourcesModal } from "@/components/admin/MigrateUserResourcesModal";
 import {
@@ -24,14 +25,17 @@ import {
 import type { ColumnsType } from "antd/lib/table";
 import { prompt } from "@/lib/utils/prompt";
 import { usePromise } from "@/lib/hooks/usePromise";
+import { useDashboardStat } from "@/lib/hooks/useDashboardStat";
 import { MyCopy } from "@/components/common/MyCopy";
 import { UserStat } from "@/components/data/UserStat";
 import { useNav } from "@/lib/hooks/useNav";
 import { PageHeader } from "@/components/common/PageHeader";
-import { PageSummary } from "@/components/common/PageSummary";
+import { StatCard } from "@/components/admin/StatCard";
 import { EmptyState } from "@/components/common/EmptyState";
 import { PaginationReq } from "@/types";
 import { getUserDetailedStats } from "@/lib/api/endpoints/admin/dashboard";
+import { getUserEngagement } from "@/lib/api/admin-summary/client";
+import type { UserEngagementResp } from "@/types/admin-summary";
 import { UserHero } from "./_components/UserHero";
 
 type GroupFilter = 'all' | 'root' | 'admin' | 'user' | 'other'
@@ -66,6 +70,8 @@ export const User: React.FC = () => {
     const [groupFilter, setGroupFilter] = useState<GroupFilter>('all')
     const [wxFilter, setWxFilter] = useState<WxFilter>('all')
     const [rgTypeFilter, setRgTypeFilter] = useState<RgTypeFilter>('all')
+    // W7: statFilter 多选叠加 (7d 活跃 toggle 用, 跟其他可点卡保持一致)
+    const [statFilter, setStatFilter] = useState<string[]>([])
     const [searchKw, setSearchKw] = useState('')
 
     // Merged query for API: page/sort params + search keywords
@@ -121,14 +127,50 @@ export const User: React.FC = () => {
         wxBound: 0, withMail: 0, withTel: 0, newUsers7d: 0, newUsers30d: 0,
     })
 
+    // W7: Top 10 活跃用户 (engagement 排行 top 10)
+    // BFF client 直接返 universalResult<T> 单层 { code, data, message? }, hook 已解套,
+    // inline arrow 直接传 BFF call 即可 (PR #71 rebase 删 W3 旧 wrapper workaround)
+    const { data: engagement } = useDashboardStat<UserEngagementResp>(
+        () => getUserEngagement(10),
+        [],
+        []
+    )
+    const engagementList: UserEngagementResp = Array.isArray(engagement) ? engagement : []
+
+    // W7-fix: 7d 活跃 filter 客户端 workaround
+    // server 端 active7d filter 暂未支持 (单独 PR), 这里用 loguserlogins 拉 7d 时间窗内登录用户去重
+    // 预取 (页加载时即拉, 不依赖 toggle, 避免点开卡要等 fetch)
+    // 防御: fetch 失败 (e.g. 无权限) 时 active7dLoaded=false, filter 不会启用, 退化为 no-op
+    const SEVEN_DAYS_MS = 7 * 24 * 60 * 60 * 1000
+    const { data: loginsData, err: loginsErr } = usePromise(async () => {
+        const now = Date.now()
+        const r = await loguserlogins(
+            new Date(now - SEVEN_DAYS_MS).toISOString(),
+            new Date(now).toISOString(),
+            { page: 1, pageSize: 1500, needTotal: false }
+        )
+        return (r as any)?.data?.items ?? []
+    }, [])
+    const active7dUsers = useMemo(() => {
+        const s = new Set<string>()
+        ;(loginsData ?? []).forEach((it: any) => {
+            if (it?.user) s.add(it.user)
+        })
+        return s
+    }, [loginsData])
+    // 只有 fetch 完成 + 无 error 才算 loaded (避免半数据时 filter 误判)
+    const active7dLoaded = !loginsErr && Array.isArray(loginsData)
+
     const users = useMemo(
         () => (userData?.items ?? []) as Uart.UserInfo[],
         [userData?.items],
     );
     const pagination = userData?.pagination ?? { total: 0 };
 
-    // === 客户端二次过滤: userGroup / wx 状态 / rgtype ===
+    // === 客户端二次过滤: userGroup / wx 状态 / rgtype / 7d 活跃 ===
     // (server 端已按 query.search 过滤, 这里只做当前页内细分)
+    // 7d 活跃: 走客户端 active7dUsers Set, 仅在 data loaded + 无 err 时启用
+    // (未 loaded 时 filter 不生效, 退化为 no-op, 避免半数据误判)
     const filteredUsers = useMemo(() => {
         return users.filter(u => {
             if (groupFilter !== 'all') {
@@ -142,11 +184,12 @@ export const User: React.FC = () => {
                 if (wxFilter === 'none' && (u.wxId || u.wpId)) return false
             }
             if (rgTypeFilter !== 'all' && u.rgtype !== rgTypeFilter) return false
+            if (active7dLoaded && statFilter.includes('active7d') && !active7dUsers.has(u.user)) return false
             return true
         })
-    }, [users, groupFilter, wxFilter, rgTypeFilter])
+    }, [users, groupFilter, wxFilter, rgTypeFilter, statFilter, active7dLoaded, active7dUsers])
 
-    const hasAnyFilter = groupFilter !== 'all' || wxFilter !== 'all' || rgTypeFilter !== 'all' || Object.keys(searchFields).length > 0 || searchKw !== ''
+    const hasAnyFilter = groupFilter !== 'all' || wxFilter !== 'all' || rgTypeFilter !== 'all' || statFilter.length > 0 || Object.keys(searchFields).length > 0 || searchKw !== ''
 
     /**
      * 更新单个用户信息
@@ -204,6 +247,7 @@ export const User: React.FC = () => {
         setGroupFilter('all')
         setWxFilter('all')
         setRgTypeFilter('all')
+        setStatFilter([])
         setQuery({ page: 1, pageSize: 20, needTotal: true })
     }
 
@@ -218,6 +262,12 @@ export const User: React.FC = () => {
 
     const toggleRgType = (r: RgTypeFilter) => {
         setRgTypeFilter(prev => prev === r ? 'all' : r)
+    }
+
+    // W7: statFilter 多选叠加 (7d 活跃 toggle)
+    const toggleStatFilter = (key: string) => {
+        setStatFilter(prev => prev.includes(key) ? prev.filter(k => k !== key) : [...prev, key])
+        setQuery(q => ({ ...q, page: 1 }))
     }
 
     return (
@@ -254,57 +304,71 @@ export const User: React.FC = () => {
 
             <UserHero total={pagination.total ?? 0} />
 
-            <PageSummary
-                column={5}
-                items={[
-                    {
-                        label: '总用户',
-                        value: serverStats.all,
-                        variant: 'primary',
-                        icon: <TeamOutlined />,
-                        active: !hasAnyFilter,
-                        onClick: handleResetFilters,
-                    },
-                    {
-                        label: '7d 活跃',
-                        value: serverStats.active7d,
-                        variant: 'success',
-                        icon: <FireOutlined />,
-                        extra: serverStats.all > 0 ? `${Math.round((serverStats.active7d / serverStats.all) * 100)}% 活跃率` : undefined,
-                        active: false,
-                    },
-                    {
-                        label: '普通用户',
-                        value: serverStats.group.user,
-                        variant: 'success',
-                        active: groupFilter === 'user',
-                        onClick: () => toggleGroup('user'),
-                    },
-                    {
-                        label: '管理员',
-                        value: serverStats.group.root + serverStats.group.admin,
-                        variant: 'warning',
-                        icon: <CrownOutlined />,
-                        active: groupFilter === 'root' || groupFilter === 'admin',
-                        onClick: () => {
-                            if (groupFilter === 'root' || groupFilter === 'admin') {
-                                toggleGroup(groupFilter)
-                            } else {
-                                toggleGroup('root')
-                            }
-                        },
-                    },
-                    {
-                        label: '微信绑定',
-                        value: serverStats.wxBound,
-                        variant: 'info',
-                        icon: <WechatOutlined />,
-                        extra: serverStats.all > 0 ? `${Math.round((serverStats.wxBound / serverStats.all) * 100)}% 绑定率` : undefined,
-                        active: wxFilter === 'wx' || wxFilter === 'wp',
-                        onClick: () => toggleWx(wxFilter === 'wx' || wxFilter === 'wp' ? 'all' : 'wx'),
-                    },
-                ]}
-            />
+            {/* W7: 5 张主卡用 StatCard 4-variant (filter) 替代 PageSummary
+                 修 audit 里 flag 的 "不一致设计" — 7d 活跃 跟其他可点卡一样能 toggle statFilter
+                 保持现有 5 列布局 (grid 5 列) */}
+            <div
+                className="page-summary-grid"
+                style={{
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(5, 1fr)',
+                    gap: 20,
+                    marginBottom: 32,
+                }}
+            >
+                <StatCard
+                    kind="filter"
+                    label="总用户"
+                    value={serverStats.all}
+                    variant="primary"
+                    icon={<TeamOutlined />}
+                    active={!hasAnyFilter}
+                    onToggle={handleResetFilters}
+                />
+                <StatCard
+                    kind="filter"
+                    label="7d 活跃"
+                    value={serverStats.active7d}
+                    variant="success"
+                    icon={<FireOutlined />}
+                    extra={serverStats.all > 0 ? `${Math.round((serverStats.active7d / serverStats.all) * 100)}% 活跃率` : undefined}
+                    active={statFilter.includes('active7d')}
+                    onToggle={() => toggleStatFilter('active7d')}
+                />
+                <StatCard
+                    kind="filter"
+                    label="普通用户"
+                    value={serverStats.group.user}
+                    variant="success"
+                    active={groupFilter === 'user'}
+                    onToggle={() => toggleGroup('user')}
+                />
+                <StatCard
+                    kind="filter"
+                    label="管理员"
+                    value={serverStats.group.root + serverStats.group.admin}
+                    variant="warning"
+                    icon={<CrownOutlined />}
+                    active={groupFilter === 'root' || groupFilter === 'admin'}
+                    onToggle={() => {
+                        if (groupFilter === 'root' || groupFilter === 'admin') {
+                            toggleGroup(groupFilter)
+                        } else {
+                            toggleGroup('root')
+                        }
+                    }}
+                />
+                <StatCard
+                    kind="filter"
+                    label="微信绑定"
+                    value={serverStats.wxBound}
+                    variant="info"
+                    icon={<WechatOutlined />}
+                    extra={serverStats.all > 0 ? `${Math.round((serverStats.wxBound / serverStats.all) * 100)}% 绑定率` : undefined}
+                    active={wxFilter === 'wx' || wxFilter === 'wp'}
+                    onToggle={() => toggleWx(wxFilter === 'wx' || wxFilter === 'wp' ? 'all' : 'wx')}
+                />
+            </div>
 
             {/* 用户档案 secondary stats (4 卡, server 全量) */}
             <div
@@ -382,6 +446,74 @@ export const User: React.FC = () => {
                         </div>
                     )
                 })}
+            </div>
+
+            {/* W7: Top 10 活跃用户 折叠卡 (kind="navigate" 跳 user info 列表)
+                 engagement 排行 top 10, 默认折叠, 点标题展开看明细, 点 StatCard 跳列表 */}
+            <div className="bento-card" style={{ padding: 20, marginBottom: 20 }}>
+                <Collapse
+                    ghost
+                    defaultActiveKey={['top-active']}
+                    items={[{
+                        key: 'top-active',
+                        label: (
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 14, fontWeight: 600, color: 'var(--ink-900)' }}>
+                                <TrophyOutlined style={{ color: '#f59e0b' }} />
+                                Top 10 活跃用户 · 7d 排行
+                                <span style={{ fontSize: 11, color: 'var(--ink-500)', fontWeight: 400 }}>
+                                    (engagement 评分)
+                                </span>
+                            </div>
+                        ),
+                        children: (
+                            <div style={{ display: 'flex', gap: 16, alignItems: 'stretch' }}>
+                                <div style={{ flex: 1, minWidth: 0 }}>
+                                    {engagementList.length === 0 ? (
+                                        <div style={{ padding: 24, textAlign: 'center', color: 'var(--ink-500)', fontSize: 12 }}>
+                                            暂无 7d 活跃用户数据
+                                        </div>
+                                    ) : (
+                                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 8 }}>
+                                            {engagementList.map((u, i) => (
+                                                <div
+                                                    key={u.user}
+                                                    onClick={() => nav(`/admin/node/user/info/${encodeURIComponent(u.user)}`)}
+                                                    style={{
+                                                        display: 'flex',
+                                                        alignItems: 'center',
+                                                        gap: 8,
+                                                        padding: '6px 10px',
+                                                        borderRadius: 8,
+                                                        background: i < 3 ? '#f59e0b10' : 'var(--ink-50)',
+                                                        cursor: 'pointer',
+                                                        fontSize: 12,
+                                                        transition: 'background .2s',
+                                                    }}
+                                                >
+                                                    <span style={{
+                                                        width: 18, textAlign: 'center', fontFamily: 'var(--font-mono)',
+                                                        fontWeight: 600,
+                                                        color: i === 0 ? '#f59e0b' : i === 1 ? '#94a3b8' : i === 2 ? '#cd7f32' : 'var(--ink-500)',
+                                                    }}>#{i + 1}</span>
+                                                    <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                                        {u.user}
+                                                    </span>
+                                                    <span style={{ color: 'var(--ink-500)', fontFamily: 'var(--font-mono)', fontSize: 11 }}>
+                                                        设备 {u.deviceCount} · 告警 {u.alarmCount7d} · 短信 {u.smsCount7d}
+                                                    </span>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    )}
+                                </div>
+                                {/* W7-fix: 删 StatCard (kind="navigate" + href="?sortBy=engagement")
+                                     - "engagement" 不是 server 端 user list 接受的 sort 字段 (server 仅 createdAt/user/userGroup)
+                                     - 跳同页 + cosmetic 跳转, UI 在假装, ship 出去会误导用户
+                                     - Top 10 列表本身已占满 flex:1, 删右侧卡后视觉更聚焦 */}
+                            </div>
+                        ),
+                    }]}
+                />
             </div>
 
             <div className="bento-card" style={{ padding: 20, marginBottom: 20 }}>
@@ -521,6 +653,11 @@ export const User: React.FC = () => {
                         {rgTypeFilter !== 'all' && (
                             <Tag color="cyan" closable onClose={(e) => { e.preventDefault(); toggleRgType(rgTypeFilter) }} style={{ margin: 0 }}>
                                 注册: {rgTypeFilter}
+                            </Tag>
+                        )}
+                        {statFilter.includes('active7d') && (
+                            <Tag color="green" closable onClose={(e) => { e.preventDefault(); toggleStatFilter('active7d') }} style={{ margin: 0 }}>
+                                近 7d 活跃
                             </Tag>
                         )}
                         <Button type="link" size="small" onClick={handleResetFilters}>
