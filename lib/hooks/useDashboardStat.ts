@@ -1,80 +1,42 @@
 'use client';
+import React from 'react';
 
-import { usePromise } from './usePromise';
+import { usePromise, defaultIsHttpSuccess, type IusePromise } from './usePromise';
 
 /**
- * useDashboardStat — 薄包装 usePromise, 解决 3 个 page-level 痛点:
+ * useDashboardStat — BFF 专用薄包装, 配对 lib/api/admin-summary/client.ts 7 个 BFF wrapper.
  *
- * 1. **默认 null vs 默认空对象** — `usePromise` 初始 data 是 `undefined` (即使传了 initValue).
- *    page 端每次写 `data?.x ?? 0` 模板代码, 9 个 page 重复 27 次.
- *    包装后 `data` 永远是 `T` (initValue 必传, 不允许 undefined).
+ * 行为:
+ * 1. **HTTP status 判定** (传入 defaultIsHttpSuccess) — BE success 返 code: 200, error 返
+ *    code: 0 + status: 4xx/5xx. PR #81 修的 code vs status 颠倒问题.
+ * 2. **universalResult 解套** — 抽 result.data 当 data 返回, 而不是 {code, data, message} 整层.
+ * 3. **trial-mode 403 兜底** — fetch 抛错时静默返 initValue, page 不崩.
  *
- * 2. **universalResult 解包** — BFF 客户端 (`lib/api/admin-summary/client.ts`) 返 `universalResult`
- *    单层 `{ code, data, message }` (`Get<T>` 在 `lib/api/fetch-impl.ts:49` 是 axios 解套后
- *    直接返 parsed JSON, 不再包一层). 包装后 `data` 已经是 `TResult` (BFF 真实数据),
- *    code !== 0 时返 initValue + 走 err.
+ * usePromise 本身只做通用 promise 包装 + isHttpSuccess 判定, 不做 BFF 二次解套.
+ * useDashboardStat 负责解套层, 是 usePromise 的 BFF-mode 薄包装.
  *
- * 3. **trial-mode 403 兜底** — 无真实 user 数据的 trial 模式返 403.
- *    BFF 客户端 fetch 在 403 时通常 throw 或返 { code: 403, data: null }.
- *    包装后捕获所有 err, 静默返 initValue (page 不崩, 显示 "—").
- *
- * 用法:
- * ```ts
- * const { data: sevDist, loading } = useDashboardStat(
- *   () => getAlarmSeverityDistribution('24h'),
- *   [],
- *   []  // AlarmSeverityDistributionResp 默认空数组
- * )
- * // data: AlarmSeverityDistributionResp = [] (空数组兜底, 不是 undefined)
- * ```
- *
- * 之前的 wrapper workaround (`() => ({ data: await getXxx() })`) **已废弃**: 当时 hook 错位
- * 期望外层 envelope, BFF 实际返内层 universalResult. PR #71 review 已修, 后续 W4-W7 rebase
- * 时各自清理 page 里的 wrapper.
- *
- * 不在本期:
- * - SWR stale-while-revalidate 模式 (60s 内不重发). usePromise 已经够用.
- * - 跨页 dedup (多页同时打开各发一次). 60s Redis cache 在 BE 端, 重复请求也命中 cache.
- * - realtime push. 后续如需要, 加 useEffect + socket subscription.
- *
- * 配对: lib/api/admin-summary/client.ts 7 个 BFF wrapper
+ * 41 个 page 文件用 `import { useDashboardStat } from '@/lib/hooks/useDashboardStat'`,
+ * 行为保持向后兼容 (跟 PR #81 修复后一致).
  */
-export interface IUseDashboardStat<TResult> {
-  loading: boolean;
-  data: TResult;
-  err: any;
-  /** 重新拉取 (BFF 客户端在 prod 60s 内会命中 Redis cache) */
-  fecth: () => void;
-}
-
 export function useDashboardStat<TResult>(
   fn: () => Promise<{ code: number; data: TResult; message?: string }>,
   deps: React.DependencyList,
   initValue: TResult
-): IUseDashboardStat<TResult> {
-  const { loading, data: rawData, err, fecth } = usePromise(async () => {
-    try {
-      const result = await fn();
-      // universalResult 解套: BE middleware (result-serialization.middleware.ts:64) 返
-      // {code: 200, data: ...} 表成功, {code: 0, status: 4xx/5xx, message} 表错误.
-      // 修法: 检查 status 字段 (HTTP 风格) 而非 code 字段 (业务码 0 在 BE 错误路径也用)
-      const httpStatus = (result as any)?.status ?? (result as any)?.code;
-      const isSuccess = typeof httpStatus === 'number' && httpStatus >= 200 && httpStatus < 300;
-      if (isSuccess && result.data !== undefined && result.data !== null) {
+): IusePromise<TResult> {
+  return usePromise(
+    async () => {
+      try {
+        const result = await fn();
         return result.data as TResult;
+      } catch {
+        // fetch 抛错 (网络 / 401 / 403 trial mode) — 静默降级
+        return initValue;
       }
-      // 业务错误或网络错误 — 静默降级, 不抛
-      return initValue;
-    } catch {
-      // fetch 抛错 (网络 / 401 / 403 trial mode) — 静默降级
-      return initValue;
-    }
-  }, initValue, deps);
-
-  return {
-    loading,
-    data: (rawData ?? initValue) as TResult,
-    err,
-    fecth,
-  };
+    },
+    initValue,
+    deps,
+    { isHttpSuccess: defaultIsHttpSuccess }
+  );
 }
+
+export default useDashboardStat;
