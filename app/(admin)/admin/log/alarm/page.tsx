@@ -310,10 +310,11 @@ export const LogAlarm: React.FC = () => {
 
     // Severity 分布 (24h 窗口, 来自 dashboard.alarms/severity-distribution)
     // useDashboardStat: trial mode / 403 自动降级, page 不崩
-    // 注: BFF client 已返 universalResult (code/data/status), useDashboardStat 期望外层 data envelope
-    // 所以这里包一层 { data: <BFF response> } 让 hook 内部 result.data.code 访问
+    // BFF client (lib/api/admin-summary/client.ts) 已返 universalResult (code/data),
+    // useDashboardStat 内部 PR #71 已改成解套单层 envelope — 直接传 BFF response 即可,
+    // 之前的 { data: <BFF> } wrapper 已是死代码 (会走 initValue fallback)
     const { data: sevDist } = useDashboardStat<AlarmSeverityDistributionResp>(
-        async () => ({ data: await getAlarmSeverityDistribution('24h') }),
+        () => getAlarmSeverityDistribution('24h'),
         [],
         []
     )
