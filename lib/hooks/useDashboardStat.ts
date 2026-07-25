@@ -55,11 +55,15 @@ export function useDashboardStat<TResult>(
   const { loading, data: rawData, err, fecth } = usePromise(async () => {
     try {
       const result = await fn();
-      // universalResult 解套: 只在 code === 0 + data 存在时返真实 data, 其他情况返 initValue
-      if (result?.code === 0 && result.data !== undefined && result.data !== null) {
+      // universalResult 解套: BE middleware (result-serialization.middleware.ts:64) 返
+      // {code: 200, data: ...} 表成功, {code: 0, status: 4xx/5xx, message} 表错误.
+      // 修法: 检查 status 字段 (HTTP 风格) 而非 code 字段 (业务码 0 在 BE 错误路径也用)
+      const httpStatus = (result as any)?.status ?? (result as any)?.code;
+      const isSuccess = typeof httpStatus === 'number' && httpStatus >= 200 && httpStatus < 300;
+      if (isSuccess && result.data !== undefined && result.data !== null) {
         return result.data as TResult;
       }
-      // code !== 0 (业务错误) 或 data 为空 — 静默降级, 不抛
+      // 业务错误或网络错误 — 静默降级, 不抛
       return initValue;
     } catch {
       // fetch 抛错 (网络 / 401 / 403 trial mode) — 静默降级
