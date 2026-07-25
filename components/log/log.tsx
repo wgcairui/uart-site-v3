@@ -2,7 +2,7 @@
 import { Button, Col, Descriptions, Row, Space, Table } from "antd";
 import { TableProps } from 'antd/lib/table'
 import dayjs from "dayjs";
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { generateTableKey } from "@/lib/utils/tableCommon";
 import { usePromise } from "@/lib/hooks/usePromise";
 import { MyDatePickerRange } from "@/components/common/MyDatePickerRange";
@@ -34,7 +34,12 @@ export interface log<T = any> extends TableProps<T> {
 export const Log: React.FC<log> = (props) => {
     const { onRowClick, ...restProps } = props
 
-    const [date, setDate] = useState([dayjs().subtract(props.lastDay || 1, 'day'), dayjs()])
+    const [date, setDate] = useState<[dayjs.Dayjs, dayjs.Dayjs] | null>(null)
+
+    useEffect(() => {
+        setDate([dayjs().subtract(props.lastDay || 1, 'day'), dayjs()])
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [])
 
     const [filter, setFilter] = useState<Record<string, string[] | null>>(() => {
         return props.cPie ?
@@ -46,7 +51,7 @@ export const Log: React.FC<log> = (props) => {
     })
 
     const list = usePromise<any[]>(async () => {
-        const result: any = await props.dataFun(date[0]?.format() || "", date[1]?.format() || "", props.filterMac, props.filterPhone)
+        const result: any = await props.dataFun(date?.[0]?.format() || "", date?.[1]?.format() || "", props.filterMac, props.filterPhone)
         const data = result?.data ?? result
         let items = Array.isArray(data) ? data : (data?.items ?? [])
         if (props.filterNode) {
