@@ -153,32 +153,27 @@ const EMPTY_FILTERS: SmsFilters = {
 
 export const LogSms: React.FC = () => {
     // 共享 date state (W5: 支持 URL ?startTs=&endTs= 反向驱动, StatCardNavigate 用)
-    const [date, setDate] = useState<[dayjs.Dayjs, dayjs.Dayjs]>(() => {
-        // SSR 阶段没有 searchParams, 默认 7d window
-        if (typeof window === 'undefined') {
-            return [dayjs().subtract(7, 'day'), dayjs()]
-        }
-        const sp = new URLSearchParams(window.location.search)
-        const startTs = Number(sp.get('startTs'))
-        const endTs = Number(sp.get('endTs'))
-        if (Number.isFinite(startTs) && Number.isFinite(endTs) && startTs > 0 && endTs > 0) {
-            return [dayjs(startTs), dayjs(endTs)]
-        }
-        return [dayjs().subtract(7, 'day'), dayjs()]
-    })
-
-    // 监听 URL search params 变化 (W5: StatCardNavigate href 跳同页, 反向驱动 date)
+    // 2026-07-25 fix: SSR-safe initial (was useState(() => window.location.search) → React #418 hydration error)
+    // 改用 useSearchParams hook + useEffect client mount 同步, 初始 null 不调 dayjs() 避免 SSR/client mismatch
+    // 跟 PR #75 (d35d4d4) 修 alarm/mail/sms/server-errors 4 页 useState dayjs() 模式同源
+    const [date, setDate] = useState<[dayjs.Dayjs, dayjs.Dayjs] | null>(null)
     const searchParams = useSearchParams()
     useEffect(() => {
+        // client mount 后同步 URL searchParams → state (URL 是 new source of truth)
         const startTs = Number(searchParams.get('startTs'))
         const endTs = Number(searchParams.get('endTs'))
         if (Number.isFinite(startTs) && Number.isFinite(endTs) && startTs > 0 && endTs > 0) {
-            setDate(([curStart, curEnd]) => {
-                const nextStart = dayjs(startTs)
-                const nextEnd = dayjs(endTs)
-                if (nextStart.isSame(curStart) && nextEnd.isSame(curEnd)) return [curStart, curEnd]
+            const nextStart = dayjs(startTs)
+            const nextEnd = dayjs(endTs)
+            setDate((cur) => {
+                if (cur && cur[0].isSame(nextStart) && cur[1].isSame(nextEnd)) {
+                    return cur
+                }
                 return [nextStart, nextEnd]
             })
+        } else {
+            // URL 无 startTs/endTs: 首次 mount 给默认 7d window; 后续不变 (避免覆盖 URL 切换前的值)
+            setDate((cur) => cur ?? [dayjs().subtract(7, 'day'), dayjs()])
         }
     }, [searchParams])
 
@@ -210,6 +205,7 @@ export const LogSms: React.FC = () => {
     const [loading, setLoading] = useState(false)
 
     useEffect(() => {
+        if (!date) return  // 2026-07-25 fix: SSR-safe initial date=null, 等 client mount 同步后再 fetch
         let cancelled = false
         setLoading(true)
 
@@ -463,8 +459,8 @@ export const LogSms: React.FC = () => {
                     value={bucket.total}
                     variant="primary"
                     icon={<CalendarOutlined />}
-                    extra={`${date[0].format('MM-DD HH:mm')} ~ ${date[1].format('MM-DD HH:mm')}`}
-                    href={`/admin/log/sms?startTs=${date[0].valueOf()}&endTs=${date[1].valueOf()}`}
+                    extra={date ? `${date[0].format('MM-DD HH:mm')} ~ ${date[1].format('MM-DD HH:mm')}` : '加载中…'}
+                    href={date ? `/admin/log/sms?startTs=${date[0].valueOf()}&endTs=${date[1].valueOf()}` : '/admin/log/sms'}
                 />
                 {/* 2. 本月新增 (navigate: 跳到本月) */}
                 <StatCard
@@ -473,8 +469,8 @@ export const LogSms: React.FC = () => {
                     value={bucket.month}
                     variant="success"
                     icon={<CalendarOutlined />}
-                    extra={`自然月 (${dayjs().startOf('month').format('MM-DD')} → ${date[1].format('MM-DD')})`}
-                    href={`/admin/log/sms?startTs=${dayjs().startOf('month').valueOf()}&endTs=${date[1].valueOf()}`}
+                    extra={date ? `自然月 (${dayjs().startOf('month').format('MM-DD')} → ${date[1].format('MM-DD')})` : '加载中…'}
+                    href={date ? `/admin/log/sms?startTs=${dayjs().startOf('month').valueOf()}&endTs=${date[1].valueOf()}` : '/admin/log/sms'}
                 />
                 {/* 3. 本周新增 (navigate: 跳到本周) */}
                 <StatCard
@@ -483,8 +479,8 @@ export const LogSms: React.FC = () => {
                     value={bucket.week}
                     variant="warning"
                     icon={<CalendarOutlined />}
-                    extra={`自然周 (周一 ${dayjs().startOf('week').format('MM-DD')} → ${date[1].format('MM-DD')})`}
-                    href={`/admin/log/sms?startTs=${dayjs().startOf('week').valueOf()}&endTs=${date[1].valueOf()}`}
+                    extra={date ? `自然周 (周一 ${dayjs().startOf('week').format('MM-DD')} → ${date[1].format('MM-DD')})` : '加载中…'}
+                    href={date ? `/admin/log/sms?startTs=${dayjs().startOf('week').valueOf()}&endTs=${date[1].valueOf()}` : '/admin/log/sms'}
                 />
                 {/* 4. 今日新增 (navigate: 跳到今天) */}
                 <StatCard
@@ -493,8 +489,8 @@ export const LogSms: React.FC = () => {
                     value={bucket.day}
                     variant="danger"
                     icon={<CalendarOutlined />}
-                    extra={`今天 (${dayjs().startOf('day').format('MM-DD HH:mm')} → ${date[1].format('MM-DD HH:mm')})`}
-                    href={`/admin/log/sms?startTs=${dayjs().startOf('day').valueOf()}&endTs=${date[1].valueOf()}`}
+                    extra={date ? `今天 (${dayjs().startOf('day').format('MM-DD HH:mm')} → ${date[1].format('MM-DD HH:mm')})` : '加载中…'}
+                    href={date ? `/admin/log/sms?startTs=${dayjs().startOf('day').valueOf()}&endTs=${date[1].valueOf()}` : '/admin/log/sms'}
                 />
                 {/* 5. 今日失败 (drilldown: hover 显示 top 5 failing 收件人 + 活跃度 top 10 参考) */}
                 <StatCard
