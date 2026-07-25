@@ -115,7 +115,8 @@ const UserIndex: React.FC = (props) => {
                             {
                                 mountDevs.map(el => {
                                     return (
-                                        <Col span={24} md={12} lg={8} xl={8} xxl={6} key={el.mac + el.pid}>
+                                        // 2026-07-25: user 端 mobile-first 锁 375, device 卡永远 1 列 (避免 lg/xl/xxl 触发 3-4 列在容器内挤)
+                                        <Col span={24} key={el.mac + el.pid}>
                                             <DevCard
                                                 img={devType[el.Type]}
                                                 title={<Space>
@@ -132,7 +133,7 @@ const UserIndex: React.FC = (props) => {
                                 })
                             }
                             </StaggerList>
-                            <Col span={24} md={12} lg={8} xl={6} xxl={4} key='addDev' className="center">
+                            <Col span={24} key='addDev' className="center">
                                 {/* <Button shape="round" variant="primary" onClick={() => setDefalutKey("module")}>添加设备</Button> */}
                                 <Dropdown menu={{
                                     items: [
@@ -156,7 +157,8 @@ const UserIndex: React.FC = (props) => {
                             {
                                 terminals.map(el => {
                                     return (
-                                        <Col span={24} md={12} lg={8} xl={6} xxl={4} key={el.DevMac}>
+                                        // 2026-07-25: user 端 mobile-first 锁 375, 网关卡永远 1 列
+                                        <Col span={24} key={el.DevMac}>
                                             <DevCard
                                                 img={devDTU[el.PID || 'null']}
                                                 title={<Space>
@@ -187,7 +189,7 @@ const UserIndex: React.FC = (props) => {
                                     )
                                 })
                             }
-                            <Col span={24} md={12} lg={8} xl={6} xxl={4} key="addModule" className="center">
+                            <Col span={24} key="addModule" className="center">
                                 <Button shape="round" variant="primary" size="large" href="/main/addterminal">添加网关</Button>
                             </Col>
                         </Row>

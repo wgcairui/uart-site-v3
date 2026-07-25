@@ -109,9 +109,11 @@ const UserInfo: React.FC = props => {
                         <p>修改用户信息请使用小程序操作</p>
                         <Descriptions
                             title={user.user}
-                            column={isMobile ? 1 : 2}
+                            column={1}
                             size={isMobile ? 'small' : 'default'}
-                            {...(isMobile ? { labelStyle: { width: 90 } } : {})}
+                            styles={{
+                                label: { width: 'auto', minWidth: 70, whiteSpace: 'nowrap' },
+                            }}
                         >
                             <Descriptions.Item label="账号" span={2}>
                                 <Tooltip title="点击复制">

@@ -148,12 +148,15 @@ function DevInner() {
                 </div>
             </div>
 
-            {/* 12-col grid: LiveControls 8 + DeviceActions 4 */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(12, 1fr)', gap: 20, marginBottom: 20 }}>
-                <div style={{ gridColumn: 'span 8' }}>
+            {/* 12-col grid: LiveControls 8 + DeviceActions 4
+                - 2026-07-25: user 端 mobile-first 锁 375, 永远 1 列 stack (避免 8/4 split 把"设备操作"压成 ~125px 文字竖列)
+                - admin 端不受影响 (admin 不走这个 page)
+            */}
+            <div className="dev-detail-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(12, 1fr)', gap: 20, marginBottom: 20 }}>
+                <div className="dev-detail-live" style={{ gridColumn: 'span 8' }}>
                     <LiveControls variant="device" mac={terminal.DevMac} pid={mountDev.pid} title="实时数据" />
                 </div>
-                <div style={{ gridColumn: 'span 4' }}>
+                <div className="dev-detail-actions" style={{ gridColumn: 'span 4' }}>
                     <DeviceActions terminal={terminal} title="设备操作" />
                 </div>
             </div>
