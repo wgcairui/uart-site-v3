@@ -1479,6 +1479,44 @@ html, body {
 }
 
 /* =============================================================
+ * user 端 Descriptions 永远 1 列 + label 横向不换行
+ * 2026-07-25 · user-descriptions-stack
+ * - 375 锁宽下, antd Descriptions 默认 column={3} 把 label 压成 ~10-20px
+ * - 中文 label (如"温度探头故障") 每个字单独换行变竖排, 惨不忍睹
+ * - user 端 mobile-first 永远 1 列, 跟主内容流一致
+ * - 保守: 只覆盖 user-content-frame 内的 Descriptions, admin 端 layout 不受影响
+ * ============================================================= */
+.user-content-frame .ant-descriptions {
+  display: block !important;
+}
+.user-content-frame .ant-descriptions-view {
+  display: block !important;
+}
+.user-content-frame .ant-descriptions-row {
+  display: flex !important;
+  flex-direction: column !important;
+  border-bottom: 1px solid var(--ink-100);
+  padding: 8px 0;
+}
+.user-content-frame .ant-descriptions-item {
+  display: flex !important;
+  flex-direction: column !important;
+  padding: 4px 0 !important;
+}
+.user-content-frame .ant-descriptions-item-label {
+  white-space: nowrap !important;
+  word-break: keep-all !important;
+  color: var(--ink-500);
+  font-size: 12px;
+  margin-bottom: 4px;
+}
+.user-content-frame .ant-descriptions-item-content {
+  word-break: break-word !important;
+  color: var(--ink-900);
+  font-size: 14px;
+}
+
+/* =============================================================
  * TrendChart v3 · 24h area chart (hybrid Page B)
  * ============================================================= */
 
