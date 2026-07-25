@@ -206,3 +206,9 @@ export default MyComponent
 - ❌ **不要给 `ChatPane` 外层 inputForm 写误导 placeholder**。Sender 的 placeholder 是 hardcode `"输入修改诉求后回车提交"`，外层塞的 placeholder 会被用户误认为 Sender 提示
 - ✅ **`ChatPane` Sender 没内置 abort 按钮**（跟 generate tab 一致）。如要 abort 单独提 PR 给 `ChatPane` 加 `onAbort` prop
 - 详见 `docs/components.md` §3.7 + §5.3.1
+
+## StatCard Family (W3, 2026-07-25)
+- `components/admin/StatCard/` 3 variant: filter / navigate / drilldown (action variant 已删, 0 caller)
+- 共享 `StatCard.base.tsx` (.stat-card CSS 跟 PageSummary 对齐)
+- `kind` 字段是 discriminated union, 编译期阻止 prop 混用
+- 详见 `docs/components.md §5.6`

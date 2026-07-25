@@ -260,3 +260,8 @@ import type { PaginationReq, V2ListResponse } from '@/types'
 **已知陷阱**：
 - ❌ `import type Uart from '@/types/uart'` —— uart.d.ts 不是 module，import 会报 TS2306
 - ✅ 直接用 `Uart.UserInfo`（TS 自动识别 global namespace）
+
+## Admin Summary BFF Client (W3, 2026-07-25)
+- `lib/api/admin-summary/{routes,client}.ts` 7 个 typed BFF wrapper, URL 集中常量
+- `lib/hooks/useDashboardStat.ts` usePromise 薄包装: 默认值兜底 / universalResult 解套 / trial-mode 静默降级
+- known gap: hook 期望 `Promise<{ data: universalResult<T> }>`, 实际 BFF client 返 `universalResult<T>` (单层), W4-W7 4 个 page 用 wrapper 适配. 后续 PR 修.
