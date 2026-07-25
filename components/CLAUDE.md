@@ -208,7 +208,7 @@ export default MyComponent
 - 详见 `docs/components.md` §3.7 + §5.3.1
 
 ## StatCard Family (W3, 2026-07-25)
-- `components/admin/StatCard/` 4 variant: filter / navigate / action / drilldown
+- `components/admin/StatCard/` 3 variant: filter / navigate / drilldown (action variant 已删, 0 caller)
 - 共享 `StatCard.base.tsx` (.stat-card CSS 跟 PageSummary 对齐)
 - `kind` 字段是 discriminated union, 编译期阻止 prop 混用
 - 详见 `docs/components.md §5.6`

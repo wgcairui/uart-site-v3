@@ -683,13 +683,14 @@ export default MyComponent
 
 ### 5.6 `StatCard` family review checklist（2026-07-25 / W3-W7）
 
-> 配对 `docs/style-guide.md §4.11`（StatCard family 视觉规则） + `components/admin/StatCard/StatCard.types.ts`（4-variant discriminated union 类型定义）
+> 配对 `docs/style-guide.md §4.11`（StatCard family 视觉规则） + `components/admin/StatCard/StatCard.types.ts`（**3-variant** discriminated union 类型定义）
 
-#### 5.6.1 4 variant 必填 prop 检查（kind 跟 prop 强绑定）
+> **2026-07-25 review 调整**：原 4-variant 设计（filter/navigate/**action**/drilldown）的 `action` variant 0 调用方（10 page 全用 filter/navigate/drilldown），已删除。Main 上是 3-variant.
+
+#### 5.6.1 3 variant 必填 prop 检查（kind 跟 prop 强绑定）
 
 - [ ] **`kind="filter"`** 必传 `active: boolean` + `onToggle: () => void`。漏传 TS 编译期报错（discriminated union 保证）
 - [ ] **`kind="navigate"`** 必传 `href: string`（next/link 自动 SSR prefetch）。可选 `beforeNavigate?: () => void | Promise<void>`（埋点 / 二次确认 hook）
-- [ ] **`kind="action"`** 必传 `actions: StatCardAction[]`（每项 `key/label/onClick` 必填，可选 `danger/icon/loading`）。action 数 1-3 个，4+ 应该拆 PageHeader.extra 或 Dropdown
 - [ ] **`kind="drilldown"`** 必传 `popoverContent: (ctx) => ReactNode` —— **是 render-prop 不是 ReactNode**（传 ReactNode 会失去 `ctx.data` 注入，popover 打开时无法访问 page 层预加载数据）
 
 #### 5.6.2 交互语义区分（onClick vs onToggle vs popoverContent）
@@ -698,26 +699,27 @@ export default MyComponent
 - [ ] **`navigate` 不需要 `onClick`**。跳转走 `next/link`（自带 router），手写 `onClick + router.push` 是反模式（丢 SSR prefetch）
 - [ ] **`drilldown` 触发方式默认 `trigger="click"`**（accessibility 友好 + 移动端 tap 可用）。`trigger="hover"` 只用于桌面端独占场景，必须显式声明
 
-#### 5.6.3 `action` variant 的 danger button 优先级（vs PageHeader.extra）
+#### 5.6.3 danger button 决策树（替代原 action variant 章节）
 
-- [ ] **整页级 bulk 操作**（"全部批准" / "全部拒绝" 作用于整页列表）→ 用 `<PageHeader type="primary" danger>` 放在右上 `extra`，**不要**用 `action` variant
-- [ ] **卡内强调的破坏性操作**（"清空告警" 显示在 KPI 卡上，警示当前分组状态）→ 用 `<StatCard kind="action" actions={[{ ..., danger: true }]}>` 钉在 card 底部
+`action` variant 已删，所有 destructive 操作走 `PageHeader.extra`：
+
+- [ ] **整页级 bulk 操作**（"全部批准" / "全部拒绝" 作用于整页列表）→ 用 `<PageHeader type="primary" danger>` 放在右上 `extra`
+- [ ] **卡内强调的破坏性操作**（"清空告警"）→ 走 `PageHeader.extra` 配 `Button danger`, **不**再放 card 底部
 - [ ] **`danger: true` + `<Button type="primary">`** = antd 走红色填充（不是默认蓝）。视觉对比 `btn-danger` className 在 v2 紫粉渐变下需要单独测对比度
-- [ ] **action button 在 card 内部必须 `e.stopPropagation()`**。`StatCardAction` 实现里 footer `<Space>` 已经包了 stopPropagation；自定义 variant 不要绕过
 
-#### 5.6.4 BFF 防御性 + 已知 gap（page 层 wrapper workaround）
+#### 5.6.4 BFF 防御性
 
 - [ ] **`useDashboardStat` 第三个参数 `initValue` 必传**。TS 强约束，但 page 写 `useDashboardStat(getXxx, [])` 会编译报错（缺 initValue）
 - [ ] **trial-mode 静默降级**：无真实 user 数据 BFF 返 403，page 不应 throw / 不应显示 Skeleton，应显示 `—` 或 `0` 走 `initValue` 兜底
-- [ ] ⚠️ **known gap (W3 → W4-W7 workaround)**：`useDashboardStat` hook 当前签名要求 page 传 `() => ({ data: await getXxx() })`（page 层 wrapper 包一层）。后续 PR 修 hook 签名为 `() => Promise<universalResult<T>>` 单层。W4-W7 4 个 page 已用 wrapper 适配
+- [ ] **签名（2026-07-25 W3 review 修后）**：hook 期望 `() => Promise<{ code, data, message }>` 单层. BFF client `getXxx()` 直接返单层 universalResult, page 直接调 `() => getXxx()`, 无需 wrapper.
 - [ ] **`loading` / `error` prop 透传**：BE 500 / 网络断时 hook `err` 字段非空，page 应在 `<StatCard error={err}>` 显式传，渲染 `—` + warning border
 
 #### 5.6.5 不要做（明确禁止）
 
-- [ ] ❌ **不要新建 `kind="..."` 第 5 个 variant**。当前 4 variant 覆盖 90% admin KPI 用法，新需求先尝试组合现有 4 variant（如 drilldown + render-prop 完全可以做 metric + sparkline）。需要新 variant 时开 RFC PR
+- [ ] ❌ **不要新建 `kind="..."` 第 4 个 variant**。当前 3 variant (filter/navigate/drilldown) 覆盖 90% admin KPI 用法, 新需求先尝试组合 (drilldown + render-prop 完全可以做 metric + sparkline). 需要新 variant 时开 RFC PR
 - [ ] ❌ **不要修改 `StatCard.types.ts` 既有 variant 的 prop 集合**。新增 prop 用 `?:` 可选，向后兼容；删 prop / 改必填 → 破坏现有 W4-W7 page
-- [ ] ❌ **不要在 page 层自己写 stat card**（写一个 `<div className="bento-card">` 套数字）。视觉一致靠 4 variant 共享 `.stat-card` CSS 维护，自己写会漂移
-- [ ] ❌ **不要在 `action` variant 写 4+ button**。视觉挤压，4+ 拆 PageHeader.extra 或 Dropdown
+- [ ] ❌ **不要在 page 层自己写 stat card**（写一个 `<div className="bento-card">` 套数字）。视觉一致靠 3 variant 共享 `.stat-card` CSS 维护，自己写会漂移
+- [ ] ❌ **不要在 card 底部堆 3+ button**。视觉挤压, 走 `PageHeader.extra` 或加 Dropdown
 - [ ] ❌ **不要把 `StatCardFilter` 包装成"卡片整体 onClick 跳转"**（那是 `navigate` variant 的语义）。filter 强调 toggle 状态变化，navigate 强调跳转
 
 ---

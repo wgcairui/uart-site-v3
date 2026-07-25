@@ -198,5 +198,5 @@ export default function SomePage() {
 | `/admin/log/alarm` | `app/(admin)/admin/log/alarm/page.tsx` |
 
 ## Admin Page Enrichment (W4-W7, 2026-07-25)
-- 9 个 admin page 接入 StatCard 4 variant, 4 个并行 PR (#72 alerts/log, #73 log/sms+log/mail, #74 nodes+terminal+2 detail, #77 user)
-- pattern: `useDashboardStat` + `<StatCard kind="filter|navigate|action|drilldown">` + statFilter state (跟 PageSummary onClick+active 等价)
+- 9 个 admin page 接入 StatCard 3 variant (filter/navigate/drilldown), 4 个并行 PR (#72 alerts/log, #73 log/sms+log/mail, #74 nodes+terminal+2 detail, #77 user)
+- pattern: `useDashboardStat` + `<StatCard kind="filter|navigate|drilldown">` + statFilter state (跟 PageSummary onClick+active 等价)
