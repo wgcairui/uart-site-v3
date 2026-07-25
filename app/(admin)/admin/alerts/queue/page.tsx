@@ -1,12 +1,12 @@
 'use client'
 /**
- * admin 告警审批跟踪页 (feat/feature-flag-platform 2026-07-21)
+ * admin 告警审批跟踪页 (feat/feature-flag-platform 2026-07-21, W4 2026-07-25 接入 StatCard)
  *
- * 三段式 (PageHeader + PageSummary + BentoTable)
+ * 三段式 (PageHeader + StatCard + BentoTable)
  *
  * 视觉:
- * - 顶部 6 卡 (pending / approved / rejected / auto_sent / 24h 创建 / 24h 处理)
- * - 4 维筛选 (mac 模糊 / msg 模糊 / mode 多选 / status 多选)
+ * - 顶部 6 卡 StatCard (4 张 status kind="filter" 多选叠加 + 2 张 24h time-bucket 兜底 refresh)
+ * - 4 维筛选 (mac 模糊 / msg 模糊 / mode 多选 / status 多选, 跟 StatCard status filter 取并集)
  * - Table 10 列: severity / mac / devName / msg / mode / status / scheduledAt / 审批人 / 创建时间 / 操作
  * - 行内操作 (按 status 联动):
  *   - pending: 批准 / 拒绝
@@ -19,6 +19,8 @@
  * - 危险操作走 Modal.confirm
  * - 'use client' 必加
  * - Modal + Form.useForm + destroyOnHidden
+ * - StatCard 4 variant: filter (本页用) / navigate / action / drilldown
+ *   详见 components/admin/StatCard/StatCard.types.ts
  */
 
 import {
@@ -39,8 +41,8 @@ import {
   batchApproveAlertApprovals, batchRejectAlertApprovals,
 } from '@/lib/api/fetchRoot'
 import { PageHeader } from '@/components/common/PageHeader'
-import { PageSummary } from '@/components/common/PageSummary'
 import { EmptyState } from '@/components/common/EmptyState'
+import { StatCard } from '@/components/admin/StatCard'
 
 // server MAX_PAGE_SIZE = 200
 const MAX_ITEMS = 200
@@ -83,12 +85,24 @@ const EMPTY_FILTERS: QueueFilters = {
   statuses: [],
 }
 
+// ─── StatCard 4 status toggle 类型 (StatCard status 跟 queue status 字段对齐) ─
+type StatusKey = 'pending' | 'approved' | 'rejected' | 'auto_sent'
+
 // ─── 主页面 ─────────────────────────────────────────────────────────────────
 
 export const AdminAlertQueue: React.FC = () => {
   // 筛选 state
   const [filters, setFilters] = useState<QueueFilters>(EMPTY_FILTERS)
+  /** StatCard status filter (multi-select toggle, 4 张 status 卡共用) */
+  const [statFilter, setStatFilter] = useState<StatusKey[]>([])
   const [fetchKey, setFetchKey] = useState(0)
+
+  /** StatCard status 多选 toggle helper (W6/W7 模式, 替代 4 处 inline setState) */
+  const toggleStatFilter = (key: StatusKey) => {
+    setStatFilter((prev) =>
+      prev.includes(key) ? prev.filter((k) => k !== key) : [...prev, key]
+    )
+  }
 
   // 详情 Modal
   const [detailModal, setDetailModal] = useState<{ open: boolean; record: Uart.UartAlertApprovalQueue | null }>({
@@ -125,9 +139,11 @@ export const AdminAlertQueue: React.FC = () => {
     if (filters.mac.trim()) search.mac = filters.mac.trim()
     if (filters.msg.trim()) search.msg = filters.msg.trim()
     if (Object.keys(search).length) req.search = search
+    // status filter 合并: statFilter (StatCard toggle) + filters.statuses (Select)
+    const mergedStatus = Array.from(new Set([...statFilter, ...filters.statuses]))
     const f: any = {}
     if (filters.modes.length) f.mode = filters.modes
-    if (filters.statuses.length) f.status = filters.statuses
+    if (mergedStatus.length) f.status = mergedStatus
     if (Object.keys(f).length) req.filters = f
 
     Promise.all([
@@ -153,7 +169,7 @@ export const AdminAlertQueue: React.FC = () => {
       })
 
     return () => { cancelled = true }
-  }, [filters, fetchKey])
+  }, [filters, statFilter, fetchKey])
 
   // ─── 操作 ───────────────────────────────────────────────────────────────
   const doApprove = (id: string, reason?: string) => {
@@ -447,16 +463,64 @@ export const AdminAlertQueue: React.FC = () => {
           }
         />
 
-        <PageSummary
-          items={[
-            { label: 'pending', value: stats?.pending ?? '—', variant: 'warning' },
-            { label: 'approved', value: stats?.approved ?? '—', variant: 'success' },
-            { label: 'rejected', value: stats?.rejected ?? '—', variant: 'danger' },
-            { label: 'auto_sent', value: stats?.autoSent ?? '—', variant: 'primary' },
-            { label: '24h 创建', value: stats?.last24h?.created ?? '—', variant: 'info' },
-            { label: '24h 处理', value: stats?.last24h?.decided ?? '—', variant: 'info' },
-          ]}
-        />
+        <div
+          style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(6, minmax(0, 1fr))',
+            gap: 12,
+            marginBottom: 16,
+          }}
+        >
+          <StatCard
+            kind="filter"
+            label="pending"
+            value={stats?.pending ?? '—'}
+            variant="warning"
+            active={statFilter.includes('pending')}
+            onToggle={() => toggleStatFilter('pending')}
+          />
+          <StatCard
+            kind="filter"
+            label="approved"
+            value={stats?.approved ?? '—'}
+            variant="success"
+            active={statFilter.includes('approved')}
+            onToggle={() => toggleStatFilter('approved')}
+          />
+          <StatCard
+            kind="filter"
+            label="rejected"
+            value={stats?.rejected ?? '—'}
+            variant="danger"
+            active={statFilter.includes('rejected')}
+            onToggle={() => toggleStatFilter('rejected')}
+          />
+          <StatCard
+            kind="filter"
+            label="auto_sent"
+            value={stats?.autoSent ?? '—'}
+            variant="primary"
+            active={statFilter.includes('auto_sent')}
+            onToggle={() => toggleStatFilter('auto_sent')}
+          />
+          {/* 2 张 24h time-bucket: server 端没暴露 bucket filter, 用 StatCard filter 兜底为 refresh */}
+          <StatCard
+            kind="filter"
+            label="24h 创建"
+            value={stats?.last24h?.created ?? '—'}
+            variant="info"
+            active={false}
+            onToggle={() => triggerFetch()}
+          />
+          <StatCard
+            kind="filter"
+            label="24h 处理"
+            value={stats?.last24h?.decided ?? '—'}
+            variant="info"
+            active={false}
+            onToggle={() => triggerFetch()}
+          />
+        </div>
 
         {/* 4 维筛选条 */}
         <div className="bento-card mb-5" style={{ padding: 16 }}>
