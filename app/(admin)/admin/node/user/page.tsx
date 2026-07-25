@@ -1,5 +1,5 @@
 'use client'
-import React, { useCallback, useMemo, useState } from "react";
+import React, { useMemo, useState } from "react";
 import {
     deleteUser, getUser, sendUserSocketInfo, users as getUsers, runingState,
     loguserlogins,
@@ -128,13 +128,13 @@ export const User: React.FC = () => {
     })
 
     // W7: Top 10 活跃用户 (engagement 排行 top 10)
-    // useDashboardStat 期望 { data: { code, data, message? } } 包装, BFF wrapper
-    // 直接返 universalResult<T>, 套一层 { data: r } 让 hook 能正确解套
-    const fetchEngagement = useCallback(async () => {
-        const r = await getUserEngagement(10)
-        return { data: r as unknown as { code: number; data: UserEngagementResp; message?: string } }
-    }, [])
-    const { data: engagement } = useDashboardStat<UserEngagementResp>(fetchEngagement, [], [])
+    // BFF client 直接返 universalResult<T> 单层 { code, data, message? }, hook 已解套,
+    // inline arrow 直接传 BFF call 即可 (PR #71 rebase 删 W3 旧 wrapper workaround)
+    const { data: engagement } = useDashboardStat<UserEngagementResp>(
+        () => getUserEngagement(10),
+        [],
+        []
+    )
     const engagementList: UserEngagementResp = Array.isArray(engagement) ? engagement : []
 
     // W7-fix: 7d 活跃 filter 客户端 workaround

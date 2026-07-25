@@ -240,20 +240,20 @@ function UserInfoInner() {
     }, false, [user])
 
     // W7: admin summary BFF — 拉 engagement 排行找当前用户位置
-    // useDashboardStat 期望 { data: { code, data, message? } } 包装, BFF wrapper
-    // 直接返 universalResult<T>, 套一层 { data: r } 让 hook 能正确解套 (result.data.code)
-    const fetchEngagement = useCallback(async () => {
-        const r = await getUserEngagement(50)
-        return { data: r as unknown as { code: number; data: UserEngagementResp; message?: string } }
-    }, [])
-    const { data: engagement } = useDashboardStat<UserEngagementResp>(fetchEngagement, [], [])
+    // BFF client 直接返 universalResult<T> 单层 { code, data, message? }, hook 已解套,
+    // inline arrow 直接传 BFF call 即可 (PR #71 rebase 删 W3 旧 wrapper workaround)
+    const { data: engagement } = useDashboardStat<UserEngagementResp>(
+        () => getUserEngagement(50),
+        [],
+        []
+    )
 
-    // W7: 7d 告警 trend (drilldown popover 用) — 同上 wrap
-    const fetchAlarmTrend = useCallback(async () => {
-        const r = await getAlarmTrend(168, 'hour')
-        return { data: r as unknown as { code: number; data: AlarmTrendResp; message?: string } }
-    }, [])
-    const { data: alarmTrend } = useDashboardStat<AlarmTrendResp>(fetchAlarmTrend, [], [])
+    // W7: 7d 告警 trend (drilldown popover 用)
+    const { data: alarmTrend } = useDashboardStat<AlarmTrendResp>(
+        () => getAlarmTrend(168, 'hour'),
+        [],
+        []
+    )
 
     // 不用 useCallback, usePromise 每次 render 都返回新的 fecth 引用, 包了也无效
     const refreshAll = () => {
