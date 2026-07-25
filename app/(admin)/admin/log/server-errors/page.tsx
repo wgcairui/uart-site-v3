@@ -94,11 +94,12 @@ const EMPTY_FILTER: FilterState = {
 }
 
 export const ServerErrorsPage: React.FC = () => {
-    // 时间范围默认 24h
-    const [range, setRange] = useState<[dayjs.Dayjs, dayjs.Dayjs]>([
-        dayjs().subtract(24, 'hour'),
-        dayjs(),
-    ])
+    // 时间范围默认 24h — 2026-07-25 fix: init null + useEffect 初始化, 避免 React #418 hydration mismatch
+    const [range, setRange] = useState<[dayjs.Dayjs, dayjs.Dayjs] | null>(null)
+
+    useEffect(() => {
+        setRange([dayjs().subtract(24, 'hour'), dayjs()])
+    }, [])
     // 噪音过滤默认开启: 5xx only / 业务 URL / 非 GET
     const [hideNonServerErrors, setHideNonServerErrors] = useState(true)
     const [hideInfraPolling, setHideInfraPolling] = useState(true)
@@ -119,8 +120,8 @@ export const ServerErrorsPage: React.FC = () => {
     const querySig = useMemo(
         () =>
             JSON.stringify({
-                start: range[0].valueOf(),
-                end: range[1].valueOf(),
+                start: range?.[0].valueOf() ?? 0,
+                end: range?.[1].valueOf() ?? 0,
                 f: filters,
                 page,
                 pageSize,
@@ -132,6 +133,7 @@ export const ServerErrorsPage: React.FC = () => {
     )
 
     const fetchList = async () => {
+        if (!range) return
         setLoading(true)
         try {
             // 拼 search (regex 模糊)
@@ -333,7 +335,9 @@ export const ServerErrorsPage: React.FC = () => {
                         value: total,
                         variant: 'danger',
                         icon: <BarChartOutlined />,
-                        extra: `${range[0].format('MM-DD HH:mm')} ~ ${range[1].format('MM-DD HH:mm')}`,
+                        extra: range
+                            ? `${range[0].format('MM-DD HH:mm')} ~ ${range[1].format('MM-DD HH:mm')}`
+                            : '加载中…',
                     },
                     {
                         label: '5xx (本页)',

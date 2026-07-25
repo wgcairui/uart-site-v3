@@ -921,6 +921,13 @@ html, body {
     margin-right: 0 !important;
     display: block !important;
   }
+
+  /* DatePicker / RangePicker 在 375px 容器内全宽, 避免被裁切
+     (例: /main/alarm PageHeader extra 的 RangePicker 原本 ~320px 宽, 超过 user-content-frame 343px 内部宽度
+     → "2026-01-24 → 2026-07-24" 右侧 calendar icon 被裁) */
+  .ant-picker {
+    width: 100% !important;
+  }
 }
 
 @media (max-width: 480px) {

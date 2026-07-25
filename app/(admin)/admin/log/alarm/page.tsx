@@ -249,11 +249,13 @@ const EMPTY_FILTERS: AlarmFilters = {
 // ─── 主页面 ─────────────────────────────────────────────────────────────────
 
 export const LogAlarm: React.FC = () => {
-    // 共享 date state
-    const [date, setDate] = useState<[dayjs.Dayjs, dayjs.Dayjs]>([
-        dayjs().subtract(7, 'day'),
-        dayjs(),
-    ])
+    // 共享 date state — 2026-07-25 fix: init to null + useEffect 初始化, 避免 React #418
+    // server-render 跟 client-hydrate dayjs() 时间不同导致 hydration mismatch
+    const [date, setDate] = useState<[dayjs.Dayjs, dayjs.Dayjs] | null>(null)
+
+    useEffect(() => {
+        setDate([dayjs().subtract(7, 'day'), dayjs()])
+    }, [])
 
     // 桌面分页 state
     const [page, setPage] = useState(1)
@@ -293,6 +295,7 @@ export const LogAlarm: React.FC = () => {
     })
 
     useEffect(() => {
+        if (!date) return
         let cancelled = false
         setLoading(true)
 
@@ -417,28 +420,36 @@ export const LogAlarm: React.FC = () => {
                         value: bucket.total,
                         variant: 'primary',
                         icon: <BellOutlined />,
-                        extra: `${date[0].format('MM-DD HH:mm')} ~ ${date[1].format('MM-DD HH:mm')}`,
+                        extra: date
+                            ? `${date[0].format('MM-DD HH:mm')} ~ ${date[1].format('MM-DD HH:mm')}`
+                            : '加载中…',
                     },
                     {
                         label: '本月新增',
                         value: bucket.month,
                         variant: 'success',
                         icon: <CalendarOutlined />,
-                        extra: `自然月 (${dayjs().startOf('month').format('MM-DD')} → ${date[1].format('MM-DD')})`,
+                        extra: date
+                            ? `自然月 (${dayjs().startOf('month').format('MM-DD')} → ${date[1].format('MM-DD')})`
+                            : '加载中…',
                     },
                     {
                         label: '本周新增',
                         value: bucket.week,
                         variant: 'warning',
                         icon: <CalendarOutlined />,
-                        extra: `自然周 (周一 ${dayjs().startOf('week').format('MM-DD')} → ${date[1].format('MM-DD')})`,
+                        extra: date
+                            ? `自然周 (周一 ${dayjs().startOf('week').format('MM-DD')} → ${date[1].format('MM-DD')})`
+                            : '加载中…',
                     },
                     {
                         label: '今日新增',
                         value: bucket.day,
                         variant: 'danger',
                         icon: <CalendarOutlined />,
-                        extra: `今天 (${dayjs().startOf('day').format('MM-DD HH:mm')} → ${date[1].format('MM-DD HH:mm')})`,
+                        extra: date
+                            ? `今天 (${dayjs().startOf('day').format('MM-DD HH:mm')} → ${date[1].format('MM-DD HH:mm')})`
+                            : '加载中…',
                     },
                 ]}
             />
