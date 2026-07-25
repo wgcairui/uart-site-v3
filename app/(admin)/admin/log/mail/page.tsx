@@ -46,7 +46,7 @@ import {
     CheckCircleOutlined, CalendarOutlined, FilterOutlined,
     WarningOutlined, PercentageOutlined,
 } from '@ant-design/icons'
-import React, { useEffect, useMemo, useState } from 'react'
+import React, { Suspense, useEffect, useMemo, useState } from 'react'
 import { useSearchParams } from 'next/navigation'
 
 import {
@@ -130,7 +130,7 @@ const TABLE_COLUMNS: ColumnsType<Uart.logMailSend> = [
 
 // ─── 主页面 ─────────────────────────────────────────────────────────────────
 
-export const LogMail: React.FC = () => {
+function LogMailInner() {
     // 共享 date state (W5: 支持 URL ?startTs=&endTs= 反向驱动, StatCardNavigate 用)
     // 2026-07-25 fix: SSR-safe initial (was useState(() => window.location.search) → React #418 hydration error)
     // 改用 useSearchParams hook + useEffect client mount 同步, 初始 null 不调 dayjs() 避免 SSR/client mismatch
@@ -295,13 +295,9 @@ export const LogMail: React.FC = () => {
     }, [safeItems])
 
     // W5: 拉 top 10 用户活跃度 (走 BFF dashboard/users/engagement, 失败率 popover 参考用)
-    // useDashboardStat 期望 { data: { code, data, message? } } (双层), BE 返 universalResult (单层)
-    // 用包装函数对齐 hook 类型, hook 内部按 result.data.code / result.data.data 解套
+    // PR #71 review 后 useDashboardStat 已对齐单层 universalResult, 直接传 BFF 客户端
     const { data: userEngagement } = useDashboardStat<UserEngagementItem[]>(
-        async () => {
-            const r = await getUserEngagement(10)
-            return { data: { code: r.code, data: r.data, message: r.message } }
-        },
+        () => getUserEngagement(10),
         [],
         []
     )
@@ -655,4 +651,12 @@ export const LogMail: React.FC = () => {
     )
 }
 
-export default LogMail
+// Next.js 16.3+ 要求 useSearchParams 包 <Suspense>, 否则 prod build warn (16.4+ 会变 error)
+// 跟 app/(admin)/admin/node/terminal/[mac]/page.tsx 的 Inner/Suspense pattern 一致
+export default function LogMailPage() {
+    return (
+        <Suspense fallback={null}>
+            <LogMailInner />
+        </Suspense>
+    )
+}
