@@ -8,10 +8,8 @@
  */
 export const SUMMARY_ROUTES = {
   alarmSeverityDistribution: '/api/v2/admin/dashboard/alarms/severity-distribution',
-  devicesActiveCount: '/api/v2/admin/dashboard/devices/active-count',
   alarmTrend: '/api/v2/admin/dashboard/alarms/trend',
   dataFreshness: '/api/v2/admin/dashboard/data/freshness',
-  protocolUsage: '/api/v2/admin/dashboard/protocols/usage',
   nodeLoad: '/api/v2/admin/dashboard/nodes/load',
   userEngagement: '/api/v2/admin/dashboard/users/engagement',
 } as const;
