@@ -3,14 +3,13 @@
  * admin 短信日志页 (v3 hybrid v4 设计语言 · 2026-07-20)
  *
  * feat/mail-sms-filter-ui (cairui 20:13 拍"一样的重构流程", 跟 alarm 一样):
- * 1) 顶部 5 卡 (cairui 拍"5 卡 全在 1 页" — 4 时间分桶 + 1 短信消耗总):
- *    短信总数 / 本月新增 / 本周新增 / 今日新增 / 短信消耗总
- *    4 时间分桶走 server agg /sms/count-by-bucket
- *    短信消耗总走 logsmssendsCountInfo (复用, 加)
+ * 1) 顶部 4 卡 (cairui 拍"4 + 2 卡" — 4 时间分桶 + 2 失败维度, 取代原 5 卡):
+ *    短信总数 / 本月新增 / 本周新增 / 今日新增 (kind="navigate", href 跳到该时间窗)
+ *    今日失败 / 失败率 (kind="drilldown", popover 显示 top failing 收件人 / 失败原因分布)
  * 2) 4 维筛选条 (server-errors 风格):
  *    时间快选 + 手机号 + 结果 + TemplateParam 模糊
  * 3) 短信消耗 tab 合并到 1 页:
- *    - 顶部 5 卡(第 5 卡 = 短信消耗总)
+ *    - 顶部 6 卡 (4 time-bucket navigate + 2 fail drilldown)
  *    - 主 Table (短信日志) 在筛选条下
  *    - 短信消耗分布 (用户/次数) 在主 Table 下, 用 logsmssendsCountInfo + getUserAlarmSetups
  *
@@ -29,23 +28,32 @@
  *  - 发送参数: RegionId / SignName / TemplateCode / PhoneNumbers 拆字段
  *  - 实现: ./SmsDetailModal  (page.tsx 不再写 modal 内联)
  *
+ * W5 改造 (2026-07-25 cairui 拍 "log/sms + log/mail 接入 StatCard 4 variant"):
+ *  - PageSummary 5 卡 (4 time-bucket + 1 短信消耗总) → 手写 grid 6 卡 (4 time-bucket navigate + 2 fail drilldown)
+ *  - 短信消耗总 卡 删除 (跟 log/mail 保持一致, 4 + 2 模式)
+ *  - 4 time-bucket: kind="navigate", href 跳 ?startTs=&endTs= 让 page 切换 date
+ *  - 今日失败: kind="drilldown" hover 显示 top 5 failing 收件人
+ *  - 失败率: kind="drilldown" hover 显示失败原因分布 (Error.Message top 5)
+ *  - 防御性: items 200 上限, failRate total=0 时显示 0, useDashboardStat 兜底
+ *
  * 视觉 (跟 alarm / server-errors 一致):
- * - 顶部 PageSummary 5 卡
+ * - 顶部 6 StatCard (4 navigate + 2 drilldown) 手写 grid
  * - 4 维筛选条 + 3 列 Table (收件人 / 发送参数 / 时间)
  * - 短信消耗分布表 (页底, 折叠可考虑, 暂不折)
  */
 
 import {
-    Button, Divider, Input, Modal, Select, Space, Table, Tag,
+    Button, Divider, Input, Select, Space, Table, Tag,
 } from 'antd'
 import type { ColumnsType } from 'antd/es/table'
 import dayjs from 'dayjs'
 import {
-    ReloadOutlined, SearchOutlined, CloseCircleOutlined,
+    SearchOutlined, CloseCircleOutlined,
     CheckCircleOutlined, CalendarOutlined, FilterOutlined,
-    TeamOutlined, DollarOutlined,
+    WarningOutlined, PercentageOutlined,
 } from '@ant-design/icons'
-import React, { useEffect, useMemo, useState } from 'react'
+import React, { Suspense, useEffect, useMemo, useState } from 'react'
+import { useSearchParams } from 'next/navigation'
 
 import {
     logsmssends,
@@ -56,9 +64,12 @@ import {
 } from '@/lib/api/fetchRoot'
 import { generateTableKey } from '@/lib/utils/tableCommon'
 import { usePromise } from '@/lib/hooks/usePromise'
+import { useDashboardStat } from '@/lib/hooks/useDashboardStat'
+import { getUserEngagement } from '@/lib/api/admin-summary/client'
 import { MyDatePickerRange } from '@/components/common/MyDatePickerRange'
 import { PageHeader } from '@/components/common/PageHeader'
-import { PageSummary } from '@/components/common/PageSummary'
+import { StatCard } from '@/components/admin/StatCard'
+import type { UserEngagementItem } from '@/types/admin-summary'
 import { EmptyState } from '@/components/common/EmptyState'
 import { UserDes } from '@/components/data/UserDes'
 import { SmsDetailModal } from './_components/SmsDetailModal'
@@ -140,12 +151,31 @@ const EMPTY_FILTERS: SmsFilters = {
 
 // ─── 主页面 ─────────────────────────────────────────────────────────────────
 
-export const LogSms: React.FC = () => {
-    // 共享 date state
-    const [date, setDate] = useState<[dayjs.Dayjs, dayjs.Dayjs]>([
-        dayjs().subtract(7, 'day'),
-        dayjs(),
-    ])
+function LogSmsInner() {
+    // 共享 date state (W5: 支持 URL ?startTs=&endTs= 反向驱动, StatCardNavigate 用)
+    // 2026-07-25 fix: SSR-safe initial (was useState(() => window.location.search) → React #418 hydration error)
+    // 改用 useSearchParams hook + useEffect client mount 同步, 初始 null 不调 dayjs() 避免 SSR/client mismatch
+    // 跟 PR #75 (d35d4d4) 修 alarm/mail/sms/server-errors 4 页 useState dayjs() 模式同源
+    const [date, setDate] = useState<[dayjs.Dayjs, dayjs.Dayjs] | null>(null)
+    const searchParams = useSearchParams()
+    useEffect(() => {
+        // client mount 后同步 URL searchParams → state (URL 是 new source of truth)
+        const startTs = Number(searchParams.get('startTs'))
+        const endTs = Number(searchParams.get('endTs'))
+        if (Number.isFinite(startTs) && Number.isFinite(endTs) && startTs > 0 && endTs > 0) {
+            const nextStart = dayjs(startTs)
+            const nextEnd = dayjs(endTs)
+            setDate((cur) => {
+                if (cur && cur[0].isSame(nextStart) && cur[1].isSame(nextEnd)) {
+                    return cur
+                }
+                return [nextStart, nextEnd]
+            })
+        } else {
+            // URL 无 startTs/endTs: 首次 mount 给默认 7d window; 后续不变 (避免覆盖 URL 切换前的值)
+            setDate((cur) => cur ?? [dayjs().subtract(7, 'day'), dayjs()])
+        }
+    }, [searchParams])
 
     // 桌面分页 state (短信日志)
     const [page, setPage] = useState(1)
@@ -175,6 +205,7 @@ export const LogSms: React.FC = () => {
     const [loading, setLoading] = useState(false)
 
     useEffect(() => {
+        if (!date) return  // 2026-07-25 fix: SSR-safe initial date=null, 等 client mount 同步后再 fetch
         let cancelled = false
         setLoading(true)
 
@@ -233,13 +264,76 @@ export const LogSms: React.FC = () => {
         return new Map((smsRes.data as any[] || []).map((el: any) => [el._id, el.sum]))
     }, new Map())
 
-    // 短信消耗全网总条数 (5 卡中第 5 个)
+    // 短信消耗全网总条数 (W5: 短信消耗总 卡已 drop, smsTotal 仍保留供后续消费)
     const smsTotal = useMemo(() => {
         if (!smsMap) return 0
         let s = 0
         smsMap.forEach((v) => { s += v })
         return s
     }, [smsMap])
+
+    // W5: StatCard drilldown 派生数据 (基于 items 200 上限, 在 popover 内注明)
+    // 防御性: items 兜底 [] + 全部失败时 total=0 显示 0 不显示 NaN
+    const todayStart = dayjs().startOf('day')
+    const todayEnd = dayjs().endOf('day')
+    const safeItems = useMemo(() => (Array.isArray(items) ? items : []), [items])
+    const todayItems = useMemo(
+        () => safeItems.filter((x) => {
+            const ts = x?.timeStamp
+            if (!ts) return false
+            const d = dayjs(ts)
+            return d.isAfter(todayStart) && d.isBefore(todayEnd)
+        }),
+        [safeItems, todayStart, todayEnd]
+    )
+    const todayTotal = todayItems.length
+    const todayFails = useMemo(
+        () => todayItems.filter((x) => x?.Error).length,
+        [todayItems]
+    )
+    const failRate = todayTotal > 0 ? Math.round((todayFails / todayTotal) * 1000) / 10 : 0
+
+    // top 5 failing 收件人 (tels) — group 失败 items by tel, count
+    const topFailingTels = useMemo(() => {
+        const map = new Map<string, number>()
+        safeItems.forEach((it) => {
+            if (!it?.Error) return
+            const tels = Array.isArray(it.tels) ? it.tels : []
+            tels.forEach((tel) => {
+                if (tel) map.set(tel, (map.get(tel) ?? 0) + 1)
+            })
+        })
+        return Array.from(map.entries())
+            .sort((a, b) => b[1] - a[1])
+            .slice(0, 5)
+            .map(([tel, count]) => ({ tel, count }))
+    }, [safeItems])
+
+    // top 5 失败原因 — group 失败 items by Error.Message (aliyun sms), 缺省走 Error.code
+    const failReasons = useMemo(() => {
+        const map = new Map<string, number>()
+        safeItems.forEach((it) => {
+            if (!it?.Error) return
+            const reason =
+                (typeof it.Error === 'object' && (it.Error.Message || it.Error.message || it.Error.Code || it.Error.code)) ||
+                (typeof it.Error === 'string' ? it.Error : null) ||
+                '未知错误'
+            const key = String(reason).slice(0, 80)
+            map.set(key, (map.get(key) ?? 0) + 1)
+        })
+        return Array.from(map.entries())
+            .sort((a, b) => b[1] - a[1])
+            .slice(0, 5)
+            .map(([reason, count]) => ({ reason, count }))
+    }, [safeItems])
+
+    // W5: 拉 top 10 用户活跃度 (走 BFF dashboard/users/engagement, 拿 enrichment 用)
+    // PR #71 review 后 useDashboardStat 已对齐单层 universalResult, 直接传 BFF 客户端
+    const { data: userEngagement } = useDashboardStat<UserEngagementItem[]>(
+        () => getUserEngagement(10),
+        [],
+        []
+    )
 
     // 用户分页 (短信消耗分布表)
     const userApiQuery: PaginationReq = {
@@ -341,47 +435,170 @@ export const LogSms: React.FC = () => {
                 ]}
             />
 
-            {/* 5 卡 (cairui 20:13 拍): 4 时间分桶 + 1 短信消耗总 */}
-            <PageSummary
-                column={5}
-                items={[
-                    {
-                        label: '短信总数',
-                        value: bucket.total,
-                        variant: 'primary',
-                        icon: <CalendarOutlined />,
-                        extra: `${date[0].format('MM-DD HH:mm')} ~ ${date[1].format('MM-DD HH:mm')}`,
-                    },
-                    {
-                        label: '本月新增',
-                        value: bucket.month,
-                        variant: 'success',
-                        icon: <CalendarOutlined />,
-                        extra: `自然月 (${dayjs().startOf('month').format('MM-DD')} → ${date[1].format('MM-DD')})`,
-                    },
-                    {
-                        label: '本周新增',
-                        value: bucket.week,
-                        variant: 'warning',
-                        icon: <CalendarOutlined />,
-                        extra: `自然周 (周一 ${dayjs().startOf('week').format('MM-DD')} → ${date[1].format('MM-DD')})`,
-                    },
-                    {
-                        label: '今日新增',
-                        value: bucket.day,
-                        variant: 'danger',
-                        icon: <CalendarOutlined />,
-                        extra: `今天 (${dayjs().startOf('day').format('MM-DD HH:mm')} → ${date[1].format('MM-DD HH:mm')})`,
-                    },
-                    {
-                        label: '短信消耗总',
-                        value: smsTotal,
-                        variant: 'info',
-                        icon: <DollarOutlined />,
-                        extra: `全网累计 (来自 logsmssendsCountInfo)`,
-                    },
-                ]}
-            />
+            {/* W5 改造: 6 卡 = 4 time-bucket (navigate) + 2 fail dimension (drilldown)
+                - 4 time-bucket href 跳同页 ?startTs=&endTs= 反向驱动 date state (useSearchParams effect)
+                - 2 fail dimension 走 drilldown 弹 popover, 防御性 data ?? [] / failRate 0 兜底
+                - popover 内注明 "基于当前 items 上限 200" 防误导 */}
+            <div
+                className="page-summary-grid"
+                style={{
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(6, 1fr)',
+                    gap: 20,
+                    marginBottom: 32,
+                }}
+            >
+                {/* 1. 短信总数 (navigate: 跳到当前时间窗, href 用 date 反向) */}
+                <StatCard
+                    kind="navigate"
+                    label="短信总数"
+                    value={bucket.total}
+                    variant="primary"
+                    icon={<CalendarOutlined />}
+                    extra={date ? `${date[0].format('MM-DD HH:mm')} ~ ${date[1].format('MM-DD HH:mm')}` : '加载中…'}
+                    href={date ? `/admin/log/sms?startTs=${date[0].valueOf()}&endTs=${date[1].valueOf()}` : '/admin/log/sms'}
+                />
+                {/* 2. 本月新增 (navigate: 跳到本月) */}
+                <StatCard
+                    kind="navigate"
+                    label="本月新增"
+                    value={bucket.month}
+                    variant="success"
+                    icon={<CalendarOutlined />}
+                    extra={date ? `自然月 (${dayjs().startOf('month').format('MM-DD')} → ${date[1].format('MM-DD')})` : '加载中…'}
+                    href={date ? `/admin/log/sms?startTs=${dayjs().startOf('month').valueOf()}&endTs=${date[1].valueOf()}` : '/admin/log/sms'}
+                />
+                {/* 3. 本周新增 (navigate: 跳到本周) */}
+                <StatCard
+                    kind="navigate"
+                    label="本周新增"
+                    value={bucket.week}
+                    variant="warning"
+                    icon={<CalendarOutlined />}
+                    extra={date ? `自然周 (周一 ${dayjs().startOf('week').format('MM-DD')} → ${date[1].format('MM-DD')})` : '加载中…'}
+                    href={date ? `/admin/log/sms?startTs=${dayjs().startOf('week').valueOf()}&endTs=${date[1].valueOf()}` : '/admin/log/sms'}
+                />
+                {/* 4. 今日新增 (navigate: 跳到今天) */}
+                <StatCard
+                    kind="navigate"
+                    label="今日新增"
+                    value={bucket.day}
+                    variant="danger"
+                    icon={<CalendarOutlined />}
+                    extra={date ? `今天 (${dayjs().startOf('day').format('MM-DD HH:mm')} → ${date[1].format('MM-DD HH:mm')})` : '加载中…'}
+                    href={date ? `/admin/log/sms?startTs=${dayjs().startOf('day').valueOf()}&endTs=${date[1].valueOf()}` : '/admin/log/sms'}
+                />
+                {/* 5. 今日失败 (drilldown: hover 显示 top 5 failing 收件人 + 活跃度 top 10 参考) */}
+                <StatCard
+                    kind="drilldown"
+                    label="今日失败"
+                    value={todayFails}
+                    variant="danger"
+                    icon={<WarningOutlined />}
+                    extra={`今日 ${todayTotal} 条中 (基于当前列表 ≤${MAX_ITEMS})`}
+                    data={topFailingTels}
+                    trigger="hover"
+                    popoverContent={() => (
+                        <div style={{ width: 360 }}>
+                            <div style={{ fontSize: 12, color: 'var(--ink-500)', marginBottom: 6, fontWeight: 600 }}>
+                                Top 5 失败收件人 (tel)
+                            </div>
+                            {topFailingTels.length === 0 ? (
+                                <div style={{ color: 'var(--ink-500)', fontSize: 12, padding: '8px 0 12px' }}>
+                                    暂无失败记录
+                                </div>
+                            ) : (
+                                <Table
+                                    size="small"
+                                    pagination={false}
+                                    rowKey="tel"
+                                    dataSource={topFailingTels as any}
+                                    columns={[
+                                        { title: '手机号', dataIndex: 'tel', key: 'tel', ellipsis: true, width: 220 },
+                                        {
+                                            title: '失败数',
+                                            dataIndex: 'count',
+                                            key: 'count',
+                                            width: 90,
+                                            align: 'right',
+                                            render: (v: number) => (
+                                                <Tag color="error" style={{ margin: 0 }}>{v}</Tag>
+                                            ),
+                                        },
+                                    ]}
+                                />
+                            )}
+                            {userEngagement.length > 0 && (
+                                <>
+                                    <div style={{ fontSize: 12, color: 'var(--ink-500)', margin: '12px 0 6px', fontWeight: 600 }}>
+                                        参考: 活跃度 top {userEngagement.length} 用户
+                                    </div>
+                                    <Table
+                                        size="small"
+                                        pagination={false}
+                                        rowKey="user"
+                                        dataSource={userEngagement.slice(0, 5) as any}
+                                        columns={[
+                                            { title: '用户', dataIndex: 'user', key: 'user', ellipsis: true, width: 140 },
+                                            { title: '设备', dataIndex: 'deviceCount', key: 'deviceCount', width: 50, align: 'right' },
+                                            { title: '7d告警', dataIndex: 'alarmCount7d', key: 'alarmCount7d', width: 70, align: 'right' },
+                                            { title: '7d短信', dataIndex: 'smsCount7d', key: 'smsCount7d', width: 70, align: 'right' },
+                                        ]}
+                                    />
+                                </>
+                            )}
+                        </div>
+                    )}
+                />
+                {/* 6. 失败率 (drilldown: hover 显示失败原因 top 5) */}
+                <StatCard
+                    kind="drilldown"
+                    label="失败率"
+                    value={`${failRate}%`}
+                    variant={failRate > 5 ? 'danger' : failRate > 0 ? 'warning' : 'success'}
+                    icon={<PercentageOutlined />}
+                    extra={`今日失败 ${todayFails} / ${todayTotal} (基于当前列表 ≤${MAX_ITEMS})`}
+                    data={failReasons}
+                    trigger="hover"
+                    popoverContent={() => (
+                        <div style={{ width: 360 }}>
+                            <div style={{ fontSize: 12, color: 'var(--ink-500)', marginBottom: 6 }}>
+                                失败原因分布 (Error.Message / code, top 5)
+                            </div>
+                            {failReasons.length === 0 ? (
+                                <div style={{ color: 'var(--ink-500)', fontSize: 12, padding: '8px 0' }}>
+                                    暂无失败记录
+                                </div>
+                            ) : (
+                                <Table
+                                    size="small"
+                                    pagination={false}
+                                    rowKey="reason"
+                                    dataSource={failReasons as any}
+                                    columns={[
+                                        {
+                                            title: '原因',
+                                            dataIndex: 'reason',
+                                            key: 'reason',
+                                            ellipsis: true,
+                                        },
+                                        {
+                                            title: '次数',
+                                            dataIndex: 'count',
+                                            key: 'count',
+                                            width: 70,
+                                            align: 'right',
+                                            render: (v: number) => (
+                                                <Tag color="error" style={{ margin: 0 }}>{v}</Tag>
+                                            ),
+                                        },
+                                    ]}
+                                />
+                            )}
+                        </div>
+                    )}
+                />
+            </div>
 
             {/* 4 维筛选条 (server-errors 风格) */}
             <div
@@ -677,4 +894,12 @@ export const LogSms: React.FC = () => {
     )
 }
 
-export default LogSms
+// Next.js 16.3+ 要求 useSearchParams 包 <Suspense>, 否则 prod build warn (16.4+ 会变 error)
+// 跟 app/(admin)/admin/node/terminal/[mac]/page.tsx 的 Inner/Suspense pattern 一致
+export default function LogSmsPage() {
+    return (
+        <Suspense fallback={null}>
+            <LogSmsInner />
+        </Suspense>
+    )
+}
