@@ -832,16 +832,7 @@ html, body {
     display: none;
   }
 
-  /* Topbar 菜单: user 端折叠成 hamburger (默认隐藏 nav) */
-  .user-topbar-nav {
-    display: none !important;
-  }
-  .user-topbar-hamburger {
-    display: flex !important;
-  }
-  .user-mobile-drawer-mask {
-    display: block !important;
-  }
+  /* Topbar 菜单: user 端走 hamburger (规则已提到顶层, 永远显示) */
 
   /* Topbar 菜单: admin 端 (Sider 已隐藏) 显示 hamburger (admin 端没有 nav, 走 drawer) */
   .admin-topbar-hamburger {
@@ -1439,6 +1430,36 @@ html, body {
   box-sizing: border-box;
   position: relative;
   min-height: 100%;
+}
+
+/* =============================================================
+ * user 端移动端优先 · topbar 锁 375px 容器 (跟 user-content-frame 对齐)
+ * 2026-07-25 · user-topbar-locked
+ * - pear.us/cai mobile-first 模式: topbar 也按 375px 锁宽, 不论 viewport
+ * - desktop (>=768) 永远走 hamburger 模式, 3 nav item 移进 drawer
+ * - 原来 media (max-width: 768px) 的隐藏 nav / 显示 hamburger 规则提到顶层
+ * ============================================================= */
+
+.app-topbar-user {
+  max-width: 375px;
+  width: 100%;
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: 16px !important;
+  padding-right: 16px !important;
+  box-sizing: border-box;
+}
+
+/* user 端: 永远走 hamburger (3 nav item 进 drawer), 不再在 desktop 显示 inline nav */
+.user-topbar-nav {
+  display: none !important;
+}
+.user-topbar-hamburger {
+  display: flex !important;
+}
+/* drawer mask 默认隐藏, 点了 hamburger 才显示 (在 layout 里 conditional render) */
+.user-mobile-drawer-mask {
+  display: none;
 }
 
 /* =============================================================
