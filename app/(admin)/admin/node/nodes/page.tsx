@@ -25,8 +25,11 @@ import { PageHeader } from '@/components/common/PageHeader'
 import { PageSummary, type SummaryVariant } from '@/components/common/PageSummary'
 import { StatusTag } from '@/components/common/StatusTag'
 import { EmptyState } from '@/components/common/EmptyState'
+import { StatCard } from '@/components/admin/StatCard'
+import { MiniSparkline } from '@/components/common/MiniSparkline'
 import { DeleteFilled, ReloadOutlined, SafetyCertificateOutlined,
   ClusterOutlined, ApiOutlined, ThunderboltOutlined, DatabaseOutlined, PlusOutlined,
+  HeartFilled, SafetyOutlined, DisconnectOutlined,
 } from '@ant-design/icons'
 import dayjs from 'dayjs'
 import relativeTime from 'dayjs/plugin/relativeTime'
@@ -44,6 +47,8 @@ import {
 } from '@/lib/api/fetchRoot'
 import { RotateTokenModal } from '@/components/node/RotateTokenModal'
 import { usePromise } from '@/lib/hooks/usePromise'
+import { useDashboardStat } from '@/lib/hooks/useDashboardStat'
+import { getNodeLoad } from '@/lib/api/admin-summary/client'
 import { generateTableKey, tableConfig } from '@/lib/utils/tableCommon'
 import { PaginationReq } from '@/types'
 
@@ -165,6 +170,13 @@ export const Nodes: React.FC = () => {
         source: 'rotate' | 'create' | 'init'
     } | null>(null)
     const [query, setQuery] = useState<PaginationReq>({ page: 1, pageSize: 20, needTotal: true })
+    // stat 筛选 (W6 · StatCard filter variant) — 多选叠加
+    // 'hasToken' = 只看 Token 鉴权节点, 'online' = 只看 60s 内有心跳
+    const [statFilter, setStatFilter] = useState<string[]>([])
+    const toggleStatFilter = (key: string) => {
+        setStatFilter(prev => prev.includes(key) ? prev.filter(k => k !== key) : [...prev, key])
+        setQuery(prev => ({ ...prev, page: 1 }))
+    }
 
     // 移动端 detection: < 768px 走 cards 视图, 桌面走 Table
     // matchMedia hook 避免 SSR 报错 (window 仅 client 存在)
@@ -186,7 +198,7 @@ export const Nodes: React.FC = () => {
         return Array.isArray(el.data) ? el.data : []
     }, [] as Uart.NodeClient[], [])
 
-    const nodes = nodesData ?? []
+    const nodes = useMemo(() => nodesData ?? [], [nodesData])
 
     // 节点是否在线: 后端不返回 `online` 字段 (Uart.NodeClient type 也没声明),
     // 改用 lastSeenAt 派生 — 60s 内有心跳算在线 (Token 鉴权每次握手都会刷新 lastSeenAt)
@@ -208,8 +220,33 @@ export const Nodes: React.FC = () => {
                   nodes.reduce((acc, n) => acc + ((n as any).count || 0), 0) / total,
               )
             : 0
-        return { total, online, totalConnections, avgDevices }
+        const hasToken = nodes.filter((n) => n.hasToken).length
+        const noToken = total - hasToken
+        return { total, online, totalConnections, avgDevices, hasToken, noToken }
     }, [nodes])
+
+    // W6 · BFF dashboard/nodes/load — 4 档分桶 (healthy / warning / overloaded / offline)
+    // 供 drilldown StatCard 展示用
+    // W3 useDashboardStat 期望 fn 返 { data: { code, data } } 双层套壳, 但 BFF 实际返
+    // universalResult<NodeLoadResp> (单层套壳). 用 as any 兼容类型, runtime 行为
+    // 由 hook 内部 try-catch + initValue 兜底 (详情见 W8 类型签名修正待办).
+    const { data: nodeLoad, loading: nodeLoadLoading } = useDashboardStat(
+        () => getNodeLoad() as any,
+        [],
+        { healthy: 0, warning: 0, overloaded: 0, offline: 0, total: 0 },
+    )
+
+    // statFilter 客户端 filter (Node list 走 client-side, 没 server filter)
+    const filteredNodes = useMemo(() => {
+        let result = nodes
+        if (statFilter.includes('hasToken')) {
+            result = result.filter((n) => n.hasToken)
+        }
+        if (statFilter.includes('online')) {
+            result = result.filter((n) => isNodeAlive(n))
+        }
+        return result
+    }, [nodes, statFilter])
 
     const handleDelete = (node: string) => {
         confirm({
@@ -361,6 +398,123 @@ export const Nodes: React.FC = () => {
                 ]}
             />
 
+            {/* W6 · StatCard 6 张 (filter / navigate / drilldown 三 variant 联合)
+                - 节点总数 (filter, primary)         — active 表示"未过滤", 点击清空所有 statFilter
+                - 在线节点 (filter, success)         — toggle statFilter.online, 客户端 filter
+                - 总连接上限 (drilldown, info)       — hover 显示 4 桶负载分布
+                - 平均注册设备 (drilldown, purple)   — hover 显示 4 桶 + 总连接柱状
+                - Token 鉴权 (filter, primary)      — toggle statFilter.hasToken, 客户端 filter
+                - 无心跳节点 (navigate, danger)      — 跳 /admin/node/terminal?status=offline
+                PageSummary 4 张保留为 SEO + 视觉过渡 (上方), StatCard 6 张体现 actionable.
+            */}
+            <div
+                style={{
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
+                    gap: 16,
+                    marginBottom: 24,
+                }}
+            >
+                <StatCard
+                    kind="filter"
+                    label="节点总数"
+                    value={stats.total}
+                    variant="primary"
+                    icon={<ClusterOutlined />}
+                    active={statFilter.length === 0}
+                    onToggle={() => {
+                        setStatFilter([])
+                        setQuery(prev => ({ ...prev, page: 1 }))
+                    }}
+                />
+                <StatCard
+                    kind="filter"
+                    label="在线节点"
+                    value={stats.online}
+                    variant="success"
+                    icon={<ApiOutlined />}
+                    extra={stats.total > 0 ? `${Math.round((stats.online / stats.total) * 100)}% 在线率` : '—'}
+                    active={statFilter.includes('online')}
+                    onToggle={() => toggleStatFilter('online')}
+                />
+                <StatCard
+                    kind="drilldown"
+                    label="总连接上限"
+                    value={stats.totalConnections.toLocaleString()}
+                    variant="info"
+                    icon={<ThunderboltOutlined />}
+                    data={nodeLoad}
+                    trigger="hover"
+                    popoverContent={({ data: dl }) => (
+                        <div style={{ minWidth: 240 }}>
+                            <div style={{ fontSize: 12, color: 'var(--ink-500)', marginBottom: 8 }}>
+                                节点负载 4 桶分布 (BFF /nodes/load)
+                            </div>
+                            {[
+                                { k: 'healthy', label: '健康', color: '#10b981' },
+                                { k: 'warning', label: '关注', color: '#f59e0b' },
+                                { k: 'overloaded', label: '过载', color: '#ef4444' },
+                                { k: 'offline', label: '离线', color: '#7c8aa0' },
+                            ].map(b => {
+                                const d = (dl as any) || {}
+                                return (
+                                    <div key={b.k} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, padding: '4px 0' }}>
+                                        <span style={{ color: b.color }}>● {b.label}</span>
+                                        <span style={{ fontFamily: 'var(--font-mono)' }}>{d[b.k] ?? 0}</span>
+                                    </div>
+                                )
+                            })}
+                        </div>
+                    )}
+                />
+                <StatCard
+                    kind="drilldown"
+                    label="平均注册设备"
+                    value={stats.avgDevices}
+                    variant="purple"
+                    icon={<DatabaseOutlined />}
+                    data={nodeLoad}
+                    trigger="hover"
+                    popoverContent={({ data: dl }) => (
+                        <div style={{ minWidth: 240 }}>
+                            <div style={{ fontSize: 12, color: 'var(--ink-500)', marginBottom: 8 }}>
+                                节点负载 4 桶分布 (BFF /nodes/load)
+                            </div>
+                            <MiniSparkline
+                                data={[
+                                    { bucket: 'healthy', total: (dl as any)?.healthy ?? 0 },
+                                    { bucket: 'warning', total: (dl as any)?.warning ?? 0 },
+                                    { bucket: 'overloaded', total: (dl as any)?.overloaded ?? 0 },
+                                    { bucket: 'offline', total: (dl as any)?.offline ?? 0 },
+                                ]}
+                                color="#8b5cf6"
+                                height={50}
+                                width={220}
+                            />
+                        </div>
+                    )}
+                />
+                <StatCard
+                    kind="filter"
+                    label="Token 鉴权"
+                    value={stats.hasToken}
+                    variant="primary"
+                    icon={<SafetyCertificateOutlined />}
+                    extra={stats.total > 0 ? `${Math.round((stats.hasToken / stats.total) * 100)}% 已启用` : '—'}
+                    active={statFilter.includes('hasToken')}
+                    onToggle={() => toggleStatFilter('hasToken')}
+                />
+                <StatCard
+                    kind="navigate"
+                    label="无心跳节点"
+                    value={nodeLoad.offline}
+                    variant="danger"
+                    icon={<DisconnectOutlined />}
+                    extra={nodeLoadLoading ? '加载中…' : `${nodeLoad.offline} 节点 socket 已断`}
+                    href="/admin/node/terminal?status=offline&mountNode=__offline__"
+                />
+            </div>
+
             <AddNode
                 visible={visible}
                 onCancel={() => setVisible(false)}
@@ -388,18 +542,18 @@ export const Nodes: React.FC = () => {
 
             {isMobile ? (
                 <div className="bento-card" style={{ padding: 16, marginBottom: 20 }}>
-                    {nodes.length === 0 ? (
+                    {filteredNodes.length === 0 ? (
                         <EmptyState
-                            description="暂无节点"
-                            actionLabel="添加节点"
-                            onAction={() => {
-                                setEditingItem(null)
-                                setVisible(true)
-                            }}
+                            description={statFilter.length > 0 ? `当前过滤条件 (${statFilter.join(', ')}) 下无节点` : '暂无节点'}
+                            actionLabel={statFilter.length > 0 ? '清除过滤' : '添加节点'}
+                            onAction={statFilter.length > 0
+                                ? () => { setStatFilter([]); setQuery(prev => ({ ...prev, page: 1 })) }
+                                : () => { setEditingItem(null); setVisible(true) }
+                            }
                         />
                     ) : (
                         <div className="nodes-mobile-cards" data-testid="nodes-mobile-cards">
-                            {generateTableKey(nodes, '_id').map((n: any) => (
+                            {generateTableKey(filteredNodes, '_id').map((n: any) => (
                                 <div key={n._id ?? n.Name} className="node-mobile-card">
                                     <div className="node-mobile-card-header">
                                         <span className="node-name">{n.Name}</span>
@@ -507,22 +661,22 @@ export const Nodes: React.FC = () => {
                 </div>
             ) : (
                 <div className="bento-card" style={{ padding: 20, marginBottom: 20 }}>
-                    {nodes.length === 0 ? (
+                    {filteredNodes.length === 0 ? (
                         <EmptyState
-                            description="暂无节点"
-                            actionLabel="添加节点"
-                            onAction={() => {
-                                setEditingItem(null)
-                                setVisible(true)
-                            }}
+                            description={statFilter.length > 0 ? `当前过滤条件 (${statFilter.join(', ')}) 下无节点` : '暂无节点'}
+                            actionLabel={statFilter.length > 0 ? '清除过滤' : '添加节点'}
+                            onAction={statFilter.length > 0
+                                ? () => { setStatFilter([]); setQuery(prev => ({ ...prev, page: 1 })) }
+                                : () => { setEditingItem(null); setVisible(true) }
+                            }
                         />
                     ) : (
-                        <Table className="v3-table"                 dataSource={generateTableKey(nodes, '_id')}
+                        <Table className="v3-table"                 dataSource={generateTableKey(filteredNodes, '_id')}
                             {...tableConfig}
                             pagination={{
                                 current: query.page ?? 1,
                                 pageSize: query.pageSize ?? 20,
-                                total: nodes.length,
+                                total: filteredNodes.length,
                                 showTotal: t => `共 ${t} 个节点`,
                                 showSizeChanger: true,
                             }}

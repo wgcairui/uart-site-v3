@@ -102,6 +102,14 @@ interface props {
 	 * 透传给 makeServerFilterProp，列头 funnel 多选
 	 */
 	statsPids?: string[];
+	/**
+	 * W6 · 外部 stat card 联动 filter (PageSummary → 列表的 server-side filter 桥)
+	 * 用法: <TerminalsTable extraQuery={{ filters: { online: ['true'] } }} />
+	 * 合并策略: extraQuery.filters 高优先级覆盖内部 pageReq.filters 同 key,
+	 *           不传 key 不动内部 state. 列头 funnel 仍可独立工作.
+	 * 不传则维持原行为 (向后兼容)
+	 */
+	extraQuery?: { filters?: Record<string, string[]> };
 }
 
 /**
@@ -121,7 +129,16 @@ export const TerminalsTable: React.FC<Omit<TableProps<Uart.Terminal>, "dataSourc
 		sortOrder: "desc",
 	});
 	const [searchFields, setSearchFields] = useState<Record<string, string>>({});
-	const apiQuery: PaginationReq = { ...pageReq, search: searchFields };
+	// W6 · extraQuery 合并: extraQuery.filters 高优先级覆盖 pageReq.filters 同 key
+	const mergedFilters: Record<string, string[]> = {
+		...(pageReq.filters || {}),
+		...(props.extraQuery?.filters || {}),
+	};
+	const apiQuery: PaginationReq = {
+		...pageReq,
+		search: searchFields,
+		...(Object.keys(mergedFilters).length > 0 ? { filters: mergedFilters } : {}),
+	};
 
 	const {
 		data,
