@@ -181,18 +181,21 @@ const Alarm: React.FC = () => {
                     { title: '首页', href: '/main' },
                     { title: '告警' },
                 ]}
-                extra={
-                    <Form layout="inline" style={{ margin: 0 }}>
-                        <Form.Item label="时间区间" style={{ marginBottom: 0 }}>
-                            <DatePicker.RangePicker
-                                value={dates as any}
-                                onChange={value => setDates(value as any)}
-                                allowClear={false}
-                            />
-                        </Form.Item>
-                    </Form>
-                }
             />
+
+            {/* 2026-07-25 V-1 修复: DatePicker 从 PageHeader.extra 拆出来, 独立一行
+                原因: 375px 容器下 DatePicker.RangePicker 太宽, 把标题挤成单字竖列 */}
+            <div style={{ marginBottom: 20 }}>
+                <Form layout="inline" style={{ margin: 0 }}>
+                    <Form.Item label="时间区间" style={{ marginBottom: 0 }}>
+                        <DatePicker.RangePicker
+                            value={dates as any}
+                            onChange={value => setDates(value as any)}
+                            allowClear={false}
+                        />
+                    </Form.Item>
+                </Form>
+            </div>
 
             {/* PageSummary 4 卡 — 6 variant 全覆盖 (primary/success/warning/danger/info/purple) */}
             <PageSummary
@@ -248,7 +251,7 @@ const Alarm: React.FC = () => {
                             fontSize: 16,
                             fontWeight: 600,
                             margin: '0 0 4px',
-                            color: 'var(--ink-900)',
+                            color: 'var(--cr-text-1)',
                         }}
                     >
                         告警类型占比
@@ -315,7 +318,7 @@ const Alarm: React.FC = () => {
                             fontSize: 16,
                             fontWeight: 600,
                             margin: '0 0 4px',
-                            color: 'var(--ink-900)',
+                            color: 'var(--cr-text-1)',
                         }}
                     >
                         告警数量趋势
@@ -381,7 +384,7 @@ const Alarm: React.FC = () => {
 
             {/* 告警列表 + 批量操作 */}
             <div
-                className="bento-card"
+                className="alarm-list-cr"
                 style={{ padding: 24 }}
             >
                 <div

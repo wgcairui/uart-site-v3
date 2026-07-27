@@ -158,13 +158,26 @@ const UserInfo: React.FC = props => {
                                 {
                                     tels.map((el, key) => <Tag className="v3-tag-cr" closable onClose={() => delTel(key)} key={key}>{el}</Tag>)
                                 }
-                                <PlusSquareFilled style={{ color: "var(--cr-accent)", cursor: "pointer" }} onClick={addTel} />
+                                {/* 2026-07-25 a11y: 加 role/tabIndex/aria-label */}
+                                <PlusSquareFilled
+                                    role="button"
+                                    tabIndex={0}
+                                    aria-label="添加告警通知电话"
+                                    style={{ color: "var(--cr-accent)", cursor: "pointer" }}
+                                    onClick={addTel}
+                                />
                             </Form.Item>
                             <Form.Item label="告警通知邮箱">
                                 {
                                     mails.map((el, key) => <Tag className="v3-tag-cr" closable onClose={() => delMail(key)} key={key}>{el}</Tag>)
                                 }
-                                <PlusSquareFilled style={{ color: "var(--cr-accent)", cursor: "pointer" }} onClick={addMail} />
+                                <PlusSquareFilled
+                                    role="button"
+                                    tabIndex={0}
+                                    aria-label="添加告警通知邮箱"
+                                    style={{ color: "var(--cr-accent)", cursor: "pointer" }}
+                                    onClick={addMail}
+                                />
                             </Form.Item>
                             <Form.Item >
                                 <Button theme="control-room" variant="primary" onClick={saveAlarm} block={isMobile}>保存配置</Button>

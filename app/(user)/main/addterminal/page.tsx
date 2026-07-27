@@ -306,11 +306,7 @@ const AddTerminal: React.FC = () => {
                     }}
                 >
                     <span
-                        className="stat-card-icon"
-                        style={{
-                            background: 'var(--brand-50)',
-                            color: 'var(--color-primary)',
-                        }}
+                        className="v3-step-icon-cr"
                     >
                         <SearchOutlined />
                     </span>
@@ -381,11 +377,7 @@ const AddTerminal: React.FC = () => {
                             }}
                         >
                             <span
-                                className="stat-card-icon"
-                                style={{
-                                    background: 'var(--brand-50)',
-                                    color: 'var(--color-primary)',
-                                }}
+                                className="v3-step-icon-cr"
                             >
                                 <LinkOutlined />
                             </span>
@@ -476,11 +468,7 @@ const AddTerminal: React.FC = () => {
                             }}
                         >
                             <span
-                                className="stat-card-icon"
-                                style={{
-                                    background: 'var(--brand-50)',
-                                    color: 'var(--color-primary)',
-                                }}
+                                className="v3-step-icon-cr"
                             >
                                 <PlusOutlined />
                             </span>

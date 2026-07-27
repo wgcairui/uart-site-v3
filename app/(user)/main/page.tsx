@@ -171,10 +171,23 @@ const UserIndex: React.FC = (props) => {
                                                 subtitle={dayjs(el.uptime).format("YY/M/D H:m:s")}
                                                 actions={[
                                                     <Tooltip key="eye" title="编辑查看">
-                                                        <EyeFilled style={{ color: 'var(--color-success)' }} onClick={() => nav("/main/terminal/" + el.DevMac)} />
+                                                        {/* 2026-07-25: 改 --cr-status-online + 加 role/tabIndex/aria-label 满足 a11y */}
+                                                        <EyeFilled
+                                                            role="button"
+                                                            tabIndex={0}
+                                                            aria-label={`查看 ${el.name}`}
+                                                            style={{ color: 'var(--cr-status-online)', cursor: 'pointer' }}
+                                                            onClick={() => nav("/main/terminal/" + el.DevMac)}
+                                                        />
                                                     </Tooltip>,
                                                     <Tooltip key="edit" title="重命名">
-                                                        <EditFilled style={{ color: 'var(--color-primary)' }} onClick={() => renameTerminal(el)} />
+                                                        <EditFilled
+                                                            role="button"
+                                                            tabIndex={0}
+                                                            aria-label={`重命名 ${el.name}`}
+                                                            style={{ color: 'var(--cr-accent)', cursor: 'pointer' }}
+                                                            onClick={() => renameTerminal(el)}
+                                                        />
                                                     </Tooltip>,
                                                     <Tooltip key="delete" title="删除" >
                                                         <Popconfirm
@@ -182,7 +195,13 @@ const UserIndex: React.FC = (props) => {
                                                             onConfirm={() => delTermianl(el)}
                                                             onCancel={() => message.info('cancel')}
                                                         >
-                                                            <DeleteFilled style={{ color: 'var(--color-warning)' }} />
+                                                            {/* 2026-07-25: 改 --cr-status-warning + a11y */}
+                                                            <DeleteFilled
+                                                                role="button"
+                                                                tabIndex={0}
+                                                                aria-label={`删除 ${el.name}`}
+                                                                style={{ color: 'var(--cr-status-warning)', cursor: 'pointer' }}
+                                                            />
                                                         </Popconfirm>
                                                     </Tooltip>
                                                 ]}

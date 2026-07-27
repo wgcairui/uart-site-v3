@@ -44,7 +44,7 @@ function TerminalInner() {
 
   if (!terminal) {
     return (
-      <div className="bg-cr-canvas" style={{ padding: 80, textAlign: 'center', color: 'var(--ink-400)' }}>
+      <div className="bg-cr-canvas" style={{ padding: 80, textAlign: 'center', color: 'var(--cr-text-3)' }}>
         <Empty className="v3-empty-cr" description="找不到该终端的数据" />
       </div>
     )
@@ -60,33 +60,33 @@ function TerminalInner() {
       <nav
         style={{
           display: 'flex', alignItems: 'center', gap: 10,
-          fontSize: 12, color: 'var(--ink-500)',
+          fontSize: 12, color: 'var(--cr-text-3)',
           marginBottom: 12,
           fontFamily: 'var(--font-mono)',
         }}
       >
         <a
           onClick={() => router.back()}
-          style={{ cursor: 'pointer', color: 'var(--ink-500)' }}
+          style={{ cursor: 'pointer', color: 'var(--cr-text-3)' }}
         >
           ← 返回
         </a>
-        <span style={{ color: 'var(--ink-300)' }}>/</span>
+        <span style={{ color: 'var(--cr-border-strong)' }}>/</span>
         <a
           onClick={() => router.push('/main')}
-          style={{ cursor: 'pointer', color: 'var(--ink-500)' }}
+          style={{ cursor: 'pointer', color: 'var(--cr-text-3)' }}
         >
           首页
         </a>
-        <span style={{ color: 'var(--ink-300)' }}>/</span>
+        <span style={{ color: 'var(--cr-border-strong)' }}>/</span>
         <a
           onClick={() => router.push('/main')}
-          style={{ cursor: 'pointer', color: 'var(--ink-500)' }}
+          style={{ cursor: 'pointer', color: 'var(--cr-text-3)' }}
         >
           终端
         </a>
-        <span style={{ color: 'var(--ink-300)' }}>/</span>
-        <span style={{ color: 'var(--ink-700)', fontWeight: 500 }}>{terminal.DevMac}</span>
+        <span style={{ color: 'var(--cr-border-strong)' }}>/</span>
+        <span style={{ color: 'var(--cr-text-1)', fontWeight: 500 }}>{terminal.DevMac}</span>
       </nav>
 
       {/* ─── 2. device hero 紫渐变 (跟 admin terminal 一致) ─── */}
@@ -155,32 +155,23 @@ function TerminalInner() {
         </div>
       </div>
 
-      {/* ─── 4. 挂载设备完整管理 (TerminalMountDevs 保留, 包在 bento-card 里) ─── */}
+      {/* ─── 4. 挂载设备完整管理 (TerminalMountDevs 保留, 包在 bento-card-cr 里) ───
+          2026-07-25 V-6 修复: 替代原 bento-card 浅色 (rgba white 0.72), 切到 control-room 暗色 */}
       <div
-        className="bento-card"
+        className="bento-card-cr"
         style={{
           padding: 20,
-          background: 'rgba(255, 255, 255, 0.72)',
-          backdropFilter: 'blur(20px)',
-          border: '1px solid rgba(255, 255, 255, 0.9)',
-          boxShadow: 'var(--shadow-bento)',
-          borderRadius: 'var(--radius-2xl)',
         }}
       >
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16 }}>
           <div
-            style={{
-              width: 32, height: 32, borderRadius: 10,
-              background: 'linear-gradient(135deg, #06b6d4 0%, var(--brand-500) 100%)',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              color: 'var(--bg-panel)', fontSize: 16,
-            }}
+            className="v3-step-icon-cr"
           >
             <AppstoreOutlined />
           </div>
           <div>
-            <h3 style={{ margin: 0, fontSize: 15, fontWeight: 600, color: 'var(--ink-900)' }}>挂载设备</h3>
-            <div style={{ fontSize: 11, color: 'var(--ink-500)', fontFamily: 'var(--font-mono)', marginTop: 2 }}>
+            <h3 style={{ margin: 0, fontSize: 15, fontWeight: 600, color: 'var(--cr-text-1)' }}>挂载设备</h3>
+            <div style={{ fontSize: 11, color: 'var(--cr-text-3)', fontFamily: 'var(--font-mono)', marginTop: 2 }}>
               {mountDevCount} 个子设备 · 点击 PID 卡片进入设备详情
             </div>
           </div>
@@ -222,7 +213,7 @@ function QuickNavCard({ terminal, onNav }: { terminal: Uart.Terminal; onNav: (pa
           <div
             style={{
               fontSize: 11,
-              color: 'var(--ink-500)',
+              color: 'var(--cr-text-3)',
               textTransform: 'uppercase',
               letterSpacing: '0.04em',
               fontFamily: 'var(--font-mono)',
@@ -247,12 +238,12 @@ function QuickNavCard({ terminal, onNav }: { terminal: Uart.Terminal; onNav: (pa
                   <span
                     style={{
                       width: 6, height: 6, borderRadius: '50%',
-                      background: devOnline ? 'var(--color-success)' : 'var(--ink-300)',
+                      background: devOnline ? 'var(--cr-status-online)' : 'var(--cr-border-strong)',
                       flexShrink: 0,
                     }}
                   />
                   <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                    {dev.mountDev} <span style={{ color: 'var(--ink-400)', fontSize: 11 }}>({dev.pid})</span>
+                    {dev.mountDev} <span style={{ color: 'var(--cr-text-3)', fontSize: 11 }}>({dev.pid})</span>
                   </span>
                 </span>
                 <span className="arrow"><ArrowRightOutlined style={{ fontSize: 11 }} /></span>
@@ -265,11 +256,11 @@ function QuickNavCard({ terminal, onNav }: { terminal: Uart.Terminal; onNav: (pa
           style={{
             padding: '20px 16px',
             textAlign: 'center',
-            color: 'var(--ink-400)',
+            color: 'var(--cr-text-3)',
             fontSize: 12,
-            background: 'rgba(255, 255, 255, 0.4)',
+            background: 'var(--cr-bg-elev-2)',
             borderRadius: 10,
-            border: '1px dashed var(--ink-200)',
+            border: '1px dashed var(--cr-border)',
           }}
         >
           暂无挂载设备
@@ -280,9 +271,9 @@ function QuickNavCard({ terminal, onNav }: { terminal: Uart.Terminal; onNav: (pa
         style={{
           marginTop: 'auto',
           paddingTop: 10,
-          borderTop: '1px dashed var(--ink-200)',
+          borderTop: '1px dashed var(--cr-border)',
           display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-          fontSize: 11, color: 'var(--ink-500)', fontFamily: 'var(--font-mono)',
+          fontSize: 11, color: 'var(--cr-text-3)', fontFamily: 'var(--font-mono)',
         }}
       >
         <span>状态: {online ? '在线' : '离线'}</span>

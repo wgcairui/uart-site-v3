@@ -50,6 +50,15 @@ interface card extends Omit<React.HTMLAttributes<HTMLDivElement>, "title"> {
 export const DevCard: React.FC<card> = (props) => {
     const isCR = props.theme === 'control-room'
 
+    // 2026-07-25 a11y: clickable card 加 keyboard 支持 (Enter / Space)
+    const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
+        if (!props.onClick) return
+        if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault()
+            props.onClick(e as any)
+        }
+    }
+
     return (
         <Card
             hoverable
@@ -80,7 +89,10 @@ export const DevCard: React.FC<card> = (props) => {
             actions={props.actions || []}
 
             onClick={props.onClick}
-
+            // 2026-07-25 a11y: keyboard activation (Enter / Space)
+            role={props.onClick ? 'button' : undefined}
+            tabIndex={props.onClick ? 0 : undefined}
+            onKeyDown={props.onClick ? handleKeyDown : undefined}
         >
             <Card.Meta
                 avatar={props.avatar}

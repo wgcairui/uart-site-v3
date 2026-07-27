@@ -3,6 +3,9 @@
 # dependencies
 /node_modules
 /.pnp
+
+# review screenshots (本地 dev 用, 不入仓)
+.review-screenshots/
 .pnp.*
 .yarn/*
 !.yarn/patches

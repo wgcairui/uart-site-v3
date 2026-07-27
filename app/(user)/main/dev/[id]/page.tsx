@@ -71,7 +71,14 @@ function DevInner() {
         // 静默反馈, 不弹 message
     }
 
-    if (!terminal || !mountDev) return <Empty />
+    if (!terminal || !mountDev) {
+        // 2026-07-25 V-5 修复: 早期 return 也包 bg-cr-canvas, 避免整页脱离暗色主题
+        return (
+            <div className="bg-cr-canvas" style={{ padding: 80, textAlign: 'center' }}>
+                <Empty className="v3-empty-cr" description="找不到该设备的数据" />
+            </div>
+        )
+    }
 
     return (
         <div className="bg-cr-canvas" style={{ position: 'relative', zIndex: 0 }}>
@@ -83,7 +90,7 @@ function DevInner() {
                             fontSize: 22,
                             fontWeight: 600,
                             letterSpacing: '-0.02em',
-                            color: 'var(--ink-900)',
+                            color: 'var(--cr-text-1)',
                             margin: 0,
                             overflow: 'hidden',
                             textOverflow: 'ellipsis',
@@ -92,7 +99,7 @@ function DevInner() {
                         <div style={{
                             fontFamily: 'var(--font-mono)',
                             fontSize: 12,
-                            color: 'var(--ink-500)',
+                            color: 'var(--cr-text-3)',
                             marginTop: 6,
                             display: 'flex',
                             alignItems: 'center',
@@ -107,14 +114,14 @@ function DevInner() {
                                     {terminal.DevMac}
                                 </code>
                             </Tooltip>
-                            <span style={{ color: 'var(--ink-300)' }}>·</span>
-                            <span>协议 <b style={{ color: 'var(--ink-700)', fontWeight: 600 }}>{mountDev.protocol || '—'}</b></span>
-                            <span style={{ color: 'var(--ink-300)' }}>·</span>
-                            <span>PID <b style={{ color: 'var(--ink-700)', fontWeight: 600 }}>{mountDev.pid}</b></span>
+                            <span style={{ color: 'var(--cr-border-strong)' }}>·</span>
+                            <span>协议 <b style={{ color: 'var(--cr-text-1)', fontWeight: 600 }}>{mountDev.protocol || '—'}</b></span>
+                            <span style={{ color: 'var(--cr-border-strong)' }}>·</span>
+                            <span>PID <b style={{ color: 'var(--cr-text-1)', fontWeight: 600 }}>{mountDev.pid}</b></span>
                             {Array.isArray(terminal.mountDevs) && terminal.mountDevs.length > 1 && (
                                 <>
-                                    <span style={{ color: 'var(--ink-300)' }}>·</span>
-                                    <span style={{ color: 'var(--ink-500)' }}>挂载 {terminal.mountDevs.length} 个</span>
+                                    <span style={{ color: 'var(--cr-border-strong)' }}>·</span>
+                                    <span style={{ color: 'var(--cr-text-3)' }}>挂载 {terminal.mountDevs.length} 个</span>
                                 </>
                             )}
                         </div>

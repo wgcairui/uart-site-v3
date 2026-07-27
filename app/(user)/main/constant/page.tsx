@@ -73,7 +73,7 @@ const UserConstant: FC = () => {
                 />
                 <div className="bento-card-cr">
                     <EmptyState
-                        icon={<SettingOutlined style={{ fontSize: 48, color: 'var(--ink-400)' }} />}
+                        icon={<SettingOutlined style={{ fontSize: 48, color: 'var(--cr-text-3)' }} />}
                         description="请从设备详情页进入此页"
                         actionLabel="去添加设备"
                         onAction={() => {

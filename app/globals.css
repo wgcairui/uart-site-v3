@@ -1993,7 +1993,7 @@ html, body {
   /* 文字 (Text) */
   --cr-text-1:      #F5F2FF;             /* 一级 (标题、关键数字) */
   --cr-text-2:      #C8C2DC;             /* 二级 (正文) */
-  --cr-text-3:      #8A8499;             /* 三级 (副标签、说明) */
+  --cr-text-3:      #9890AB;             /* 三级 (副标签、说明) — 2026-07-25 提到 #9890AB, 留安全对比余量 (5.6:1 on bg) */
   --cr-text-muted:  #5A556B;             /* placeholder / disabled */
 
   /* Accent — Energy Flow (黄色) ★ 签名色 */
@@ -2049,7 +2049,8 @@ html, body {
     radial-gradient(circle at 20% 0%, rgba(240, 180, 41, 0.06) 0%, transparent 50%),
     radial-gradient(circle at 80% 100%, rgba(139, 92, 246, 0.08) 0%, transparent 50%),
     var(--cr-bg);
-  min-height: 100%;
+  /* 2026-07-25: 撑高到 viewport (减去 topbar 56px) — 否则短内容时下方露出 --bg-page 浅色 */
+  min-height: calc(100dvh - 56px);
   overflow: hidden;
   color: var(--cr-text-2);
 }
@@ -2197,6 +2198,12 @@ html, body {
   padding-bottom: 12px;
   border-bottom: 1px solid var(--cr-border);
   gap: 12px;
+  /* 2026-07-25: extra 宽 (DatePicker 等) 跟 title 抢空间时允许 wrap, title 拿 min-width: 0 允许收缩 */
+  flex-wrap: wrap;
+}
+.app-page-header-cr > div:first-child {
+  min-width: 0;
+  flex: 1 1 200px;
 }
 .app-page-header-cr-title {
   font-size: 22px;
@@ -3095,4 +3102,86 @@ html, body {
 
 .kv-list-cr {
   background: transparent;
+}
+
+/* =============================================================
+ * Control Room · addterminal Step icon (深色版)
+ * 2026-07-25 V-4 修复: 替代原 --brand-50 浅紫 + --color-primary
+ * ============================================================= */
+.v3-step-icon-cr {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--cr-accent-soft);
+  color: var(--cr-accent);
+  border: 1px solid var(--cr-accent);
+  flex-shrink: 0;
+}
+.v3-step-icon-cr .anticon {
+  font-size: 18px;
+}
+
+/* =============================================================
+ * Control Room · alarm list container (替代 bento-card 浅色)
+ * 2026-07-25 V-3 修复
+ * ============================================================= */
+.alarm-list-cr {
+  background: var(--cr-bg-elev-1) !important;
+  border: 1px solid var(--cr-border) !important;
+  border-radius: var(--cr-radius-card) !important;
+  padding: 0 !important;
+  box-shadow: var(--cr-shadow-card) !important;
+  overflow: hidden;
+}
+
+/* =============================================================
+ * Control Room · a11y 修复 (2026-07-25)
+ * - :focus-visible 黄色焦点环 (所有交互元素)
+ * - prefers-reduced-motion 关闭所有动画
+ * ============================================================= */
+
+/* Focus visible — 黄色 2px 焦点环 + 2px offset, 跨整个 user 端生效 */
+.app-topbar-cr *:focus-visible,
+.user-mobile-drawer-cr *:focus-visible,
+.bg-cr-canvas *:focus-visible {
+  outline: 2px solid var(--cr-accent) !important;
+  outline-offset: 2px !important;
+  border-radius: 4px;
+}
+
+/* button / antd 按钮走 antd 默认焦点环时, 也用 --cr-accent 覆盖 */
+.bg-cr-canvas .ant-btn:focus-visible,
+.bg-cr-canvas .ant-btn-primary:focus-visible {
+  outline: 2px solid var(--cr-accent) !important;
+  outline-offset: 2px !important;
+}
+
+/* prefers-reduced-motion — 用户开启系统"减少动态效果"时关闭所有动画 */
+@media (prefers-reduced-motion: reduce) {
+  .cr-live-dot,
+  .status-tag-cr-online .status-dot-cr,
+  .abs-btn-cr,
+  .bg-cr-canvas *,
+  .app-topbar-cr *,
+  .user-mobile-drawer-cr * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* =============================================================
+ * Control Room · AbsButton 去 pulse (spec §3.3 唯一性)
+ * 2026-07-25 修复: 浮动按钮用 static glow, 不参与 pulse 动画
+ * ============================================================= */
+.abs-btn-cr {
+  animation: none !important;
+  box-shadow: var(--cr-shadow-card), 0 0 0 2px var(--cr-accent-soft) !important;
+}
+.abs-btn-cr:hover {
+  box-shadow: var(--cr-shadow-card-hover), 0 0 16px var(--cr-accent-soft) !important;
 }

@@ -68,7 +68,7 @@ export const BrandLogo: FC<BrandLogoProps> = ({
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          color: isCR ? '#0E0A1F' : '#fff',
+          color: isCR ? 'var(--cr-bg)' : '#fff',
           fontWeight: 700,
           fontSize: size * 0.45,
           flexShrink: 0,
