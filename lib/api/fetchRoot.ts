@@ -15,5 +15,7 @@ export * from '@/lib/api/endpoints/admin/featureFlags'
 export * from '@/lib/api/endpoints/admin/alertApprovals'
 // feat/ai-ops (server PR #106): AI token 签发 + 一站式诊断 + 系统健康
 export * from '@/lib/api/endpoints/admin/aiOps'
+// feat/admin-reparse (server PR #116): 重新解析端点 (admin 端 history modal 用)
+export * from '@/lib/api/endpoints/admin/data'
 
 export type { PaginationReq, V2ListResponse } from '@/types'
