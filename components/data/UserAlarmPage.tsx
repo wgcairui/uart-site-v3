@@ -13,6 +13,7 @@ import { usePromise } from "@/lib/hooks/usePromise";
 import { ProtocolAlarmStatUser } from "@/components/protocol/ProtocolAlarmStatUser";
 import { ProtocolShowTagUser } from "@/components/protocol/ProtocolShowTagUser";
 import { ProtocolThresholdUser } from "@/components/protocol/ProtocolThresholdUser";
+import { ProtocolsCascader } from "@/components/protocol/ProtocolsCascader";
 import { EditableContact } from "./UserDes";
 
 /**
@@ -41,6 +42,8 @@ export const UserAlarmPage: React.FC<{ user: string }> = ({ user }) => {
     const [addOpen, setAddOpen] = useState(false)
     const [addForm] = Form.useForm<{ protocol: string }>()
     const [adding, setAdding] = useState(false)
+    // Cascader 受控值: [ProtocolType, Protocol] 数组, 跟 ProtocolsCascader 内部 value 类型一致
+    const [cascaderVal, setCascaderVal] = useState<string[]>([])
 
     /**
      * 整体初始化 — 跟 server 端 initUserAlarmSetup 走全量 init
@@ -104,18 +107,22 @@ export const UserAlarmPage: React.FC<{ user: string }> = ({ user }) => {
     /**
      * 新增协议 entry (server POST /:user/alarm-setup/protocols body { protocol })
      * 同 init 底层逻辑 (upsert from DevConstant), 缺 protocol → 400
+     *
+     * 现在走 Cascader 选协议 (跟 "为设备选协议" 体验一致), values.protocol
+     * 是 Cascader 写入隐藏字段的字符串, 不需要 trim
      */
     const addOne = async () => {
         try {
             const values = await addForm.validateFields()
             setAdding(true)
-            const res: any = await addAdminUserAlarmSetupProtocol(user, values.protocol.trim())
+            const res: any = await addAdminUserAlarmSetupProtocol(user, values.protocol)
             const httpStatus = res?.status ?? res?.code
             const isSuccess = typeof httpStatus === 'number' && httpStatus >= 200 && httpStatus < 300
             if (isSuccess) {
                 message.success(`协议 ${values.protocol} 已添加`)
                 setAddOpen(false)
                 addForm.resetFields()
+                setCascaderVal([])
             } else {
                 message.error(res?.message || `新增协议失败`)
             }
@@ -254,6 +261,7 @@ export const UserAlarmPage: React.FC<{ user: string }> = ({ user }) => {
                                 onCancel={() => {
                                     setAddOpen(false)
                                     addForm.resetFields()
+                                    setCascaderVal([])
                                 }}
                                 confirmLoading={adding}
                                 okText="确认新增"
@@ -266,16 +274,36 @@ export const UserAlarmPage: React.FC<{ user: string }> = ({ user }) => {
                                     onFinish={addOne}
                                     preserve={false}
                                 >
+                                    {/* Cascader 单选 (跟 AddDevModelModal "为设备选协议" 体验一致):
+                                        - 第一级选 ProtocolType (UPS/空调/电量仪/温湿度/IO, 跟 BE 端 5 个 ProtocolType 对齐)
+                                        - 第二级选 Protocol 名字
+                                        - 选完后 onChange 拿 val[1] 写到隐藏的 protocol 字段, 给 Form.validateFields 用
+                                        - 体验: 用户不会输错协议名, 也不会调出 404 (BE 端只能在 DevConstant 已有协议里选)
+                                    */}
+                                    <Form.Item label="选择协议" required tooltip="协议名需在 DevConstant 中存在, 否则后端会返回 404">
+                                        <ProtocolsCascader
+                                            value={cascaderVal}
+                                            onChange={(val: any) => {
+                                                if (Array.isArray(val) && val.length >= 2) {
+                                                    // val = [ProtocolType, Protocol]
+                                                    setCascaderVal(val)
+                                                    addForm.setFieldsValue({ protocol: val[1] })
+                                                } else {
+                                                    setCascaderVal([])
+                                                    addForm.resetFields(['protocol'])
+                                                }
+                                            }}
+                                        />
+                                    </Form.Item>
+                                    {/* 隐藏字段: 给 Form.validateFields 校验, 实际值由 Cascader 写入 */}
                                     <Form.Item
                                         name="protocol"
-                                        label="协议名称"
+                                        hidden
                                         rules={[
-                                            { required: true, message: '请输入协议名称' },
-                                            { whitespace: true, message: '协议名称不能为空' },
+                                            { required: true, message: '请选择协议' },
                                         ]}
-                                        extra="协议名需在 DevConstant 中存在, 否则后端会返回 404"
                                     >
-                                        <Input placeholder="例如: Pesiv卡" autoFocus />
+                                        <Input />
                                     </Form.Item>
                                 </Form>
                             </Modal>
