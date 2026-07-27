@@ -20,6 +20,18 @@ export const modifyAdminUserAlarmSetupContacts = (user: string, data: { tels?: s
   Patch<universalResult<any>>(`/api/v2/admin/users/${encodeURIComponent(user)}/alarm-setup`, data)
 export const modifyAdminUserAlarmSetupProtocol = (user: string, protocol: string, data: { Threshold?: any[], AlarmStat?: any[], ShowTag?: string[] }) =>
   Put<universalResult<any>>(`/api/v2/admin/users/${encodeURIComponent(user)}/alarm-setup/protocols/${encodeURIComponent(protocol)}`, data)
+
+// Admin: protocol-level alarm-setup CRUD (server PR #119 配对, 配 feat/admin-alarm-protocol-crud 分支)
+//   - init: 已有 entry 覆盖 ShowTag/Threshold/AlarmStat 为 DevConstant 默认值; 没有则 push 新 entry
+//           DevConstant 缺该协议 → 404 { message: '协议 X 在 DevConstant 中不存在' }
+//   - add:  语义"新增"协议, body { protocol: string }; 同 init, 缺 protocol → 400 { message: 'protocol 字段不能为空' }
+//   - del:  $pull ProtocolSetup[] 里指定 entry; 不存在 → 静默 no-op (200)
+export const initAdminUserAlarmSetupProtocol = (user: string, protocol: string) =>
+  Post<universalResult<any>>(`/api/v2/admin/users/${encodeURIComponent(user)}/alarm-setup/protocols/${encodeURIComponent(protocol)}/init`, {})
+export const addAdminUserAlarmSetupProtocol = (user: string, protocol: string) =>
+  Post<universalResult<any>>(`/api/v2/admin/users/${encodeURIComponent(user)}/alarm-setup/protocols`, { protocol })
+export const delAdminUserAlarmSetupProtocol = (user: string, protocol: string) =>
+  Del<universalResult<any>>(`/api/v2/admin/users/${encodeURIComponent(user)}/alarm-setup/protocols/${encodeURIComponent(protocol)}`)
 export const getAlarm = (user: string, start: number, end: number, query?: PaginationReq) =>
   Post<universalResult<V2ListResponse<Uart.uartAlarmObject>>>(`/api/v2/admin/users/${encodeURIComponent(user)}/terminal-alarms/list`, { startTs: start, endTs: end, ...query })
 export const getUserSmsStats = (user: string, days = 30) =>
