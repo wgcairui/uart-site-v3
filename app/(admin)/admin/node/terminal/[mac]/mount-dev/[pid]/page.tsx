@@ -232,7 +232,7 @@ function MountDevPageInner() {
             {
               key: 'history',
               label: <span>📈 历史数据</span>,
-              children: <TerminalHistoryData mac={mac} pid={pid} />,
+              children: <TerminalHistoryData mac={mac} pid={pid} protocol={dev.protocol} />,
             },
             {
               key: 'config',
