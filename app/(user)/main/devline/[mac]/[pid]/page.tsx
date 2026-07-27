@@ -43,9 +43,11 @@ function DevLineInner() {
     }, [])
 
     return (
-        (!terminal || !mountDev) ? <Empty />
-            : <>
+        (!terminal || !mountDev)
+            ? <div className="bg-cr-canvas"><Empty className="v3-empty-cr" /></div>
+            : <div className="bg-cr-canvas">
                 <PageHeader
+                    theme="control-room"
                     title={dataName ? `${mountDev.mountDev} - ${dataName}` : mountDev.mountDev}
                     breadcrumb={[
                         { title: '首页', href: '/main' },
@@ -55,12 +57,13 @@ function DevLineInner() {
                     ]}
                 />
                 <BentoCard
+                    theme="control-room"
                     style={{ marginTop: 16, padding: isMobile ? 12 : undefined }}
                     padding="sm"
                 >
                     <TerminalMountDevNameLine mac={terminal.DevMac} pid={mountDev.pid} name={dataName}></TerminalMountDevNameLine>
                 </BentoCard>
-            </>
+            </div>
     )
 }
 

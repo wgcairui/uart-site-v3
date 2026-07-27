@@ -15,6 +15,12 @@ interface KVListProps {
   icon?: ReactNode
   items: KVListItem[]
   column?: number
+  /**
+   * 视觉主题 (2026-07-25)
+   * - `default`     → 现有浅色视觉
+   * - `control-room`→ user 端暗色, 走 --cr-* token
+   */
+  theme?: 'default' | 'control-room'
 }
 
 /**
@@ -28,10 +34,19 @@ interface KVListProps {
  *
  * 替代 antd Descriptions（避免过度嵌套 + 圆角不匹配）
  */
-export function KVList({ title, icon, items, column = 2 }: KVListProps) {
+export function KVList({ title, icon, items, column = 2, theme = 'default' }: KVListProps) {
+  const isCR = theme === 'control-room'
+  const labelColor = isCR ? 'var(--cr-text-3)' : 'var(--ink-500)'
+  const valueColor = isCR ? 'var(--cr-text-1)' : 'var(--ink-900)'
+  const dashColor = isCR ? 'var(--cr-text-muted)' : 'var(--ink-300)'
+  const borderColor = isCR ? 'var(--cr-border)' : 'var(--ink-100)'
+
   return (
-    <div className="app-card" style={{ padding: 24, height: '100%' }}>
-      {title && <SectionTitle icon={icon} title={title} />}
+    <div
+      className={isCR ? 'kv-list-cr' : 'app-card'}
+      style={{ padding: 24, height: '100%' }}
+    >
+      {title && <SectionTitle icon={icon} title={title} theme={theme} />}
       <div
         style={{
           display: 'grid',
@@ -48,14 +63,14 @@ export function KVList({ title, icon, items, column = 2 }: KVListProps) {
               alignItems: 'flex-start',
               gap: 12,
               padding: '10px 0',
-              borderBottom: '1px solid var(--ink-100)',
+              borderBottom: `1px solid ${borderColor}`,
             }}
           >
-            <div style={{ color: 'var(--ink-500)', fontSize: 13, minWidth: 100, flexShrink: 0 }}>
+            <div style={{ color: labelColor, fontSize: 13, minWidth: 100, flexShrink: 0 }}>
               {it.label}
             </div>
-            <div style={{ color: 'var(--ink-900)', fontSize: 14, fontWeight: 500, wordBreak: 'break-word', flex: 1 }}>
-              {it.value ?? <span style={{ color: 'var(--ink-300)' }}>-</span>}
+            <div style={{ color: valueColor, fontSize: 14, fontWeight: 500, wordBreak: 'break-word', flex: 1 }}>
+              {it.value ?? <span style={{ color: dashColor }}>-</span>}
             </div>
           </div>
         ))}

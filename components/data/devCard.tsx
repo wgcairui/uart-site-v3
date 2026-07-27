@@ -2,6 +2,13 @@
 import React from "react";
 import { Card, Image } from "antd";
 
+/**
+ * 主题变体 (2026-07-25)
+ * - `default`     → 现有浅色 Bento 视觉 (admin 端 + 兼容)
+ * - `control-room`→ user 端专用暗色, 走 --cr-* token
+ */
+export type DevCardTheme = 'default' | 'control-room'
+
 interface card extends Omit<React.HTMLAttributes<HTMLDivElement>, "title"> {
     /**
      * 图片链接
@@ -25,21 +32,40 @@ interface card extends Omit<React.HTMLAttributes<HTMLDivElement>, "title"> {
      * 副标题
      */
     subtitle?: React.ReactNode
+    /**
+     * 视觉主题 (2026-07-25)
+     */
+    theme?: DevCardTheme
 }
 
 /**
  * 用户绑定设备卡片样式
  * @param props
  * @returns
+ *
+ * theme="control-room" 走 --cr-* token (user 端 2026-07-25)
+ * - 卡片背景: 浅色半透明 → --cr-bg-elev-1 深色
+ * - 边框 / 阴影: 浅色紫边 → --cr-border + --cr-shadow-card
  */
 export const DevCard: React.FC<card> = (props) => {
+    const isCR = props.theme === 'control-room'
 
+    // 2026-07-25 a11y: clickable card 加 keyboard 支持 (Enter / Space)
+    const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
+        if (!props.onClick) return
+        if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault()
+            props.onClick(e as any)
+        }
+    }
 
     return (
         <Card
             hoverable
-            className="v3-dev-card"
-            style={{
+            className={isCR ? 'v3-dev-card-cr' : 'v3-dev-card'}
+            style={isCR ? {
+                margin: '12px 0',
+            } : {
                 margin: 12,
                 borderRadius: 18,
                 background: 'rgba(255, 255, 255, 0.7)',
@@ -63,7 +89,10 @@ export const DevCard: React.FC<card> = (props) => {
             actions={props.actions || []}
 
             onClick={props.onClick}
-
+            // 2026-07-25 a11y: keyboard activation (Enter / Space)
+            role={props.onClick ? 'button' : undefined}
+            tabIndex={props.onClick ? 0 : undefined}
+            onKeyDown={props.onClick ? handleKeyDown : undefined}
         >
             <Card.Meta
                 avatar={props.avatar}

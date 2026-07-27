@@ -71,19 +71,26 @@ function DevInner() {
         // 静默反馈, 不弹 message
     }
 
-    if (!terminal || !mountDev) return <Empty />
+    if (!terminal || !mountDev) {
+        // 2026-07-25 V-5 修复: 早期 return 也包 bg-cr-canvas, 避免整页脱离暗色主题
+        return (
+            <div className="bg-cr-canvas" style={{ padding: 80, textAlign: 'center' }}>
+                <Empty className="v3-empty-cr" description="找不到该设备的数据" />
+            </div>
+        )
+    }
 
     return (
-        <div className="bg-bento-canvas" style={{ position: 'relative', zIndex: 0 }}>
+        <div className="bg-cr-canvas" style={{ position: 'relative', zIndex: 0 }}>
             {/* 精简 device header — 1 行布局: 名 + meta + 状态 + 切换设备 */}
-            <div className="bento-card v3-device-header" style={{ marginBottom: 20, padding: '18px 24px' }}>
+            <div className="bento-card-cr v3-device-header-cr" style={{ marginBottom: 20, padding: '18px 24px' }}>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16, flexWrap: 'wrap' }}>
                     <div style={{ minWidth: 0, flex: '1 1 auto' }}>
                         <h2 style={{
                             fontSize: 22,
                             fontWeight: 600,
                             letterSpacing: '-0.02em',
-                            color: 'var(--ink-900)',
+                            color: 'var(--cr-text-1)',
                             margin: 0,
                             overflow: 'hidden',
                             textOverflow: 'ellipsis',
@@ -92,7 +99,7 @@ function DevInner() {
                         <div style={{
                             fontFamily: 'var(--font-mono)',
                             fontSize: 12,
-                            color: 'var(--ink-500)',
+                            color: 'var(--cr-text-3)',
                             marginTop: 6,
                             display: 'flex',
                             alignItems: 'center',
@@ -102,25 +109,26 @@ function DevInner() {
                             <Tooltip title="点击复制 DevMac">
                                 <code
                                     onClick={copyMac}
-                                    className="v3-device-header-mac"
+                                    className="v3-device-header-cr-mac"
                                 >
                                     {terminal.DevMac}
                                 </code>
                             </Tooltip>
-                            <span style={{ color: 'var(--ink-300)' }}>·</span>
-                            <span>协议 <b style={{ color: 'var(--ink-700)', fontWeight: 600 }}>{mountDev.protocol || '—'}</b></span>
-                            <span style={{ color: 'var(--ink-300)' }}>·</span>
-                            <span>PID <b style={{ color: 'var(--ink-700)', fontWeight: 600 }}>{mountDev.pid}</b></span>
+                            <span style={{ color: 'var(--cr-border-strong)' }}>·</span>
+                            <span>协议 <b style={{ color: 'var(--cr-text-1)', fontWeight: 600 }}>{mountDev.protocol || '—'}</b></span>
+                            <span style={{ color: 'var(--cr-border-strong)' }}>·</span>
+                            <span>PID <b style={{ color: 'var(--cr-text-1)', fontWeight: 600 }}>{mountDev.pid}</b></span>
                             {Array.isArray(terminal.mountDevs) && terminal.mountDevs.length > 1 && (
                                 <>
-                                    <span style={{ color: 'var(--ink-300)' }}>·</span>
-                                    <span style={{ color: 'var(--ink-500)' }}>挂载 {terminal.mountDevs.length} 个</span>
+                                    <span style={{ color: 'var(--cr-border-strong)' }}>·</span>
+                                    <span style={{ color: 'var(--cr-text-3)' }}>挂载 {terminal.mountDevs.length} 个</span>
                                 </>
                             )}
                         </div>
                     </div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexShrink: 0 }}>
                         <StatusTag
+                            theme="control-room"
                             variant={terminal.online ? 'online' : 'offline'}
                             text={terminal.online ? '实时连接' : '离线'}
                             pulse={!!terminal.online}
@@ -131,6 +139,7 @@ function DevInner() {
                                     key: String(pid),
                                     label: (
                                         <Button
+                                            theme="control-room"
                                             variant="link"
                                             onClick={() => nav('/main/dev/' + encodeURIComponent(terminal.DevMac) + '/' + pid)}
                                         >
@@ -139,7 +148,7 @@ function DevInner() {
                                     ),
                                 })),
                             }}>
-                                <Button>
+                                <Button theme="control-room">
                                     切换设备 <DownOutlined />
                                 </Button>
                             </Dropdown>
@@ -162,6 +171,7 @@ function DevInner() {
             </div>
 
             <Tabs
+                className="v3-tabs-cr"
                 activeKey={activeKey}
                 onChange={handleTabChange}
                 items={[

@@ -5,6 +5,13 @@ import { VARIANT_TO_TAILWIND_BG, type SummaryVariant } from '@/lib/utils/designT
 
 export type { SummaryVariant }
 
+/**
+ * 主题变体 (2026-07-25)
+ * - `default`     → 现有浅色 Bento 视觉 (admin 端 + 兼容)
+ * - `control-room`→ user 端专用暗色, 走 --cr-* token
+ */
+export type PageSummaryTheme = 'default' | 'control-room'
+
 export interface PageSummaryItem {
   /** 标签 */
   label: string
@@ -28,10 +35,44 @@ interface PageSummaryProps {
   items: PageSummaryItem[]
   /** 列数（默认 4） */
   column?: number
+  /**
+   * 视觉主题 (2026-07-25):
+   * - `default`      → 现有浅色视觉
+   * - `control-room` → user 端暗色 (走 --cr-* token)
+   */
+  theme?: PageSummaryTheme
 }
 
-function resolveColor(variant?: SummaryVariant, color?: string): string {
-  return color ?? (variant ? `var(--color-${variant})` : 'var(--color-primary)')
+// Control Room 暗色版 variant 颜色映射 (替代 resolveColor 默认的 --color-*)
+const CR_VARIANT_COLOR: Record<SummaryVariant, string> = {
+  primary: 'var(--cr-accent)',
+  success: 'var(--cr-status-online)',
+  warning: 'var(--cr-status-warning)',
+  danger:  'var(--cr-status-danger)',
+  info:    '#34D399',  // 深色版 info 复用绿
+  purple:  '#A78BFA',  // 深色版 purple 浅紫
+}
+
+const CR_VARIANT_BG: Record<SummaryVariant, string> = {
+  primary: 'var(--cr-accent-soft)',
+  success: 'rgba(52, 211, 153, 0.12)',
+  warning: 'rgba(251, 191, 36, 0.12)',
+  danger:  'rgba(248, 113, 113, 0.12)',
+  info:    'rgba(52, 211, 153, 0.12)',
+  purple:  'rgba(167, 139, 250, 0.12)',
+}
+
+function resolveColor(variant?: SummaryVariant, color?: string, isCR = false): string {
+  if (color) return color
+  if (variant) {
+    return isCR ? CR_VARIANT_COLOR[variant] : `var(--color-${variant})`
+  }
+  return isCR ? 'var(--cr-accent)' : 'var(--color-primary)'
+}
+
+function resolveBg(variant?: SummaryVariant, isCR = false): string {
+  const v = variant ?? 'primary'
+  return isCR ? CR_VARIANT_BG[v] : VARIANT_TO_TAILWIND_BG[v]
 }
 
 /**
@@ -50,10 +91,13 @@ function resolveColor(variant?: SummaryVariant, color?: string): string {
  * - 调用方根据容器宽度显式传 column：user 移动端 375px 容器 → column=2
  *   admin 桌面端 → 默认 4
  * - gap 跟列数走：4 列 20px / 2 列 12px（紧凑）
+ *
+ * theme="control-room" 走 --cr-* token (user 端 2026-07-25)
  */
-export function PageSummary({ items, column = 4 }: PageSummaryProps) {
+export function PageSummary({ items, column = 4, theme = 'default' }: PageSummaryProps) {
   if (items.length === 0) return null
 
+  const isCR = theme === 'control-room'
   const gap = column >= 4 ? 20 : 12
 
   return (
@@ -62,35 +106,49 @@ export function PageSummary({ items, column = 4 }: PageSummaryProps) {
         display: 'grid',
         gridTemplateColumns: `repeat(${column}, 1fr)`,
         gap,
-        marginBottom: 32,
+        marginBottom: 24,
       }}
       className="page-summary-grid"
     >
       {items.map((it, i) => {
         const variant = it.variant ?? 'primary'
-        const color = resolveColor(variant, it.color)
-        const bgColor = VARIANT_TO_TAILWIND_BG[variant]
+        const color = resolveColor(variant, it.color, isCR)
+        const bgColor = resolveBg(variant, isCR)
         const clickable = !!it.onClick
+
+        const cardClass = isCR
+          ? `stat-card-cr ${clickable ? 'stat-card-cr-clickable' : ''}${it.active ? ' active' : ''}`
+          : `stat-card ${clickable ? 'stat-card-clickable' : ''}`
+
+        const labelClass = isCR ? 'stat-card-cr-label' : 'stat-card-label'
+        const valueClass = isCR ? 'stat-card-cr-value' : 'stat-card-value'
+        const extraClass = isCR ? 'stat-card-cr-extra' : 'stat-card-extra'
+        const iconClass = isCR ? 'stat-card-cr-icon' : 'stat-card-icon'
 
         return (
           <div
             key={i}
-            className={`stat-card ${clickable ? 'stat-card-clickable' : ''}`}
+            className={cardClass}
             onClick={it.onClick}
-            style={{
-              outline: it.active ? `1px solid ${color}` : undefined,
-              background: it.active ? `${bgColor}` : undefined,
-            }}
+            style={!isCR && it.active ? {
+              outline: `1px solid ${color}`,
+              background: bgColor,
+            } : undefined}
           >
             <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
               <div style={{ minWidth: 0, flex: 1 }}>
-                <div className="stat-card-label">{it.label}</div>
-                <div className="stat-card-value" style={{ color }}>{it.value}</div>
-                {it.extra && <div className="stat-card-extra">{it.extra}</div>}
+                <div className={labelClass}>
+                  {isCR && <span className="stat-card-cr-dot" style={{ background: color }} />}
+                  {it.label}
+                </div>
+                <div className={valueClass} style={isCR ? undefined : { color }}>
+                  {it.value}
+                </div>
+                {it.extra && <div className={extraClass}>{it.extra}</div>}
               </div>
               {it.icon && (
                 <div
-                  className="stat-card-icon"
+                  className={iconClass}
                   style={{ background: bgColor, color }}
                 >
                   {it.icon}

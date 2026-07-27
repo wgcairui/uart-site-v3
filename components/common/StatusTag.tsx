@@ -16,10 +16,18 @@ import type { FC, ReactNode } from 'react'
  * 全部走 globals.css .status-tag-* class (v2 token)
  *
  * 规范: docs/style-guide.md v2 §4.5
+ *
+ * theme="control-room" 走 --cr-* token (user 端 2026-07-25)
  */
 
 export type StatusTagVariant = 'online' | 'warning' | 'offline' | 'error' | 'info' | 'idle'
 export type StatusTagSize = 'sm' | 'md'
+/**
+ * 主题变体 (2026-07-25)
+ * - `default`     → 现有浅色视觉 (admin 端 + 兼容)
+ * - `control-room`→ user 端专用暗色, 走 --cr-* token
+ */
+export type StatusTagTheme = 'default' | 'control-room'
 
 interface StatusTagProps {
   variant?: StatusTagVariant
@@ -33,6 +41,10 @@ interface StatusTagProps {
   pulse?: boolean
   /** 尺寸: sm=10px (表格内), md=12px (默认) */
   size?: StatusTagSize
+  /**
+   * 视觉主题 (2026-07-25)
+   */
+  theme?: StatusTagTheme
 }
 
 const DEFAULT_TEXT: Record<StatusTagVariant, string> = {
@@ -51,14 +63,15 @@ export const StatusTag: FC<StatusTagProps> = ({
   showDot = true,
   pulse = false,
   size = 'md',
+  theme = 'default',
 }) => {
-  const sizeClass = size === 'sm' ? 'status-tag-sm' : ''
+  const isCR = theme === 'control-room'
+  const sizeClass = size === 'sm' ? (isCR ? 'status-tag-cr-sm' : 'status-tag-sm') : ''
+  const baseClass = isCR ? `status-tag-cr status-tag-cr-${variant}` : `status-tag status-tag-${variant}`
+  const dotClass = isCR ? 'status-dot-cr' : 'status-dot'
   return (
-    <span
-      className={`status-tag status-tag-${variant} ${sizeClass}`.trim()}
-      style={pulse && variant === 'online' ? undefined : undefined}
-    >
-      {showDot && <span className="status-dot" />}
+    <span className={`${baseClass} ${sizeClass}`.trim()}>
+      {showDot && <span className={dotClass} />}
       {icon}
       {text ?? DEFAULT_TEXT[variant]}
     </span>

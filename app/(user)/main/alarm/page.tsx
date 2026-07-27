@@ -172,29 +172,34 @@ const Alarm: React.FC = () => {
 
     // ── 渲染 ─────────────────────────────────────────────────────────────
     return (
-        <div className="bg-bento-canvas" style={{ position: 'relative', zIndex: 0 }}>
+        <div className="bg-cr-canvas" style={{ position: 'relative', zIndex: 0 }}>
             <PageHeader
+                theme="control-room"
                 title="告警中心"
                 subtitle="查看并确认设备告警，跟踪历史趋势"
                 breadcrumb={[
                     { title: '首页', href: '/main' },
                     { title: '告警' },
                 ]}
-                extra={
-                    <Form layout="inline" style={{ margin: 0 }}>
-                        <Form.Item label="时间区间" style={{ marginBottom: 0 }}>
-                            <DatePicker.RangePicker
-                                value={dates as any}
-                                onChange={value => setDates(value as any)}
-                                allowClear={false}
-                            />
-                        </Form.Item>
-                    </Form>
-                }
             />
+
+            {/* 2026-07-25 V-1 修复: DatePicker 从 PageHeader.extra 拆出来, 独立一行
+                原因: 375px 容器下 DatePicker.RangePicker 太宽, 把标题挤成单字竖列 */}
+            <div style={{ marginBottom: 20 }}>
+                <Form layout="inline" style={{ margin: 0 }}>
+                    <Form.Item label="时间区间" style={{ marginBottom: 0 }}>
+                        <DatePicker.RangePicker
+                            value={dates as any}
+                            onChange={value => setDates(value as any)}
+                            allowClear={false}
+                        />
+                    </Form.Item>
+                </Form>
+            </div>
 
             {/* PageSummary 4 卡 — 6 variant 全覆盖 (primary/success/warning/danger/info/purple) */}
             <PageSummary
+                theme="control-room"
                 column={2}
                 items={[
                     {
@@ -240,13 +245,13 @@ const Alarm: React.FC = () => {
                 }}
             >
                 {/* 告警类型占比 · PieChart */}
-                <div className="bento-card" style={{ minHeight: 360 }}>
+                <div className="bento-card-cr" style={{ minHeight: 360 }}>
                     <h3
                         style={{
                             fontSize: 16,
                             fontWeight: 600,
                             margin: '0 0 4px',
-                            color: 'var(--ink-900)',
+                            color: 'var(--cr-text-1)',
                         }}
                     >
                         告警类型占比
@@ -254,7 +259,7 @@ const Alarm: React.FC = () => {
                     <p
                         style={{
                             fontSize: 12,
-                            color: 'var(--ink-500)',
+                            color: 'var(--cr-text-3)',
                             margin: '0 0 16px',
                             fontFamily: 'var(--font-mono)',
                         }}
@@ -265,7 +270,7 @@ const Alarm: React.FC = () => {
                         <EmptyState
                             description="暂无告警数据"
                             minHeight={240}
-                        />
+                            className="v3-empty-cr" />
                     ) : (
                         <ResponsiveContainer width="100%" height={260}>
                             <PieChart>
@@ -290,8 +295,8 @@ const Alarm: React.FC = () => {
                                 </Pie>
                                 <Tooltip
                                     contentStyle={{
-                                        background: 'rgba(255,255,255,0.96)',
-                                        border: '1px solid var(--ink-200)',
+                                        background: 'var(--cr-bg-elev-2)',
+                                        border: '1px solid var(--cr-border)',
                                         borderRadius: 12,
                                         fontSize: 12,
                                     }}
@@ -307,13 +312,13 @@ const Alarm: React.FC = () => {
                 </div>
 
                 {/* 告警数量 · LineChart */}
-                <div className="bento-card" style={{ minHeight: 360 }}>
+                <div className="bento-card-cr" style={{ minHeight: 360 }}>
                     <h3
                         style={{
                             fontSize: 16,
                             fontWeight: 600,
                             margin: '0 0 4px',
-                            color: 'var(--ink-900)',
+                            color: 'var(--cr-text-1)',
                         }}
                     >
                         告警数量趋势
@@ -321,7 +326,7 @@ const Alarm: React.FC = () => {
                     <p
                         style={{
                             fontSize: 12,
-                            color: 'var(--ink-500)',
+                            color: 'var(--cr-text-3)',
                             margin: '0 0 16px',
                             fontFamily: 'var(--font-mono)',
                         }}
@@ -332,7 +337,7 @@ const Alarm: React.FC = () => {
                         <EmptyState
                             description="暂无告警数据"
                             minHeight={240}
-                        />
+                            className="v3-empty-cr" />
                     ) : (
                         <ResponsiveContainer width="100%" height={260}>
                             <LineChart
@@ -345,19 +350,19 @@ const Alarm: React.FC = () => {
                                         <stop offset="100%" stopColor="#f472b6" />
                                     </linearGradient>
                                 </defs>
-                                <CartesianGrid strokeDasharray="3 3" stroke="var(--ink-200)" />
+                                <CartesianGrid strokeDasharray="3 3" stroke="var(--cr-border)" />
                                 <XAxis
                                     dataKey="date"
-                                    tick={{ fontSize: 11, fill: 'var(--ink-500)' }}
+                                    tick={{ fontSize: 11, fill: 'var(--cr-text-3)' }}
                                 />
                                 <YAxis
                                     allowDecimals={false}
-                                    tick={{ fontSize: 11, fill: 'var(--ink-500)' }}
+                                    tick={{ fontSize: 11, fill: 'var(--cr-text-3)' }}
                                 />
                                 <Tooltip
                                     contentStyle={{
-                                        background: 'rgba(255,255,255,0.96)',
-                                        border: '1px solid var(--ink-200)',
+                                        background: 'var(--cr-bg-elev-2)',
+                                        border: '1px solid var(--cr-border)',
                                         borderRadius: 12,
                                         fontSize: 12,
                                     }}
@@ -379,7 +384,7 @@ const Alarm: React.FC = () => {
 
             {/* 告警列表 + 批量操作 */}
             <div
-                className="bento-card"
+                className="alarm-list-cr"
                 style={{ padding: 24 }}
             >
                 <div
@@ -397,7 +402,7 @@ const Alarm: React.FC = () => {
                             fontSize: 16,
                             fontWeight: 600,
                             margin: 0,
-                            color: 'var(--ink-900)',
+                            color: 'var(--cr-text-1)',
                         }}
                     >
                         告警列表 ({alarms.length})
@@ -408,6 +413,7 @@ const Alarm: React.FC = () => {
                         onConfirm={confirmAll}
                     >
                         <Button
+                            theme="control-room"
                             variant="primary"
                             icon={<CheckCircleOutlined />}
                         >
@@ -424,12 +430,13 @@ const Alarm: React.FC = () => {
                             padding: 40,
                         }}
                     >
-                        <Spin tip="加载中…" />
+                        <Spin className="v3-spin-cr" tip="加载中…" />
                     </div>
                 ) : alarms.length === 0 ? (
                     <EmptyState
                         description="当前时间区间无告警"
-                        minHeight={240}
+                            className="v3-empty-cr"
+                            minHeight={240}
                     />
                 ) : isMobile ? (
                     <div
@@ -444,7 +451,7 @@ const Alarm: React.FC = () => {
                                 key={idx}
                                 style={{
                                     padding: 12,
-                                    background: 'var(--bg-hover)',
+                                    background: 'var(--cr-bg-elev-2)',
                                     borderRadius: 12,
                                 }}
                             >
@@ -460,11 +467,12 @@ const Alarm: React.FC = () => {
                                         style={{
                                             fontWeight: 600,
                                             fontSize: 13,
+                                            color: 'var(--cr-text-1)',
                                         }}
                                     >
                                         {a.devName || a.mac}
                                     </span>
-                                    <StatusTag
+                                    <StatusTag theme="control-room"
                                         variant={a.isOk ? 'online' : 'warning'}
                                         size="sm"
                                         text={a.isOk ? '已确认' : '待处理'}
@@ -473,7 +481,7 @@ const Alarm: React.FC = () => {
                                 <div
                                     style={{
                                         fontSize: 12,
-                                        color: 'var(--ink-500)',
+                                        color: 'var(--cr-text-3)',
                                         marginBottom: 4,
                                     }}
                                 >
@@ -482,7 +490,7 @@ const Alarm: React.FC = () => {
                                 <div
                                     style={{
                                         fontSize: 12,
-                                        color: 'var(--ink-700)',
+                                        color: 'var(--cr-text-1)',
                                         marginBottom: 6,
                                         wordBreak: 'break-all',
                                     }}
@@ -499,18 +507,19 @@ const Alarm: React.FC = () => {
                                     <span
                                         style={{
                                             fontSize: 11,
-                                            color: 'var(--ink-400)',
+                                            color: 'var(--cr-text-muted)',
                                             fontFamily: 'var(--font-mono)',
                                         }}
                                     >
                                         {dayjs(a.timeStamp).format('MM-DD H:m:s')}
                                     </span>
                                     {a.isOk ? (
-                                        <span style={{ fontSize: 12, color: 'var(--ink-400)' }}>
+                                        <span style={{ fontSize: 12, color: 'var(--cr-text-muted)' }}>
                                             已确认
                                         </span>
                                     ) : !isValidAlarmId(a._id) ? (
                                         <Button
+                                            theme="control-room"
                                             variant="primary"
                                             disabled
                                             title="告警 id 不合法"
@@ -519,6 +528,7 @@ const Alarm: React.FC = () => {
                                         </Button>
                                     ) : (
                                         <Button
+                                            theme="control-room"
                                             variant="primary"
                                             onClick={() => confirm(a._id)}
                                         >
@@ -531,7 +541,7 @@ const Alarm: React.FC = () => {
                     </div>
                 ) : (
                     <Table
-                        className="v3-table"
+                        className="v3-table-cr"
                         dataSource={generateTableKey(alarms, '_id')}
                         pagination={{
                             current: pageReq.page ?? 1,
@@ -586,7 +596,7 @@ const Alarm: React.FC = () => {
                                         {val}
                                     </Popconfirm>
                                 ) : (
-                                    <span style={{ color: 'var(--ink-400)' }}>{val}</span>
+                                    <span style={{ color: 'var(--cr-text-muted)' }}>{val}</span>
                                 )
                             }
                         />
@@ -621,13 +631,14 @@ const Alarm: React.FC = () => {
                             render={(_, record: alarms) => {
                                 if (record.isOk)
                                     return (
-                                        <span style={{ color: 'var(--ink-400)' }}>
+                                        <span style={{ color: 'var(--cr-text-muted)' }}>
                                             已确认
                                         </span>
                                     )
                                 if (!isValidAlarmId(record._id)) {
                                     return (
                                         <Button
+                                            theme="control-room"
                                             variant="primary"
                                             disabled
                                             title="告警 id 不合法"

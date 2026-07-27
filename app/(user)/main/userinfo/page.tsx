@@ -49,6 +49,7 @@ const UserInfo: React.FC = props => {
         const { data } = type === 'wp' ? await wpTicket() : await mpTicket()
         loading()
         info({
+            className: "v3-modal-cr",
             title: type === 'wp' ? '小程序二维码' : '公众号二维码',
             content: (
                 <Image src={data || ''}></Image>
@@ -97,17 +98,19 @@ const UserInfo: React.FC = props => {
 
 
     return (
-        <div className="bg-bento-canvas" style={{ position: 'relative', zIndex: 0 }}>
+        <div className="bg-cr-canvas" style={{ position: 'relative', zIndex: 0 }}>
             <PageHeader
+                theme="control-room"
                 title={user.name || user.user}
                 breadcrumb={[{ title: '首页', href: '/main' }]}
             />
             <Row justify="center" align="middle">
                 <Col xs={24} md={14} lg={12} style={{ padding: isMobile ? 4 : 12 }}>
                     <Space orientation="vertical" style={{ width: '100%' }}>
-                        <Divider plain>用户信息</Divider>
-                        <p>修改用户信息请使用小程序操作</p>
+                        <Divider plain style={{ color: 'var(--cr-text-2)' }}>用户信息</Divider>
+                        <p style={{ color: 'var(--cr-text-3)' }}>修改用户信息请使用小程序操作</p>
                         <Descriptions
+                            className="v3-descriptions-cr"
                             title={user.user}
                             column={1}
                             size={isMobile ? 'small' : 'default'}
@@ -118,7 +121,7 @@ const UserInfo: React.FC = props => {
                             <Descriptions.Item label="账号" span={2}>
                                 <Tooltip title="点击复制">
                                     <code
-                                        className="userinfo-account-code"
+                                        className="userinfo-account-code-cr"
                                         onClick={() => {
                                             navigator.clipboard?.writeText(user.user || '')
                                             message.success('账号已复制')
@@ -139,32 +142,45 @@ const UserInfo: React.FC = props => {
                             <Descriptions.Item label="组织">{user.company}</Descriptions.Item>
                             <Descriptions.Item label="小程序">{
                                 user.wpId ?
-                                    <StatusTag variant="online" text="已绑定" showDot={false} />
+                                    <StatusTag theme="control-room" variant="online" text="已绑定" showDot={false} />
                                     : <Button variant="primary" shape="round" onClick={() => showQR("wp")}>点击绑定小程序</Button>
                             }</Descriptions.Item>
                             <Descriptions.Item label="公众号">{
                                 user.wxId ?
-                                    <StatusTag variant="online" text="已绑定" showDot={false} />
+                                    <StatusTag theme="control-room" variant="online" text="已绑定" showDot={false} />
                                     : <Button variant="primary" shape="round" onClick={() => showQR("wx")}>点击绑定公众号</Button>
                             }</Descriptions.Item>
                         </Descriptions>
 
-                        <Divider plain>告警联系方式</Divider>
-                        <Form layout="vertical">
+                        <Divider plain style={{ color: 'var(--cr-text-2)' }}>告警联系方式</Divider>
+                        <Form className="v3-form-cr" layout="vertical">
                             <Form.Item label="告警通知电话">
                                 {
-                                    tels.map((el, key) => <Tag closable color="green" onClose={() => delTel(key)} key={key}>{el}</Tag>)
+                                    tels.map((el, key) => <Tag className="v3-tag-cr" closable onClose={() => delTel(key)} key={key}>{el}</Tag>)
                                 }
-                                <PlusSquareFilled style={{ color: "green" }} onClick={addTel} />
+                                {/* 2026-07-25 a11y: 加 role/tabIndex/aria-label */}
+                                <PlusSquareFilled
+                                    role="button"
+                                    tabIndex={0}
+                                    aria-label="添加告警通知电话"
+                                    style={{ color: "var(--cr-accent)", cursor: "pointer" }}
+                                    onClick={addTel}
+                                />
                             </Form.Item>
                             <Form.Item label="告警通知邮箱">
                                 {
-                                    mails.map((el, key) => <Tag closable color="green" onClose={() => delMail(key)} key={key}>{el}</Tag>)
+                                    mails.map((el, key) => <Tag className="v3-tag-cr" closable onClose={() => delMail(key)} key={key}>{el}</Tag>)
                                 }
-                                <PlusSquareFilled style={{ color: "green" }} onClick={addMail} />
+                                <PlusSquareFilled
+                                    role="button"
+                                    tabIndex={0}
+                                    aria-label="添加告警通知邮箱"
+                                    style={{ color: "var(--cr-accent)", cursor: "pointer" }}
+                                    onClick={addMail}
+                                />
                             </Form.Item>
                             <Form.Item >
-                                <Button variant="primary" onClick={saveAlarm} block={isMobile}>保存配置</Button>
+                                <Button theme="control-room" variant="primary" onClick={saveAlarm} block={isMobile}>保存配置</Button>
                             </Form.Item>
                         </Form>
                     </Space>

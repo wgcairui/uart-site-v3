@@ -34,9 +34,11 @@ const WxLine: React.FC = () => {
     }, [])
 
     return (
-        (!token || !props.mac || !props.pid || !props.name) ? <Empty description="请求参数不完整"></Empty>
+        (!token || !props.mac || !props.pid || !props.name)
+            ? <div className="bg-cr-canvas"><Empty className="v3-empty-cr" description="请求参数不完整"></Empty></div>
             :
             <div
+                className="bg-cr-canvas"
                 style={{
                     paddingTop: 12,
                     paddingBottom: 32,
