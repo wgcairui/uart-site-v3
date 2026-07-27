@@ -42,6 +42,7 @@ import {
   setProtocol,
 } from '@/lib/api/fetchRoot'
 import { getProtocol, getProtocolSetup } from '@/lib/api/fetch'
+import { getProtocolHistory } from '@/lib/api/endpoints/admin/protocols'
 import { generateTableKey } from '@/lib/utils/tableCommon'
 import { usePromise } from '@/lib/hooks/usePromise'
 
@@ -59,6 +60,7 @@ import { ProtocolInstructForm } from '@/components/protocol/ProtocolInstructForm
 import { ProtocolAiInferred } from '@/components/protocol/ProtocolAiInferred'
 import { ProtocolAiChatTab } from '@/components/protocol/ProtocolAiChatTab'
 import { ProtocolAiDryRunTab } from '@/components/protocol/ProtocolAiDryRunTab'
+import { ProtocolVersionHistory } from '@/components/protocol/ProtocolVersionHistory'
 import { AiSourceInfoCard } from '@/components/ai/AiSourceInfoCard'
 
 import { EditProtocolModal } from './_components/EditProtocolModal'
@@ -385,6 +387,19 @@ function ProtocolInfo() {
     }
   }, EMPTY_COUNTS, [Protocol])
 
+  // 协议历史快照数 (server PR #118 / 2026-07-27) — Tab 角标计数
+  // BE 端点 GET /api/v2/admin/protocols/history?Protocol=xxx 返回 items[] 完整列表 (不分页),
+  // 走轻量查询, 跟 ProtocolVersionHistory 组件内部 fetch 重复但用于 tab label 即时显示
+  const { data: historyCount } = usePromise<number>(async () => {
+    if (!Protocol) return 0
+    try {
+      const { data } = await getProtocolHistory(Protocol)
+      return data.total ?? data.items?.length ?? 0
+    } catch {
+      return 0
+    }
+  }, 0, [Protocol])
+
   // 4 个 modal 的开关
   const [uploadModalOpen, setUploadModalOpen] = useState(false)
   const [usageOpen, setUsageOpen] = useState(false)
@@ -587,6 +602,21 @@ function ProtocolInfo() {
             key: 'aiDryRun',
             label: 'Dry-run',
             children: <ProtocolAiDryRunTab protocolName={Protocol} />,
+          },
+          {
+            // feat/version-history (2026-07-27) — 配 server PR #118: protocols.history
+            // 永久快照 + 3 个新端点 (history/rollback/diff). admin 用本 tab 排查
+            // AI 改写 bug (老 instruct 丢失前可一键回滚) + 字段级 diff.
+            key: 'versionHistory',
+            label: `版本历史 (${historyCount ?? 0})`,
+            children: (
+              <ProtocolVersionHistory
+                protocolName={Protocol}
+                currentInstruct={protocolMeta?.instruct}
+                currentVersion={protocolMeta?.version}
+                currentSource={protocolMeta?.source}
+              />
+            ),
           },
         ]}
       />
