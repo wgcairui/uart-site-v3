@@ -58,6 +58,7 @@ declare namespace Uart {
         pop: boolean;
         popNum: number;
         isSplit: boolean;
+        splitStr?: string;
         resize: string;
         formResize: protocolInstructFormrize[];
         isUse: boolean;

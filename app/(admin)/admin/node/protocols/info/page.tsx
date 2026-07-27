@@ -30,7 +30,7 @@
 
 import { useCallback, useEffect, useState, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { message, Modal, Space, Spin, Table, Tabs } from 'antd'
+import { message, Modal, Space, Spin, Table, Tabs, Tag } from 'antd'
 import { confirm, success, info, error, warning } from '@/lib/utils/modal'
 import type { ColumnsType } from 'antd/lib/table'
 import { CopyFilled, DeleteFilled, ExperimentOutlined, MessageOutlined, UploadOutlined } from '@ant-design/icons'
@@ -246,6 +246,29 @@ function ProtocolDes({ Protocol }: ProtocolDesProps) {
                 title: '去尾',
                 render: (val: boolean, re: Uart.protocolInstruct) =>
                   val ? '是/' + re.popNum : '否',
+              },
+              {
+                dataIndex: 'isSplit',
+                title: '分隔符',
+                width: 90,
+                render: (isSplit: boolean, re: Uart.protocolInstruct) => {
+                  const val = re.splitStr as string | undefined
+                  if (!isSplit) return <span style={{ color: 'var(--ink-300)' }}>—</span>
+                  if (val === '') return <Tag color="orange">无</Tag>
+                  if (val === ' ') return '空格'
+                  if (val === ',') return '逗号'
+                  // 不在 3 个标准里 → 16 进制 (e.g. ";" → \x3B)
+                  if (val && val.length > 0) {
+                    return (
+                      <code style={{ fontFamily: 'var(--font-mono)', fontSize: 12 }}>
+                        {Array.from(val)
+                          .map((c) => '\\x' + c.charCodeAt(0).toString(16).toUpperCase().padStart(2, '0'))
+                          .join('')}
+                      </code>
+                    )
+                  }
+                  return '—'
+                },
               },
               { dataIndex: 'remark', title: '备注' },
               {

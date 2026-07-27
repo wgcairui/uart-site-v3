@@ -138,7 +138,9 @@ export function ProtocolInstructForm({ item, onChange, protocolItemFun }: Props)
       </Form.Item>
       <Form.Item name="splitStr" label="分隔符" extra="针对232协议,232有时会把状态读取为连接的二进制字符串,选择无分隔符可以解析,一般以空格符/逗号为分隔符">
         <Select
+          placeholder="选择分隔符"
           options={[
+            { label: '无 (按字符切)', value: '' },
             { label: '空格', value: ' ' },
             { label: '逗号', value: ',' },
           ]}
