@@ -1,9 +1,11 @@
 'use client'
 import React, { useState } from "react"
-import { Table, Tag, Card, Modal } from "antd"
+import { Table, Tag, Card, Modal, Button } from "antd"
+import { ExperimentOutlined } from "@ant-design/icons"
 import dayjs from "dayjs"
 import { ClientResultSingle, ClientResultList } from "@/lib/api/fetchRoot"
 import { clientResultExpandableExpandedRowRender } from "@/components/data/ClientResultExpandable"
+import { ReparseDiffModal } from "@/components/data/ReparseDiffModal"
 import { usePromise } from "@/lib/hooks/usePromise"
 import { PaginationReq } from "@/types"
 
@@ -35,10 +37,11 @@ export const TerminalCurData: React.FC<{ mac: string; pid: number }> = ({ mac, p
     )
 }
 
-export const TerminalHistoryData: React.FC<{ mac: string; pid: number }> = ({ mac, pid }) => {
+export const TerminalHistoryData: React.FC<{ mac: string; pid: number; protocol?: string }> = ({ mac, pid, protocol }) => {
 
     const [query, setQuery] = useState<PaginationReq>({ page: 1, pageSize: 20, needTotal: true })
     const [selected, setSelected] = useState<any>(null)
+    const [reparseOpen, setReparseOpen] = useState(false)
 
     const { data, loading } = usePromise(async () => {
         const startTs = Date.now() - 24 * 60 * 60 * 1000
@@ -86,10 +89,33 @@ export const TerminalHistoryData: React.FC<{ mac: string; pid: number }> = ({ ma
                 open={!!selected}
                 onCancel={() => setSelected(null)}
                 width={800}
-                footer={null}
+                footer={[
+                    <Button
+                        key="reparse"
+                        type="primary"
+                        icon={<ExperimentOutlined />}
+                        onClick={() => setReparseOpen(true)}
+                        disabled={!selected?._id || !protocol}
+                        title={!protocol ? '该挂载设备未配置协议' : undefined}
+                    >
+                        重新解析
+                    </Button>,
+                    <Button key="close" onClick={() => setSelected(null)}>
+                        关闭
+                    </Button>,
+                ]}
             >
                 {selected ? clientResultExpandableExpandedRowRender(selected) : null}
             </Modal>
+            <ReparseDiffModal
+                resultId={selected?._id || ''}
+                open={reparseOpen}
+                onClose={() => setReparseOpen(false)}
+                protocol={protocol || ''}
+                mac={mac}
+                pid={pid}
+                {...(selected ? { timeLabel: dayjs(selected.timeStamp).format('YYYY-MM-DD HH:mm:ss') } : {})}
+            />
         </>
     )
 }
