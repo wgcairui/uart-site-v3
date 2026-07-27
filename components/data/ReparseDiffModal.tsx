@@ -2,6 +2,7 @@
 import React, { useEffect, useMemo, useState } from 'react'
 import {
   Button,
+  Collapse,
   Modal,
   Select,
   Skeleton,
@@ -42,7 +43,12 @@ interface MergedDiffRow {
   oldParseValue?: string | undefined
   newValue?: string | undefined
   newParseValue?: string | undefined
+  /** 协议内 instruct 分组 (server PR #117). 老 PR1 协议缺省 → UI "未分组" fallback. */
+  instruct?: string | undefined
 }
+
+/** 兜底 instruct 名 (老 PR1 协议 instruct 字段缺省时统一进这个 group) */
+const UNGROUPED_INSTRUCT = '未分组'
 
 const STATUS_META: Record<DiffStatus, { color: string; label: string }> = {
   changed: { color: 'red', label: '变更' },
@@ -52,10 +58,22 @@ const STATUS_META: Record<DiffStatus, { color: string; label: string }> = {
 }
 
 const mergeDiff = (data: ReparseResponse): MergedDiffRow[] => {
-  const oldMap = new Map<string, { value: string; parseValue: string }>()
-  const newMap = new Map<string, { value: string; parseValue: string }>()
-  data.old.forEach((p) => oldMap.set(p.name, { value: p.value, parseValue: p.parseValue }))
-  data.new.forEach((p) => newMap.set(p.name, { value: p.value, parseValue: p.parseValue }))
+  const oldMap = new Map<string, { value: string; parseValue: string; instruct?: string }>()
+  const newMap = new Map<string, { value: string; parseValue: string; instruct?: string }>()
+  data.old.forEach((p) => {
+    oldMap.set(p.name, {
+      value: p.value,
+      parseValue: p.parseValue,
+      ...(p.instruct ? { instruct: p.instruct } : {}),
+    })
+  })
+  data.new.forEach((p) => {
+    newMap.set(p.name, {
+      value: p.value,
+      parseValue: p.parseValue,
+      ...(p.instruct ? { instruct: p.instruct } : {}),
+    })
+  })
 
   const allNames = new Set<string>([...oldMap.keys(), ...newMap.keys()])
   const diffMap = new Map<string, ReparseResponse['diff'][number]>()
@@ -82,12 +100,52 @@ const mergeDiff = (data: ReparseResponse): MergedDiffRow[] => {
       oldParseValue: oldEntry?.parseValue ?? d?.oldParseValue,
       newValue: newEntry?.value ?? d?.newValue,
       newParseValue: newEntry?.parseValue ?? d?.newParseValue,
+      // instruct 优先级: old item > new item > diff item > undefined
+      //  (同一 name 在三处 instruct 应该一致, 但服务器可能稀疏返回)
+      instruct: oldEntry?.instruct ?? newEntry?.instruct ?? d?.instruct,
     })
   }
   // 变更 > 新增 > 删除 > 不变 (前台展示优先级)
   const order: Record<DiffStatus, number> = { changed: 0, added: 1, removed: 2, unchanged: 3 }
   rows.sort((a, b) => order[a.status] - order[b.status] || a.name.localeCompare(b.name))
   return rows
+}
+
+/** 按 protocol.instruct 顺序分组 (缺省走 "未分组" 兜底, 排在最后) */
+interface MergedGroup {
+  instruct: string
+  rows: MergedDiffRow[]
+  stats: { changed: number; added: number; removed: number; unchanged: number }
+}
+
+const groupMergedByInstruct = (
+  mergedRows: MergedDiffRow[],
+  protocolInstruct: string[],
+): MergedGroup[] => {
+  // group by instruct (缺省 → "未分组")
+  const byInstruct = new Map<string, MergedDiffRow[]>()
+  for (const r of mergedRows) {
+    const key = r.instruct || UNGROUPED_INSTRUCT
+    const arr = byInstruct.get(key)
+    if (arr) arr.push(r)
+    else byInstruct.set(key, [r])
+  }
+  // 按 protocol.instruct 顺序; 未在 protocol.instruct 里的 instruct (e.g. "未分组" 兜底) 排在最后
+  const order = (s: string) => {
+    const idx = protocolInstruct.indexOf(s)
+    return idx === -1 ? Number.POSITIVE_INFINITY : idx
+  }
+  const keys = [...byInstruct.keys()].sort((a, b) => order(a) - order(b))
+  return keys.map((instruct) => {
+    const rows = byInstruct.get(instruct) ?? []
+    const stats = {
+      changed: rows.filter((r) => r.status === 'changed').length,
+      added: rows.filter((r) => r.status === 'added').length,
+      removed: rows.filter((r) => r.status === 'removed').length,
+      unchanged: rows.filter((r) => r.status === 'unchanged').length,
+    }
+    return { instruct, rows, stats }
+  })
 }
 
 export const ReparseDiffModal: React.FC<ReparseDiffModalProps> = ({
@@ -104,6 +162,8 @@ export const ReparseDiffModal: React.FC<ReparseDiffModalProps> = ({
   const [data, setData] = useState<ReparseResponse | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [isMobile, setIsMobile] = useState(false)
+  /** 每组 sub-table 当前页码 (key = instruct 名, 重新解析时清空) */
+  const [groupPages, setGroupPages] = useState<Record<string, number>>({})
   useEffect(() => {
     if (typeof window === 'undefined') return
     const mq = window.matchMedia('(max-width: 768px)')
@@ -119,6 +179,7 @@ export const ReparseDiffModal: React.FC<ReparseDiffModalProps> = ({
       setData(null)
       setError(null)
       setSelectedVersion('auto')
+      setGroupPages({})
     }
   }, [open, resultId])
 
@@ -158,6 +219,7 @@ export const ReparseDiffModal: React.FC<ReparseDiffModalProps> = ({
     setReparseLoading(true)
     setError(null)
     setData(null)
+    setGroupPages({})
     try {
       const body: { resultId: string; protocolVersion?: number } = { resultId }
       if (selectedVersion !== 'auto') body.protocolVersion = selectedVersion
@@ -179,6 +241,10 @@ export const ReparseDiffModal: React.FC<ReparseDiffModalProps> = ({
   }
 
   const mergedRows = useMemo(() => (data ? mergeDiff(data) : []), [data])
+  const groups = useMemo(
+    () => (data ? groupMergedByInstruct(mergedRows, data.protocol.instruct || []) : []),
+    [data, mergedRows],
+  )
   const changedCount = mergedRows.filter((r) => r.status === 'changed').length
   const addedCount = mergedRows.filter((r) => r.status === 'added').length
   const removedCount = mergedRows.filter((r) => r.status === 'removed').length
@@ -315,81 +381,131 @@ export const ReparseDiffModal: React.FC<ReparseDiffModalProps> = ({
             </pre>
           </div>
 
-          {/* 差异表 */}
+          {/* 差异明细 (按 protocol.instruct 分组, 每组 sub-Table + 50/page) */}
           <div>
             <Text strong style={{ fontSize: 12, marginBottom: 6, display: 'block' }}>
-              差异明细
+              差异明细 · {groups.length} 个 instruct 分组
             </Text>
-            <Table<MergedDiffRow>
-              size="small"
-              rowKey="key"
-              dataSource={mergedRows}
-              pagination={{ hideOnSinglePage: true, size: 'small' }}
-              {...(isMobile ? { scroll: { x: 600 } } : {})}
-              columns={[
-                {
-                  dataIndex: 'name',
-                  title: '参数',
-                  width: 160,
-                  ...(isMobile ? {} : { fixed: 'left' as const }),
-                  render: (v: string, r) => (
-                    <Space size={4}>
-                      <span style={{ fontFamily: 'var(--font-mono)', fontSize: 12 }}>{v}</span>
-                      <Tag
-                        color={STATUS_META[r.status].color}
-                        style={{ marginInlineEnd: 0 }}
-                      >
-                        {STATUS_META[r.status].label}
-                      </Tag>
-                    </Space>
-                  ),
-                },
-                {
-                  dataIndex: 'oldValue',
-                  title: '旧值',
-                  width: 120,
-                  render: (v?: string) =>
-                    v === undefined ? (
-                      <Text type="secondary">—</Text>
-                    ) : (
-                      <span style={{ fontFamily: 'var(--font-mono)' }}>{v}</span>
+            {groups.length === 0 ? (
+              <Text type="secondary" style={{ fontSize: 12 }}>无差异项</Text>
+            ) : (
+              <Collapse
+                defaultActiveKey={groups.map((g) => g.instruct)}
+                ghost
+                size="small"
+                items={groups.map((group) => {
+                  const PAGE_SIZE = 50
+                  const total = group.rows.length
+                  const currentPage = groupPages[group.instruct] ?? 1
+                  const startIdx = (currentPage - 1) * PAGE_SIZE
+                  const pageRows = group.rows.slice(startIdx, startIdx + PAGE_SIZE)
+                  const setPage = (page: number) =>
+                    setGroupPages((prev) => ({ ...prev, [group.instruct]: page }))
+                  return {
+                    key: group.instruct,
+                    label: (
+                      <Space size="small" wrap style={{ fontSize: 12 }}>
+                        <Text strong style={{ minWidth: 80 }}>{group.instruct}</Text>
+                        <Text type="secondary">({total} 项)</Text>
+                        <Text type="secondary">·</Text>
+                        <Tag color="red" style={{ marginInlineEnd: 0 }}>
+                          {group.stats.changed} 变更
+                        </Tag>
+                        <Tag color="blue" style={{ marginInlineEnd: 0 }}>
+                          {group.stats.added} 新增
+                        </Tag>
+                        <Tag color="orange" style={{ marginInlineEnd: 0 }}>
+                          {group.stats.removed} 删除
+                        </Tag>
+                        <Tag color="green" style={{ marginInlineEnd: 0 }}>
+                          {group.stats.unchanged} 不变
+                        </Tag>
+                      </Space>
                     ),
-                },
-                {
-                  dataIndex: 'oldParseValue',
-                  title: '旧解析',
-                  width: 120,
-                  render: (v?: string) =>
-                    v === undefined ? (
-                      <Text type="secondary">—</Text>
-                    ) : (
-                      <span style={{ fontFamily: 'var(--font-mono)' }}>{v}</span>
+                    children: (
+                      <Table<MergedDiffRow>
+                        size="small"
+                        rowKey="key"
+                        dataSource={pageRows}
+                        pagination={{
+                          current: currentPage,
+                          pageSize: PAGE_SIZE,
+                          total,
+                          hideOnSinglePage: true,
+                          size: 'small',
+                          showSizeChanger: false,
+                          onChange: setPage,
+                        }}
+                        {...(isMobile ? { scroll: { x: 600 } } : {})}
+                        columns={[
+                          {
+                            dataIndex: 'name',
+                            title: '参数',
+                            width: 160,
+                            ...(isMobile ? {} : { fixed: 'left' as const }),
+                            render: (v: string, r) => (
+                              <Space size={4}>
+                                <span style={{ fontFamily: 'var(--font-mono)', fontSize: 12 }}>{v}</span>
+                                <Tag
+                                  color={STATUS_META[r.status].color}
+                                  style={{ marginInlineEnd: 0 }}
+                                >
+                                  {STATUS_META[r.status].label}
+                                </Tag>
+                              </Space>
+                            ),
+                          },
+                          {
+                            dataIndex: 'oldValue',
+                            title: '旧值',
+                            width: 120,
+                            render: (v?: string) =>
+                              v === undefined ? (
+                                <Text type="secondary">—</Text>
+                              ) : (
+                                <span style={{ fontFamily: 'var(--font-mono)' }}>{v}</span>
+                              ),
+                          },
+                          {
+                            dataIndex: 'oldParseValue',
+                            title: '旧解析',
+                            width: 120,
+                            render: (v?: string) =>
+                              v === undefined ? (
+                                <Text type="secondary">—</Text>
+                              ) : (
+                                <span style={{ fontFamily: 'var(--font-mono)' }}>{v}</span>
+                              ),
+                          },
+                          {
+                            dataIndex: 'newValue',
+                            title: '新值',
+                            width: 120,
+                            render: (v?: string) =>
+                              v === undefined ? (
+                                <Text type="secondary">—</Text>
+                              ) : (
+                                <span style={{ fontFamily: 'var(--font-mono)' }}>{v}</span>
+                              ),
+                          },
+                          {
+                            dataIndex: 'newParseValue',
+                            title: '新解析',
+                            width: 120,
+                            render: (v?: string) =>
+                              v === undefined ? (
+                                <Text type="secondary">—</Text>
+                              ) : (
+                                <span style={{ fontFamily: 'var(--font-mono)' }}>{v}</span>
+                              ),
+                          },
+                        ]}
+                      />
                     ),
-                },
-                {
-                  dataIndex: 'newValue',
-                  title: '新值',
-                  width: 120,
-                  render: (v?: string) =>
-                    v === undefined ? (
-                      <Text type="secondary">—</Text>
-                    ) : (
-                      <span style={{ fontFamily: 'var(--font-mono)' }}>{v}</span>
-                    ),
-                },
-                {
-                  dataIndex: 'newParseValue',
-                  title: '新解析',
-                  width: 120,
-                  render: (v?: string) =>
-                    v === undefined ? (
-                      <Text type="secondary">—</Text>
-                    ) : (
-                      <span style={{ fontFamily: 'var(--font-mono)' }}>{v}</span>
-                    ),
-                },
-              ]}
-            />
+                  }
+                })}
+              />
+            )}
           </div>
         </>
       ) : (
