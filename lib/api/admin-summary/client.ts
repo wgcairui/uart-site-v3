@@ -1,10 +1,14 @@
 /**
- * Admin Dashboard Summary Tier 1 — 7 个 typed BFF client
+ * Admin Dashboard Summary Tier 1 — 5 个 typed BFF client
  *
  * 配对 uart-server PR #113 + types/admin-summary.ts + ./routes.ts
  *
- * 7 个 wrapper 都用 `Get<universalResult<TResp>>(URL, params)` 模式,
+ * 5 个 wrapper 都用 `Get<universalResult<TResp>>(URL, params)` 模式,
  * 跟 lib/api/endpoints/admin/dashboard.ts 现有 wrapper 风格一致.
+ *
+ * P0 round 2 删 dead wrapper:
+ * - getDevicesActiveCount (0 引用, dev stat 现用 AnomalousDevicesCard 替代)
+ * - getProtocolUsage (0 引用, 协议用量信息从 terminal stats 反查)
  *
  * 设计原则:
  * - URL 集中常量 (./routes.ts), 不在 client 里 hardcode string
@@ -21,10 +25,8 @@ import { Get } from '@/lib/api/fetch';
 import { universalResult } from '@/types';
 import type {
   AlarmSeverityDistributionResp,
-  DevicesActiveCountResp,
   AlarmTrendResp,
   DataFreshnessResp,
-  ProtocolUsageResp,
   NodeLoadResp,
   UserEngagementResp,
 } from '@/types/admin-summary';
@@ -48,22 +50,7 @@ export const getAlarmSeverityDistribution = (
   );
 
 // ---------------------------------------------------------------------------
-// 2. /devices/active-count
-// ---------------------------------------------------------------------------
-
-/**
- * 24h 活跃设备数 (有至少 1 条 heartbeat / 终端事件)
- *
- * @param hours 过去 N 小时 (1-168, 默认 24)
- */
-export const getDevicesActiveCount = (hours: number = 24) =>
-  Get<universalResult<DevicesActiveCountResp>>(
-    SUMMARY_ROUTES.devicesActiveCount,
-    { hours: String(hours) }
-  );
-
-// ---------------------------------------------------------------------------
-// 3. /alarms/trend
+// 2. /alarms/trend
 // ---------------------------------------------------------------------------
 
 /**
@@ -82,7 +69,7 @@ export const getAlarmTrend = (
   });
 
 // ---------------------------------------------------------------------------
-// 4. /data/freshness
+// 3. /data/freshness
 // ---------------------------------------------------------------------------
 
 /**
@@ -92,17 +79,7 @@ export const getDataFreshness = () =>
   Get<universalResult<DataFreshnessResp>>(SUMMARY_ROUTES.dataFreshness);
 
 // ---------------------------------------------------------------------------
-// 5. /protocols/usage
-// ---------------------------------------------------------------------------
-
-/**
- * 每种协议 (pid) 被多少 terminal / mount-dev 使用 (top 20 by deviceCount)
- */
-export const getProtocolUsage = () =>
-  Get<universalResult<ProtocolUsageResp>>(SUMMARY_ROUTES.protocolUsage);
-
-// ---------------------------------------------------------------------------
-// 6. /nodes/load
+// 4. /nodes/load
 // ---------------------------------------------------------------------------
 
 /**
@@ -112,7 +89,7 @@ export const getNodeLoad = () =>
   Get<universalResult<NodeLoadResp>>(SUMMARY_ROUTES.nodeLoad);
 
 // ---------------------------------------------------------------------------
-// 7. /users/engagement
+// 5. /users/engagement
 // ---------------------------------------------------------------------------
 
 /**
