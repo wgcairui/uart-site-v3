@@ -60,8 +60,17 @@ export const logAlarmTimeBucket = (start: string | number, end: string | number)
   )
 export const loguserlogins = (start: string, end: string, query?: PaginationReq) =>
   Post<universalResult<V2ListResponse<Uart.logUserLogins>>>('/api/v2/admin/logs/user-logins', { startTs: new Date(start).getTime(), endTs: new Date(end).getTime(), ...query })
-export const loguserrequsts = (start: string, end: string, query?: PaginationReq) =>
-  Post<universalResult<V2ListResponse<Uart.logUserRequst>>>('/api/v2/admin/logs/user-requests', { startTs: new Date(start).getTime(), endTs: new Date(end).getTime(), ...query })
+/**
+ * 用户请求日志 (admin 端)
+ *
+ * 7/28 加可选 userGroup filter (server feat/ai-audit-server-filter):
+ * - 不传 → 走 server 端默认 (不过滤 userGroup, pageSize 200 按 timeStamp desc 翻页)
+ * - 传 'ai' → server 端 mongo filter 加 userGroup='ai' (audit 页面专用, 7d 量级精准)
+ *
+ * Refs: uart-site-v3 feat/ai-audit-web-filter 配 server midwayuartserver PR #123
+ */
+export const loguserrequsts = (start: string, end: string, userGroup?: string, query?: PaginationReq) =>
+  Post<universalResult<V2ListResponse<Uart.logUserRequst>>>('/api/v2/admin/logs/user-requests', { startTs: new Date(start).getTime(), endTs: new Date(end).getTime(), userGroup, ...query })
 export const logwxsubscribes = (start: string, end: string, query?: PaginationReq) =>
   Post<universalResult<V2ListResponse<Uart.WX.wxsubscribeMessage>>>('/api/v2/admin/logs/wx-subscribes', { startTs: new Date(start).getTime(), endTs: new Date(end).getTime(), ...query })
 export const logterminalAggs = (mac: string, start: string, end: string, query?: PaginationReq) =>

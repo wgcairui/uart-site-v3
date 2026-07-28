@@ -11,12 +11,10 @@
  *
  * == 数据源 ==
  * 复用现有 `loguserrequsts` API (POST /api/v2/admin/logs/user-requests),
- * 拉最近 7d 的 user requests, **client-side 过滤** `userGroup === 'ai'`.
+ * **server-side 过滤** `userGroup='ai'` (server feat/ai-audit-server-filter @ PR #123).
  *
- * == 已知限制 ==
- * server 端 `/api/v2/admin/logs/user-requests` 没支持 userGroup filter (cairui 06-23 拍过),
- * 所以走 client filter. 时间窗越大拉的数据越多, 当前默认 7d (pageSize 200) 够用.
- * 后续 server 端加 userGroup filter 后再切 server filter.
+ * 之前走 client filter + pageSize 200 按 timeStamp desc 翻页, 7d 量级 (~3500 条)
+ * 会把 5 天前的 AI 11 条全挤出第 200 名外, UI 显示 0. 7/28 排查发现并切到 server filter.
  *
  * == 字段名权威源 ==
  * midwayuartserver/src/module/log/controller/admin-log.controller.ts listUserRequestLogs
@@ -108,21 +106,24 @@ export default function AdminAiAuditPage() {
   const [items, setItems] = useState<Uart.logUserRequst[]>([])
   const [loading, setLoading] = useState(false)
 
-  // 拉数据
+  // 拉数据 — server-side 过滤 userGroup='ai' (PR #123), 7d 量级 200 条 cover 不到全 AI
   useEffect(() => {
     let cancelled = false
     setLoading(true)
     const end = Date.now()
     const start = end - filters.hours * 3600 * 1000
-    // pageSize=MAX_ITEMS 一次拉满, 7d 范围内数据量可控
-    // 后续 server 端支持 userGroup filter 后改成 server filter, 减少数据传输
-    loguserrequsts(new Date(start).toISOString(), new Date(end).toISOString(), {
-      page: 1,
-      pageSize: MAX_ITEMS,
-      sortBy: 'timeStamp',
-      sortOrder: 'desc',
-      needTotal: true,
-    })
+    loguserrequsts(
+      new Date(start).toISOString(),
+      new Date(end).toISOString(),
+      'ai', // server filter: 只查 userGroup='ai' 的记录
+      {
+        page: 1,
+        pageSize: MAX_ITEMS,
+        sortBy: 'timeStamp',
+        sortOrder: 'desc',
+        needTotal: true,
+      },
+    )
       .then((res) => {
         if (cancelled) return
         const d: any = res.data
@@ -140,11 +141,8 @@ export default function AdminAiAuditPage() {
     return () => { cancelled = true }
   }, [fetchKey, filters.hours])
 
-  // client-side 过滤 userGroup='ai' (server 不支持 server-side filter)
-  const aiItems = useMemo(
-    () => items.filter((it) => it.userGroup === 'ai'),
-    [items],
-  )
+  // server-side 已经过滤过 userGroup='ai', 不用再 client filter
+  const aiItems = items
 
   // 进一步按 search + aiName 过滤
   const filtered = useMemo(() => {
@@ -277,16 +275,16 @@ export default function AdminAiAuditPage() {
 
       {/* ═══ 顶部说明 ═══ */}
       <Alert
-        type="warning"
+        type="info"
         showIcon
         icon={<InfoCircleOutlined />}
         message="数据源说明"
         description={
           <div style={{ fontSize: 12, lineHeight: 1.7 }}>
-            server 端 <code>/api/v2/admin/logs/user-requests</code> 当前不支持 <code>userGroup</code> server-side filter,
-            本页走 <strong>client-side 过滤</strong> + 默认 7d 时间窗 + pageSize 200 拉取.
-            拉到的 <code>userGroup=&apos;ai&apos;</code> 才是 AI 调用, 其它 user 全部丢弃.
-            后续 server 端加 filter 后会切到 server filter (省流量).
+            server 端 <code>/api/v2/admin/logs/user-requests</code> 支持 <code>userGroup</code> server-side filter
+            (PR <code>#123</code>), 本页直接传 <code>userGroup=&apos;ai&apos;</code> 精准拉 AI 调用记录,
+            默认 7d 时间窗 + pageSize {MAX_ITEMS}.
+            之前走 client filter 时 7d ~3500 条把 5 天前的 AI 11 条挤到第 200 名外, 7/28 切到 server filter 修好.
           </div>
         }
         style={{ marginBottom: 20, maxWidth: 1100 }}
@@ -386,7 +384,7 @@ export default function AdminAiAuditPage() {
 
       {/* ═══ 底部说明 ═══ */}
       <div style={{ marginTop: 16, fontSize: 11, color: '#94a3b8', fontFamily: 'ui-monospace, monospace' }}>
-        {'// 数据源: log.userRequests (server feat/log-user-requests) · 7d 滚动 · '}
+        {'// 数据源: log.UserRequests (server feat/ai-audit-server-filter) · server filter userGroup=ai · 7d 滚动 · '}
         {filtered.length} / {aiItems.length} 条 AI 记录
       </div>
     </div>
