@@ -217,7 +217,7 @@ export default function AdminAiAuditPage() {
     {
       dataIndex: 'method',
       title: 'Method',
-      width: 80,
+      width: 92,
       render: (_: any, record) => {
         const m = extractMethod(record.argument)
         const methodColor = m === 'GET' ? 'green' : m === 'POST' ? 'gold' : m === 'DELETE' ? 'red' : m === 'PUT' ? 'blue' : 'default'
