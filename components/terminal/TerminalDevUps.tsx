@@ -82,7 +82,9 @@ export const TerminalDevUps: React.FC<result> = ({ mac, pid, result }) => {
             key: 'upsStat',
             label: 'ups状态',
             children: (
-                <Descriptions>
+                // 2026-07-25: column={1} 强制 1 列, 避免 user 端 375 锁宽下 Descriptions 默认 3 列
+                // 把 label cell 压成 10-20px, 中文 sensor 名称 (温度探头故障) 被强制竖排单字
+                <Descriptions column={1}>
                     {
                         (ups.UpsStat as Uart.queryResultArgument[]).map(el =>
                             <Descriptions.Item label={el.name} key={el.name}>
