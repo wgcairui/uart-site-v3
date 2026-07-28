@@ -228,19 +228,30 @@ export default function AdminAiAuditPage() {
       },
     },
     {
-      title: 'Endpoint / Method',
-      width: 280,
+      title: 'Method',
+      dataIndex: 'method',
+      width: 72,
+      render: (_: any, record) => {
+        const m = extractMethod(record.argument)
+        const methodColor = m === 'GET' ? 'green' : m === 'POST' ? 'gold' : m === 'DELETE' ? 'red' : m === 'PUT' ? 'blue' : 'default'
+        return (
+          <Tag color={methodColor} style={{ fontSize: 10, fontFamily: 'ui-monospace, monospace', margin: 0 }}>
+            {m}
+          </Tag>
+        )
+      },
+    },
+    {
+      title: 'Endpoint',
+      dataIndex: 'endpoint',
+      width: 360,
+      ellipsis: true,
       render: (_: any, record) => {
         const ep = extractEndpoint(record.argument)
-        const m = extractMethod(record.argument)
-        const methodColor = m === 'GET' ? 'green' : m === 'POST' ? 'gold' : m === 'DELETE' ? 'red' : 'default'
         return (
-          <Space size={4} wrap>
-            <Tag color={methodColor} style={{ fontSize: 10, fontFamily: 'ui-monospace, monospace' }}>
-              {m}
-            </Tag>
+          <Tooltip title={ep} placement="topLeft">
             <code style={{ fontSize: 11, color: '#475569' }}>{ep}</code>
-          </Space>
+          </Tooltip>
         )
       },
     },
@@ -379,7 +390,72 @@ export default function AdminAiAuditPage() {
               showSizeChanger: true,
               showTotal: (total) => `共 ${total} 条`,
             }}
-            scroll={{ x: 900 }}
+            scroll={{ x: 1050 }}
+            expandable={{
+              columnTitle: '详情',
+              columnWidth: 60,
+              expandRowByClick: true,
+              expandedRowRender: (record: Uart.logUserRequst) => {
+                const ep = extractEndpoint(record.argument)
+                const m = extractMethod(record.argument)
+                const summary: Record<string, any> = {
+                  '_id': record._id,
+                  'user': record.user,
+                  'userGroup': record.userGroup,
+                  'type': record.type,
+                  'method': m,
+                  'endpoint': ep,
+                  'timeStamp': record.timeStamp ? dayjs(record.timeStamp).format('YYYY-MM-DD HH:mm:ss.SSS') : '-',
+                  'createdAt': record.createdAt ? dayjs(record.createdAt).format('YYYY-MM-DD HH:mm:ss.SSS') : '-',
+                }
+                return (
+                  <div style={{
+                    background: 'rgba(248, 250, 252, 0.6)',
+                    borderRadius: 6,
+                    padding: '12px 16px',
+                    fontSize: 12,
+                    fontFamily: 'ui-monospace, monospace',
+                    color: '#475569',
+                  }}>
+                    {/* ═══ 元数据摘要 ═══ */}
+                    <div style={{
+                      display: 'grid',
+                      gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
+                      gap: '4px 24px',
+                      marginBottom: record.argument && Object.keys(record.argument).length > 0 ? 12 : 0,
+                    }}>
+                      {Object.entries(summary).map(([k, v]) => (
+                        <div key={k} style={{ display: 'flex', gap: 8 }}>
+                          <span style={{ color: '#94a3b8', minWidth: 80 }}>{k}:</span>
+                          <span style={{ color: '#1e293b' }}>{String(v)}</span>
+                        </div>
+                      ))}
+                    </div>
+                    {/* ═══ 完整 argument JSON ═══ */}
+                    {record.argument && Object.keys(record.argument).length > 0 && (
+                      <details open>
+                        <summary style={{ cursor: 'pointer', color: '#8b5cf6', marginBottom: 6, fontSize: 11 }}>
+                          完整 argument payload ({Object.keys(record.argument).length} keys)
+                        </summary>
+                        <pre style={{
+                          margin: 0,
+                          padding: 12,
+                          background: '#0f172a',
+                          color: '#e2e8f0',
+                          borderRadius: 4,
+                          fontSize: 11,
+                          lineHeight: 1.6,
+                          overflow: 'auto',
+                          maxHeight: 320,
+                        }}>
+                          {JSON.stringify(record.argument, null, 2)}
+                        </pre>
+                      </details>
+                    )}
+                  </div>
+                )
+              },
+            }}
           />
         )}
       </BentoCard>
