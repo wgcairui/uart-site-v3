@@ -215,20 +215,9 @@ export default function AdminAiAuditPage() {
       },
     },
     {
-      dataIndex: 'type',
-      title: '类型',
-      width: 100,
-      render: (t: string) => {
-        if (!t) return '-'
-        // t 一般是 endpoint path 摘要 或 'login' 之类的
-        const color = t === 'login' ? 'blue' : 'default'
-        return <Tag color={color} style={{ fontSize: 11 }}>{t}</Tag>
-      },
-    },
-    {
-      title: 'Method',
       dataIndex: 'method',
-      width: 72,
+      title: 'Method',
+      width: 80,
       render: (_: any, record) => {
         const m = extractMethod(record.argument)
         const methodColor = m === 'GET' ? 'green' : m === 'POST' ? 'gold' : m === 'DELETE' ? 'red' : m === 'PUT' ? 'blue' : 'default'
@@ -241,14 +230,16 @@ export default function AdminAiAuditPage() {
     },
     {
       title: 'Endpoint',
-      dataIndex: 'endpoint',
+      dataIndex: 'type',
       width: 360,
       ellipsis: true,
-      render: (_: any, record) => {
-        const ep = extractEndpoint(record.argument)
+      render: (t: string) => {
+        // server log.UserRequests.type 字段 = endpoint path (e.g. /api/v2/admin/terminals/anomalies)
+        // argument 才是 query params, 没 url/method
+        if (!t) return '-'
         return (
-          <Tooltip title={ep} placement="topLeft">
-            <code style={{ fontSize: 11, color: '#475569' }}>{ep}</code>
+          <Tooltip title={t} placement="topLeft">
+            <code style={{ fontSize: 11, color: '#475569' }}>{t}</code>
           </Tooltip>
         )
       },
