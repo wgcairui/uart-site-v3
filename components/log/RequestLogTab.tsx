@@ -473,6 +473,7 @@ const LegacyView: React.FC<{
             const res = await loguserrequsts(
                 range[0].format('YYYY-MM-DD'),
                 range[1].format('YYYY-MM-DD'),
+                undefined, // userGroup 不过滤, 走原路径
                 { page, pageSize },
             )
             if (res.code === 200) {
